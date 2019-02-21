@@ -12,8 +12,8 @@ class Plugin
         virtual bool init(JsonObject &params) = 0;
         virtual bool setState(JsonObject &params) = 0;
         virtual bool setConfig(JsonObject &params) = 0;
-        virtual JsonObject& getState() = 0;
-        virtual JsonObject& getConfig() = 0;
+        virtual bool getState(JsonObject& ) = 0;
+        virtual bool getConfig(JsonObject& ) = 0;
 
         static Plugin* getPluginInstance(int type);
         static Plugin* addPrototype(int type, Plugin* p);

@@ -7,13 +7,16 @@ const char *TAG = "SwitchPlugin";
 void SwitchPlugin::task(void * pvParameters)
 {
     SwitchPlugin* s = (SwitchPlugin*)pvParameters;
+    JsonObject &cfg = *(s->cfg);
 
-    ESP_LOGI(TAG, "main task: %i:%i", (unsigned)s, unsigned(pvParameters));
+    ESP_LOGI(TAG, "main task: %i:%i", (unsigned)s, unsigned(s->cfg));
     for( ;; )
     {
         // Task code goes here.
-        ESP_LOGI(TAG, "paramters: interval: %i, gpio: %i", s->interval, s->gpio);
-        vTaskDelay(s->interval * 1000 / portTICK_PERIOD_MS);
+        int interval = cfg["interval"];
+        int gpio = cfg["gpio"];
+        ESP_LOGI(TAG, "paramters: interval: %i, gpio: %i", interval, gpio);
+        vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);
     }
 }
 
@@ -80,33 +83,25 @@ void SwitchPlugin::task(void * pvParameters)
  */
 
 bool SwitchPlugin::init(JsonObject &params) {
-    ESP_LOGI(TAG, "init");
-    gpio = params["gpio"] | 255;
-    interval = params["interval"] | 60;
+    cfg = &params;
+    ESP_LOGI(TAG, "init %i", unsigned(cfg));
     xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, NULL, 1);
     return true;
 }
 
 bool SwitchPlugin::setConfig(JsonObject &params) {
     if (params.containsKey("gpio")) {
-        gpio = params["gpio"];
+        (*cfg)["gpio"] = params["gpio"];
     }
     if (params.containsKey("interval")) {
-        interval = params["interval"];
+        (*cfg)["interval"] = params["interval"];
     }
     return true;
 }
 
-// we could also get JsonObject& in and assign to that one ...
-// JsonObject& SwitchPlugin::getConfig() {
-//     JsonObject& obj = jb.createObject();
-//     obj["interval"] = interval;
-//     obj["gpio"] = gpio;
-//     return obj;
-// }
 bool SwitchPlugin::getConfig(JsonObject &params) {
-    params["interval"] = interval;
-    params["gpio"] = gpio;
+    params["interval"] = (*cfg)["interval"];
+    params["gpio"] = (*cfg)["gpio"];
     return true;
 }
 
@@ -117,8 +112,7 @@ bool SwitchPlugin::setState(JsonObject &params) {
     return true;
 }
 
-JsonObject& SwitchPlugin::getState() {
-    JsonObject& obj = jb.createObject();
-    obj["state"] = state;
-    return obj;
+bool SwitchPlugin::getState(JsonObject &params) {
+    params["state"] = state;
+    return true;
 }

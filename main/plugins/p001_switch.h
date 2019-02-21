@@ -9,7 +9,7 @@ class SwitchPlugin: public Plugin {
         int interval;
         int gpio;
         bool state;
-        StaticJsonBuffer<JSON_OBJECT_SIZE(3)> jb;
+        JsonObject *cfg;
     public:
         Plugin* clone() const { 
             ESP_LOGI("PLUGIN", "cloning ...");
@@ -19,8 +19,8 @@ class SwitchPlugin: public Plugin {
         bool init(JsonObject &params);
         bool setState(JsonObject &params);
         bool setConfig(JsonObject &params);
-        JsonObject& getState();
-        JsonObject& getConfig();
+        bool getState(JsonObject& );
+        bool getConfig(JsonObject& );
         static void task(void *pvParameters);
 };
 
