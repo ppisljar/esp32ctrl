@@ -1,0 +1,6 @@
+build/
+.vscode
+makefs.sh
+spiffs.bin
+sdkconfig.old
+ArduinoJson
