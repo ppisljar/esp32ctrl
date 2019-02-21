@@ -19,8 +19,8 @@ class SwitchPlugin: public Plugin {
         bool init(JsonObject &params);
         bool setState(JsonObject &params);
         bool setConfig(JsonObject &params);
-        JsonObject& getState();
-        JsonObject& getConfig();
+        bool getState(JsonObject& );
+        bool getConfig(JsonObject& );
         static void task(void *pvParameters);
 };
 

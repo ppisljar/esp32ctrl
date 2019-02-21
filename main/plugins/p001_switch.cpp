@@ -97,13 +97,6 @@ bool SwitchPlugin::setConfig(JsonObject &params) {
     return true;
 }
 
-// we could also get JsonObject& in and assign to that one ...
-// JsonObject& SwitchPlugin::getConfig() {
-//     JsonObject& obj = jb.createObject();
-//     obj["interval"] = interval;
-//     obj["gpio"] = gpio;
-//     return obj;
-// }
 bool SwitchPlugin::getConfig(JsonObject &params) {
     params["interval"] = interval;
     params["gpio"] = gpio;
@@ -117,8 +110,7 @@ bool SwitchPlugin::setState(JsonObject &params) {
     return true;
 }
 
-JsonObject& SwitchPlugin::getState() {
-    JsonObject& obj = jb.createObject();
-    obj["state"] = state;
-    return obj;
+bool SwitchPlugin::getState(JsonObject &params) {
+    params["state"] = state;
+    return true;
 }

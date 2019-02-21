@@ -10,7 +10,7 @@ const char* config_default_json = "{\"wifi\":{\"ssid\":\"Teltonika_Router\",\"pa
 class Config
 {
     private:
-        StaticJsonBuffer<500> jsonBuffer;
+        StaticJsonBuffer<100000> jsonBuffer;
         JsonObject *configuration;
 
     public:

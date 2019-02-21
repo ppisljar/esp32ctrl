@@ -565,12 +565,12 @@ static esp_err_t plugins_handler(httpd_req_t *req)
 
     int plugin_id = atoi(filename);
     JsonObject& plugin = (cfg->getConfig())["plugins"][plugin_id];
-    JsonObject& cfgObject = active_plugins[plugin_id]->getConfig();
-    JsonObject& varObject = active_plugins[plugin_id]->getState();
-    plugin.set("config", cfgObject);
-    plugin.set("state", varObject);
+    active_plugins[plugin_id]->getConfig(plugin["params"]);
+    active_plugins[plugin_id]->getState(plugin["state"]);
+    //plugin.set("config", cfgObject);
+    //plugin.set("state", varObject);
 
-    len = cfgObject.printTo(buf, 512);
+    len = plugin.printTo(buf, 512);
     httpd_resp_send_chunk(req, buf, len);
     httpd_resp_sendstr_chunk(req, NULL);
 
@@ -581,7 +581,7 @@ static esp_err_t plugins_handler(httpd_req_t *req)
 httpd_handle_t server = NULL;
 
 void quick_register(char * uri, httpd_method_t method,  esp_err_t handler(httpd_req_t *req), void *ctx) {
-    httpd_uri_t uri_handler = {
+    httpd_uri_t uri_handler =JsonObject& varObject =  {
         .uri       = uri,
         .method    = method,
         .handler   = handler,
