@@ -1,6 +1,13 @@
 #include "plugin.h"
 #include "esp_log.h"
-Plugin* Plugin::protoTable[10];
+// #include <std::string> <-- prepend namespace ... you can also add namespace to our path with "using"
+// std::string var1;
+
+Plugin* Plugin::protoTable[10]; // here we put it on sys
+// new[] <-- check what does it do
+// smart pointers, smart weak pointers, outer pointers
+// scott myers: effective modern c++
+// move operator
 
 Plugin* Plugin::getPluginInstance(int type)
 {
@@ -14,7 +21,6 @@ Plugin* Plugin::getPluginInstance(int type)
 Plugin* Plugin::addPrototype(int type, Plugin* p)
 {
     ESP_LOGI("PLUGIN", "registering plugin %i on 0x%08x", type, (unsigned)p);
-   protoTable[type] = p;
-   return p;
+    protoTable[type] = p;
+    return p;
 }
-

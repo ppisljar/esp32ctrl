@@ -1,16 +1,58 @@
-menu "Example Configuration"
+menu "MyESP32 CTRL"
 
-    config WIFI_SSID
-        string "WiFi SSID"
-        default "myssid"
-        help
-            SSID (network name) for the example to connect to.
+    menu "Enabled Controllers"
 
-    config WIFI_PASSWORD
-        string "WiFi Password"
-        default "mypassword"
-        help
-            WiFi password (WPA or WPA2) for the example to use.
-            Can be left blank if the network has no security set.
+        config ENABLE_C001_I2c
+            bool "I2C"
+            default y
 
+        config ENABLE_C002_SPI
+            bool "SPI"
+            default y
+
+        config ENABLE_C003_MQTT
+            bool "MQTT"
+            default y
+
+        config ENABLE_C004_MESH
+            bool "ESP MESH"
+            default y
+    endmenu
+
+    menu "Enabled Plugins"
+
+        config ENABLE_P001_SWITCH
+            bool "SWITCH"
+            default y
+
+        config ENABLE_P002_DHT
+            bool "DHT11/22"
+            default y
+
+        config ENABLE_P003_BMP
+            bool "BMx280"
+            depends on ENABLE_C001_I2c
+            default y
+
+        config ENABLE_P004_DS18x20
+            bool "DS18x20"
+            default y
+    endmenu
+
+    menu "WiFi Config"
+
+        config WIFI_SSID
+            string "WiFi SSID"
+            default "myssid"
+            help
+                SSID (network name) for the example to connect to.
+
+        config WIFI_PASSWORD
+            string "WiFi Password"
+            default "mypassword"
+            help
+                WiFi password (WPA or WPA2) for the example to use.
+                Can be left blank if the network has no security set.
+
+    endmenu
 endmenu

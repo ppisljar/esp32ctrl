@@ -31,63 +31,19 @@ void SwitchPlugin::task(void * pvParameters)
  * :: req2: we can set each variable independently
  */  
 
-/**
- *  v2: each plugin tells how much memory it needs
- * - main task mallocs the memory and copies config into it (binary)
- * - init casts memory to struct and asigngs defaults
- * - getConfig returns memory pointer
- * - setConfig ? must write whole config, as we cannot have undefined members in struct
- * 
- * :: we dont need private variables ? as we use this memory directly
- */
-// struct 001_config_struct {
-//     int gpio;
-//     int interval;
-// }
-
-// bool SwitchPlugin::init(void *memory) {
-//     struct 0001_config_struct *cfg = (struct 0001_config_struct *)memory;
-//     // how do we set defaults ? they need to be provided from web UI
-//     //cfg->interval = 
-// }
-
-// // or we could receive in byte array, which won't allow us to set each setting independently
-// // but its questionable which one is actually better for performance
-// bool SwitchPlugin::setConfig(JsonObject &params) {
-//     if (params.containsKey("gpio")) {
-//         cfg->gpio = params["gpio"];
-//     }
-//     if (params.containsKey("interval")) {
-//         cfg->interval = params["interval"];
-//     }
-//     return true;
-// }
-
-// // 
-// JsonObject& SwitchPlugin::getConfig() {
-//     JsonObject& obj = jb.createObject();
-//     obj["interval"] = cfg->interval;
-//     obj["gpio"] = cfg->gpio;
-//     return obj;
-// }
-
-/**
- * v1: each plugin manages its own memory
- * - main task loads config? and passes it to plugin
- * - init copies config into its local state ? (private variables) .... could it work without this ?
- * - getConfig returns new object representing current config ... it could return just instance to main object if we could do above point
- * - setConfig sets local state from input object
- * 
- * :: if main doens't know anything (shouldnt) about plugins memory/config ... it passes {} down ... 0 memory ?
- *  ::: main task could alocate some big part of memory for config, and then expose API to create new objects (like the json thing)
- */
-
 bool SwitchPlugin::init(JsonObject &params) {
     cfg = &params;
-    ESP_LOGI(TAG, "init %i", unsigned(cfg));
+    if (!params.containsKey("gpio")) {
+        params.set("gpio", 255);
+    }
+    if (!params.containsKey("interval")) {
+        params.set("interval", 60);
+    }
+    ESP_LOGI(TAG, "init %i : interval: %i", unsigned(cfg), (int)params["interval"]);
     xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, NULL, 1);
     return true;
 }
+
 
 bool SwitchPlugin::setConfig(JsonObject &params) {
     if (params.containsKey("gpio")) {

@@ -10,7 +10,7 @@ const char* config_default_json = "{\"wifi\":{\"ssid\":\"Teltonika_Router\",\"pa
 class Config
 {
     private:
-        StaticJsonBuffer<100000> jsonBuffer;
+        StaticJsonBuffer<20000> jsonBuffer;
         JsonObject *configuration;
 
     public:
@@ -21,7 +21,7 @@ class Config
              ESP_LOGI(TAG, "loading config object");
             char* confData = spiffs_read_file((char*)config_filename);
             if (confData == NULL) {
-                 ESP_LOGI(TAG, "warning: config file not found, creating new!");
+                ESP_LOGI(TAG, "warning: config file not found, creating new!");
                 spiffs_write_file((char*)config_filename, (char*)config_default_json, strlen(config_default_json));
                 confData = spiffs_read_file((char*)config_filename);
             }
