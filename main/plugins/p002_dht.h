@@ -23,8 +23,8 @@ class DHTPlugin: public Plugin {
         bool getState(JsonObject& );
         bool getConfig(JsonObject& );
         static void task(void *pvParameters);
-        void* getStatePtr(char );
-        void setStatePtr(char, char*);
+        void* getStatePtr(uint8_t );
+        void setStatePtr(uint8_t, uint8_t*);
 };
 
 #endif

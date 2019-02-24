@@ -2,9 +2,12 @@
 #include "rule_engine.h"
 #include "../plugins/plugin.h"
 
-char *rule_list[20]; //every trigger has its entry
-char old_values[256]; // reserve 128 bytes for storing old values
-char old_values_free_ptr = 0; // points to the place in array which is free
+#define byte uint8_t
+
+byte *rule_list[20]; //every trigger has its entry
+byte old_values[256]; // reserve 128 bytes for storing old values
+byte old_values_free_ptr = 0; // points to the place in array which is free
+std::map<uint16_t, void*> rule_data_ptrs;
 
 #define CMD_SET     0xf0
 #define CMD_SET_CFG 0xf1
@@ -26,10 +29,10 @@ char old_values_free_ptr = 0; // points to the place in array which is free
 extern Plugin *active_plugins[10];
 
 // comparison: [type][len][value] : x>5
-bool compare(char** ptr, char *val, char *old) {
-    char *cmd = *ptr;
+bool compare(byte** ptr, byte *val, byte *old) {
+    byte *cmd = *ptr;
     bool match = true;
-    for (char i = 0; i < cmd[1]; i++) {
+    for (byte i = 0; i < cmd[1]; i++) {
         switch (cmd[0]) {
             case 0: // every change
                 if (cmd[i + 2] != old[i]) match = false;
@@ -42,6 +45,7 @@ bool compare(char** ptr, char *val, char *old) {
             case 4: // <=
             case 5: // >=
             case 6: // <>
+                break;
         }
         old[i] = val[i];
     }
@@ -50,21 +54,29 @@ bool compare(char** ptr, char *val, char *old) {
 }
 
 // comparison: [len][[var][comparison]]
-bool multi_compare(char **ptr) {
+bool multi_compare(byte **ptr) {
     bool match = true;
-    char len = (*ptr++)[0];
-    char *cmd = *ptr;
-    for (char i = 0; i < len; i++) {
+    byte len = (*ptr++)[0];
+    byte *cmd = *ptr;
+    byte *old;
+    for (byte i = 0; i < len; i++) {
         Plugin *p = active_plugins[cmd[0]];
-        char *var = (char*)p->getStatePtr(cmd[1]);
-        if (!compare(&cmd, val, old)) match = false;
+        byte *var = (byte*)p->getStatePtr(cmd[1]);
+        uint16_t oldId = *cmd;
+        if (!rule_data_ptrs[oldId]) {
+            rule_data_ptrs[oldId] = old_values + old_values_free_ptr;
+            old_values_free_ptr += cmd[4];
+        }
+        old = (byte*)rule_data_ptrs[oldId];
+        cmd+=2;
+        if (!compare(&cmd, var, old)) match = false;
     }
     return match;
 }
 
-int parse_rules(char *rules, int len) {
+int parse_rules(byte *rules, long len) {
     int rules_found = 0;
-    for (char i = 0; i < len; i++) {
+    for (byte i = 0; i < len; i++) {
         if (rules[i] == 0xff && rules[i+1] == 0xfe && rules[i+2] == 0x00 && rules[i+3] == 0xff) {
             rule_list[rules_found++] = rules + 4;
         }
@@ -74,17 +86,22 @@ int parse_rules(char *rules, int len) {
 
 void run_rules() {
     for (auto rule : rule_list) {
-        char *cmd = rule;
-        bool match = true;
+        byte *cmd = rule;
+        byte *old;
         // check if rule is triggered
         // 1. we should probably not be checking just active_plugins but have some specials like `system`, `timer`, `event`
         Plugin *p = active_plugins[cmd[0]];
         // 2. we need a way to access variable
         // 3. we need a way to compare variables independent of type
-        char *var = (char*)p->getStatePtr(cmd[1]);
+        byte *var = (byte*)p->getStatePtr(cmd[1]);
 
-        cmd += 4;
-        char *old = cmd;
+        uint16_t oldId = *cmd;
+        if (!rule_data_ptrs[oldId]) {
+            rule_data_ptrs[oldId] = old_values + old_values_free_ptr;
+            old_values_free_ptr += cmd[4];
+        }
+        old = (byte*)rule_data_ptrs[oldId];
+        cmd += 2;
         // this way will be hard to do < and >
         if (compare(&cmd, var, old)) {
 
@@ -106,7 +123,7 @@ void run_rules() {
                     // if statement
                     case CMD_IF:
                         if (multi_compare(&cmd)) {
-                            cmd++;
+                            //cmd++;
                         } else {
                             while(cmd[0] != CMD_ELSE) cmd++;
                             cmd++;
@@ -123,6 +140,7 @@ void run_rules() {
                         break;
                     // plugin provided commands
                     default:
+                        break;
                 }
             }
         }

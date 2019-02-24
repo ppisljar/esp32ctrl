@@ -84,11 +84,11 @@ bool TYPE::setState(JsonObject &params) { \
     FOREACH_MACRO(PLUGIN___STATS_SET, __VA_ARGS__) \
     return true; \
 } \
-void* TYPE::getStatePtr(char val) { \
+void* TYPE::getStatePtr(uint8_t val) { \
     FOREACH_MACRO(PLUGIN___STATS_GETPTR, __VA_ARGS__) \
     return NULL; \
 } \
-void TYPE::setStatePtr(char n, char *val) { \
+void TYPE::setStatePtr(uint8_t n, uint8_t *val) { \
     FOREACH_MACRO(PLUGIN___STATS_SETPTR, __VA_ARGS__) \
 }
 
@@ -104,8 +104,8 @@ class Plugin
         virtual bool setConfig(JsonObject &params) = 0;
         virtual bool getState(JsonObject& ) = 0;
         virtual bool getConfig(JsonObject& ) = 0;
-        virtual void* getStatePtr(char var) = 0;
-        virtual void setStatePtr(char var, char* val) = 0;
+        virtual void* getStatePtr(uint8_t var) = 0;
+        virtual void setStatePtr(uint8_t var, uint8_t* val) = 0;
 
         static Plugin* getPluginInstance(int type);
         static Plugin* addPrototype(int type, Plugin* p);

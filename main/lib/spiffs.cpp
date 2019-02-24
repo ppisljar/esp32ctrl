@@ -1,7 +1,7 @@
 #include "spiffs.h"
 #define TAG "SPIFFS"
 /* Function to initialize SPIFFS */
-static esp_err_t spiffs_init(void)
+esp_err_t spiffs_init(void)
 {
     ESP_LOGI(TAG, "Initializing SPIFFS");
 
@@ -35,7 +35,7 @@ static esp_err_t spiffs_init(void)
     return ESP_OK;
 }
 
-static char* spiffs_read_file(char * filename, long *len) {
+char* spiffs_read_file(char * filename, long *len) {
     ESP_LOGI(TAG, "loading file %s", filename);
     FILE *f = fopen(filename, "rb");
     if (f == NULL) return NULL;
@@ -51,12 +51,12 @@ static char* spiffs_read_file(char * filename, long *len) {
     ESP_LOGI(TAG, "File read succesfully");
     return data;
 }
-static char* spiffs_read_file(char * filename) {
+char* spiffs_read_file(char * filename) {
     long len;
     return spiffs_read_file(filename, &len);
 }
 
-static esp_err_t spiffs_write_file(char *filepath, char * data, uint16_t length) {
+esp_err_t spiffs_write_file(char *filepath, char * data, uint16_t length) {
     ESP_LOGI(TAG, "Writing file %s with  bytes", filepath);
     FILE *fd = fopen(filepath, "w");
     if (!fd) {

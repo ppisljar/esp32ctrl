@@ -1,4 +1,4 @@
-set(COMPONENT_SRCS "main.cpp" "wifi.c" "lib/rule_engine.cpp")
-set(COMPONENT_ADD_INCLUDEDIRS "." "./plugins")
+set(COMPONENT_SRCS "main.cpp" "wifi.c")
+set(COMPONENT_ADD_INCLUDEDIRS "." "./plugins" "./lib")
 
 register_component()

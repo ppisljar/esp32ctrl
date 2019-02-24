@@ -4,8 +4,8 @@
 #include "spiffs.h"
 #include "ArduinoJson.h"
 
-const char* config_filename = "/spiffs/config.json";
-const char* config_default_json = "{\"wifi\":{\"ssid\":\"Teltonika_Router\",\"pass\":\"secpass123\"},\"plugins\":[]}";
+#define config_filename "/spiffs/config.json"
+#define config_default_json "{\"wifi\":{\"ssid\":\"Teltonika_Router\",\"pass\":\"secpass123\"},\"plugins\":[]}"
 
 class Config
 {

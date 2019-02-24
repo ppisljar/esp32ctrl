@@ -17,9 +17,9 @@
 
 static const char *TAG = "example";
 
+#include "lib/config.h"
 #include "lib/spiffs.h"
 #include "lib/file_server.h"
-#include "lib/config.h"
 #include "wifi.h"
 #include "plugins/plugin.h"
 #include "plugins/p001_switch.h"
@@ -90,7 +90,7 @@ extern "C" void app_main()
 
     // open rule file and read it in
     long rule_length;
-    char *rules = spiffs_read_file("/spiffs/rules.dat", &rule_length);
+    uint8_t *rules = (uint8_t*)spiffs_read_file("/spiffs/rules.dat", &rule_length);
     parse_rules(rules, rule_length);
 }
 

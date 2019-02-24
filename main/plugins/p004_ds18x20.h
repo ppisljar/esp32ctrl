@@ -21,8 +21,8 @@ class DS18x20Plugin: public Plugin {
         bool setConfig(JsonObject &params);
         bool getState(JsonObject& );
         bool getConfig(JsonObject& );
-        void* getStatePtr(char );
-        void setStatePtr(char, char*);
+        void* getStatePtr(uint8_t );
+        void setStatePtr(uint8_t, uint8_t*);
         static void task(void *pvParameters);
 };
 
