@@ -4,6 +4,7 @@
 //#include "plugin.h"
 //#include "esp_log.h"
 //#include "driver/i2c.h"
+//#include "i2cdev.h"
 //
 //class I2CPlugin: public Plugin {
 //    private:

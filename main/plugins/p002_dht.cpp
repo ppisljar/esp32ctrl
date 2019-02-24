@@ -1,16 +1,16 @@
 #include "p002_dht.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "dht.h"
 
-const char *TAG = "DHTPlugin";
+const char *P002_TAG = "DHTPlugin";
+
+PLUGIN_CONFIG(DHTPlugin, interval, gpio, type)
+PLUGIN_STATS(DHTPlugin, temperature, humidity)
 
 void DHTPlugin::task(void * pvParameters)
 {
     DHTPlugin* s = (DHTPlugin*)pvParameters;
     JsonObject &cfg = *(s->cfg);
 
-    ESP_LOGI(TAG, "main task: %i:%i", (unsigned)s, unsigned(s->cfg));
+    ESP_LOGI(P002_TAG, "main task: %i:%i", (unsigned)s, unsigned(s->cfg));
     for( ;; )
     {
         int interval = cfg["interval"] | 60;
@@ -19,9 +19,9 @@ void DHTPlugin::task(void * pvParameters)
 
         if (gpio != 255) {
             if (dht_read_data((dht_sensor_type_t)sensor_type, (gpio_num_t)gpio, &(s->humidity), &(s->temperature)) == ESP_OK)
-                ESP_LOGI(TAG, "Humidity: %d%% Temp: %dC", s->humidity / 10, s->temperature / 10);
+                ESP_LOGI(P002_TAG, "Humidity: %d%% Temp: %dC", s->humidity / 10, s->temperature / 10);
             else
-                printf(TAG, "Could not read data from sensor");
+                printf(P002_TAG, "Could not read data from sensor");
         }
 
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);
@@ -30,47 +30,7 @@ void DHTPlugin::task(void * pvParameters)
 
 bool DHTPlugin::init(JsonObject &params) {
     cfg = &params;
-    if (!params.containsKey("gpio")) {
-        params.set("gpio", 255);
-    }
-    if (!params.containsKey("interval")) {
-        params.set("interval", 60);
-    }
-    if (!params.containsKey("type")) {
-        params.set("type", 0);
-    }
 
-    xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, NULL, 1);
-    return true;
-}
-
-
-bool DHTPlugin::setConfig(JsonObject &params) {
-    if (params.containsKey("gpio")) {
-        (*cfg)["gpio"] = params["gpio"];
-    }
-    if (params.containsKey("interval")) {
-        (*cfg)["interval"] = params["interval"];
-    }
-    if (params.containsKey("type")) {
-        (*cfg)["type"] = params["type"];
-    }
-    return true;
-}
-
-bool DHTPlugin::getConfig(JsonObject &params) {
-    params["interval"] = (*cfg)["interval"];
-    params["gpio"] = (*cfg)["gpio"];
-    params["type"] = (*cfg)["type"];
-    return true;
-}
-
-bool DHTPlugin::setState(JsonObject &params) {
-    return true;
-}
-
-bool DHTPlugin::getState(JsonObject &params) {
-    params["temperature"] = temperature;
-    params["humidity"] = humidity;
+    xTaskCreatePinnedToCore(this->task, P002_TAG, 4096, this, 5, NULL, 1);
     return true;
 }

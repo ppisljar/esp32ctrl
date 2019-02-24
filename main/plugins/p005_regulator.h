@@ -1,20 +1,17 @@
-#ifndef ESP_PLUGIN_002_H
-#define ESP_PLUGIN_002_H
+#ifndef ESP_PLUGIN_005_H
+#define ESP_PLUGIN_005_H
 
 #include "plugin.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "dht.h"
 #include "esp_log.h"
 
-class DHTPlugin: public Plugin {
+class RegulatorPlugin: public Plugin {
     private:
-        int16_t temperature;
-        int16_t humidity;
+        bool output;
         JsonObject *cfg;
+        StaticJsonBuffer<JSON_OBJECT_SIZE(3)> jb;
     public:
         Plugin* clone() const {
-            return new DHTPlugin;
+            return new RegulatorPlugin;
         }
 
         bool init(JsonObject &params);
@@ -22,9 +19,9 @@ class DHTPlugin: public Plugin {
         bool setConfig(JsonObject &params);
         bool getState(JsonObject& );
         bool getConfig(JsonObject& );
-        static void task(void *pvParameters);
         void* getStatePtr(char );
-        void setStatePtr(char, char*);
+                void setStatePtr(char, char*);
+        static void task(void *pvParameters);
 };
 
 #endif

@@ -1,9 +1,9 @@
 #include "plugin.h"
-#include "esp_log.h"
+
 // #include <std::string> <-- prepend namespace ... you can also add namespace to our path with "using"
 // std::string var1;
 
-Plugin* Plugin::protoTable[10]; // here we put it on sys
+std::map<int, Plugin*> Plugin::protoTable; // here we put it on sys
 // new[] <-- check what does it do
 // smart pointers, smart weak pointers, outer pointers
 // scott myers: effective modern c++

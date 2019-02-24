@@ -3,6 +3,7 @@
 
 #include "plugin.h"
 #include "esp_log.h"
+#include <bmp280.h>
 
 class BMP280Plugin: public Plugin {
     private:
@@ -21,6 +22,8 @@ class BMP280Plugin: public Plugin {
         bool setConfig(JsonObject &params);
         bool getState(JsonObject& );
         bool getConfig(JsonObject& );
+        void* getStatePtr(char );
+        void setStatePtr(char, char*);
         static void task(void *pvParameters);
 };
 

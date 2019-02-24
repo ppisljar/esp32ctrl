@@ -7,23 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/param.h>
-#include <sys/unistd.h>
-#include <sys/stat.h>
-#include <dirent.h>
-
-#include "esp_err.h"
-#include "esp_log.h"
-
-#include "esp_vfs.h"
-#include "esp_spiffs.h"
-#include "esp_http_server.h"
-
-#include "esp_ota_ops.h"
-#include "esp_flash_partitions.h"
-#include "esp_partition.h"
+#include "file_server.h"
 
 #include "config.h"
 #include "../plugins/plugin.h"
@@ -38,6 +22,8 @@
 
 /* Scratch buffer size */
 #define SCRATCH_BUFSIZE  8192
+
+#define TAG "FileServer"
 
 struct file_server_data {
     /* Base path of file storage */
@@ -76,7 +62,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
     strcpy(fullpath, ((struct file_server_data *)req->user_ctx)->base_path);
 
     /* Concatenate the requested directory path */
-    strcat(fullpath, req->uri);
+    strcat(fullpath, "/"/*req->uri*/);
     dir = opendir(fullpath);
     const size_t entrypath_offset = strlen(fullpath);
 
@@ -87,7 +73,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
     }
 
     /* Send file-list table definition and column labels */
-    httpd_resp_sendstr_chunk(req, "[{");
+    httpd_resp_sendstr_chunk(req, "[");
 
     bool first = true;
     /* Iterate over all files / folders and fetch their names and sizes */
@@ -106,7 +92,6 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
         else { httpd_resp_sendstr_chunk(req, "," ); }
         /* Send chunk of HTML file containing table entries with file name and size */
         httpd_resp_sendstr_chunk(req, "{ \"file\":\"" );
-        httpd_resp_sendstr_chunk(req, req->uri);
         httpd_resp_sendstr_chunk(req, entry->d_name);
         if (entry->d_type == DT_DIR) {
             httpd_resp_sendstr_chunk(req, "/");
@@ -137,9 +122,9 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req)
 {
     if (IS_FILE_EXT(req->uri, ".pdf")) {
         return httpd_resp_set_type(req, "application/pdf");
-    } else if (IS_FILE_EXT(req->uri, ".html")) {
+    } else if (IS_FILE_EXT(req->uri, ".html") || IS_FILE_EXT(req->uri, ".htm")) {
         return httpd_resp_set_type(req, "text/html");
-    } else if (IS_FILE_EXT(req->uri, ".jpeg")) {
+    } else if (IS_FILE_EXT(req->uri, ".jpeg") || IS_FILE_EXT(req->uri, ".jpg")) {
         return httpd_resp_set_type(req, "image/jpeg");
     }
     /* This is a limited set only */
@@ -339,7 +324,7 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
             return ESP_FAIL;
         }
         
-        // ESP_LOGD(TAG, "Written image length %d", binary_file_length);
+       // ESP_LOGD(TAG, "Written image length %d", binary_file_length);
 
         /* Keep track of remaining size of
          * the file left to be uploaded */
@@ -352,6 +337,9 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
     httpd_resp_set_status(req, "303 See Other");
     httpd_resp_set_hdr(req, "Location", "/");
     httpd_resp_sendstr(req, "File uploaded successfully");
+
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    esp_restart();
     return ESP_OK;
 }
 
@@ -382,11 +370,9 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
     /* Concatenate the requested file path */
     strcat(filepath, filename);
     if (stat(filepath, &file_stat) == 0) {
-        ESP_LOGE(TAG, "File already exists : %s", filepath);
+        ESP_LOGI(TAG, "File already exists : %s", filepath);
         /* If file exists respond with 400 Bad Request */
-        httpd_resp_set_status(req, "400 Bad Request");
-        httpd_resp_sendstr(req, "File already exists!");
-        return ESP_OK;
+        unlink(filepath);
     }
 
     /* File cannot be larger than a limit */
@@ -514,7 +500,7 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-StaticJsonBuffer<JSON_OBJECT_SIZE(3)> jb;
+StaticJsonBuffer<JSON_OBJECT_SIZE(10)> jb;
 static esp_err_t plugins_post_handler(httpd_req_t *req)
 {
 
@@ -578,6 +564,36 @@ static esp_err_t plugins_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t plugins_list_handler(httpd_req_t *req)
+{
+    // get plugin restiry and list all available plugins
+    bool first=true;
+    char id[4];
+    httpd_resp_sendstr_chunk(req, "[");
+    for(auto it = Plugin::protoTable.begin(); it != Plugin::protoTable.end(); it++) {
+        if (first) { first = false; }
+        else { httpd_resp_sendstr_chunk(req, "," ); }
+
+        sprintf(id, "%d", it->first);
+        httpd_resp_sendstr_chunk(req, id);
+    }
+    httpd_resp_sendstr_chunk(req, "]");
+    httpd_resp_sendstr_chunk(req, NULL);
+
+    // try to get specific registered plugin
+    return ESP_OK;
+}
+
+static esp_err_t reboot_handler(httpd_req_t *req)
+{
+    httpd_resp_set_status(req, "200 OK");
+    httpd_resp_sendstr(req, "OK");
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+    esp_restart();
+    return ESP_OK;
+}
+
 httpd_handle_t server = NULL;
 
 void quick_register(char * uri, httpd_method_t method,  esp_err_t handler(httpd_req_t *req), void *ctx) {
@@ -638,18 +654,14 @@ esp_err_t start_file_server(const char *base_path)
     //quick_register("/config/*", HTTP_GET, plugins_delete_handler, server_data);
     //quick_register("/config/*", HTTP_POST, plugins_delete_handler, server_data);
 
+    quick_register("/plugins_list", HTTP_GET, plugins_list_handler, server_data);
     quick_register("/plugins/*", HTTP_GET, plugins_handler, server_data);
     quick_register("/plugins/*", HTTP_POST, plugins_post_handler, server_data);
     //quick_register("/plugins/*", HTTP_DELETE, plugins_delete_handler, server_data);
 
-    /* Register handler for index.html which should redirect to / */
-    httpd_uri_t index_html = {
-        .uri       = "/index.html",
-        .method    = HTTP_GET,
-        .handler   = index_html_get_handler,
-        .user_ctx  = NULL
-    };
-    httpd_register_uri_handler(server, &index_html);
+    quick_register("/filelist", HTTP_GET, http_resp_dir_html, server_data);
+    quick_register("/reboot", HTTP_GET, reboot_handler, server_data);
+
 
     /* URI handler for getting uploaded files */
     httpd_uri_t file_download = {

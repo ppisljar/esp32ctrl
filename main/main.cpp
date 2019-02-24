@@ -17,11 +17,18 @@
 
 static const char *TAG = "example";
 
-#include "lib/spiffs.cpp"
-#include "lib/file_server.cpp"
+#include "lib/spiffs.h"
+#include "lib/file_server.h"
+#include "lib/config.h"
 #include "wifi.h"
 #include "plugins/plugin.h"
 #include "plugins/p001_switch.h"
+#include "plugins/p002_dht.h"
+#include "plugins/p003_bmp280.h"
+#include "plugins/p004_ds18x20.h"
+#include "plugins/p005_regulator.h"
+
+#include "lib/rule_engine.h"
 
 // global config object
 Config *cfg;
@@ -34,6 +41,10 @@ struct status {
 struct status status;
 
 Plugin* SwitchPlugin_myProtoype = Plugin::addPrototype(1, new SwitchPlugin);
+Plugin* DHTPlugin_myProtoype = Plugin::addPrototype(2, new DHTPlugin);
+Plugin* BMP280Plugin_myProtoype = Plugin::addPrototype(3, new BMP280Plugin);
+Plugin* DS18x20Plugin_myProtoype = Plugin::addPrototype(4, new DS18x20Plugin);
+Plugin* RegulatorPlugin_myProtoype = Plugin::addPrototype(5, new RegulatorPlugin);
 
 extern "C" void app_main()
 {
@@ -76,6 +87,11 @@ extern "C" void app_main()
     //     // create new instance
     //     // store it to the list of initialized plugins
     }
+
+    // open rule file and read it in
+    long rule_length;
+    char *rules = spiffs_read_file("/spiffs/rules.dat", &rule_length);
+    parse_rules(rules, rule_length);
 }
 
 // when configuration is updated: (how to detect it ?) easiest way is to reboot ... web endpoint to save config (thru Config object), somewhere along the way we check what needs to be updated

@@ -2,7 +2,6 @@
 #define ESP_PLUGIN_001_H
 
 #include "plugin.h"
-#include "esp_log.h"
 
 class SwitchPlugin: public Plugin {
     private:
@@ -21,6 +20,8 @@ class SwitchPlugin: public Plugin {
         bool setConfig(JsonObject &params);
         bool getState(JsonObject& );
         bool getConfig(JsonObject& );
+        void* getStatePtr(char );
+        void setStatePtr(char, char*);
         static void task(void *pvParameters);
 };
 

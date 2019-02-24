@@ -1,5 +1,5 @@
 #include "spiffs.h"
-
+#define TAG "SPIFFS"
 /* Function to initialize SPIFFS */
 static esp_err_t spiffs_init(void)
 {
@@ -35,21 +35,25 @@ static esp_err_t spiffs_init(void)
     return ESP_OK;
 }
 
-static char* spiffs_read_file(char * filename) {
+static char* spiffs_read_file(char * filename, long *len) {
     ESP_LOGI(TAG, "loading file %s", filename);
     FILE *f = fopen(filename, "rb");
     if (f == NULL) return NULL;
 
     fseek(f, 0, SEEK_END);
-    long fsize = ftell(f);
+    *len = ftell(f);
     fseek(f, 0, SEEK_SET);  /* same as rewind(f); */
 
-    ESP_LOGI(TAG, "total size of file: %lu", fsize);
-    char *data = (char*)malloc(fsize + 1);
-    fread(data, fsize, 1, f);
+    ESP_LOGI(TAG, "total size of file: %lu", *len);
+    char *data = (char*)malloc(*len + 1);
+    fread(data, *len, 1, f);
     fclose(f);
     ESP_LOGI(TAG, "File read succesfully");
     return data;
+}
+static char* spiffs_read_file(char * filename) {
+    long len;
+    return spiffs_read_file(filename, &len);
 }
 
 static esp_err_t spiffs_write_file(char *filepath, char * data, uint16_t length) {
