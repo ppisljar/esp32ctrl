@@ -1,0 +1,18 @@
+import { pins, getTasks, getTaskValues } from './_defs';
+
+export const levelControl = {
+    defaults: () => ({
+        'settings.values[0].name': 'Output',
+    }),
+    params: {
+        name: 'Configuration',
+        configs: {
+            device: { name: 'Check Device', type: 'select', options: getTasks },
+            value: { name: 'Check Value', type: 'select', options: getTaskValues },
+            level: { name: 'Set Level', type: 'number' },
+            hysteresis: { name: 'Hysteresis', type: 'number' },
+        }
+    },
+    data: true,
+    vals: 1,
+}
