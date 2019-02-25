@@ -11,6 +11,7 @@
 
 #include "config.h"
 #include "../plugins/plugin.h"
+#include "rule_engine.h"
 
 /* Max length a file path can have on storage */
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
@@ -35,16 +36,7 @@ struct file_server_data {
 
 extern Config *cfg;
 extern Plugin *active_plugins[10];
-
-
-/* Handler to redirect incoming GET request for /index.html to / */
-static esp_err_t index_html_get_handler(httpd_req_t *req)
-{
-    httpd_resp_set_status(req, "301 Permanent Redirect");
-    httpd_resp_set_hdr(req, "Location", "/upload_script.html");
-    httpd_resp_send(req, NULL, 0);  // Response body can be empty
-    return ESP_OK;
-}
+extern uint8_t event_triggers[8];
 
 /* Send HTTP response with a run-time generated html consisting of
  * a list of all files and folders under the requested path */
@@ -450,8 +442,7 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
     ESP_LOGI(TAG, "File reception complete");
 
     /* Redirect onto root to see the updated file list */
-    httpd_resp_set_status(req, "303 See Other");
-    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_set_status(req, "200 OK");
     httpd_resp_sendstr(req, "File uploaded successfully");
     return ESP_OK;
 }
@@ -494,8 +485,7 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
     unlink(filepath);
 
     /* Redirect onto root to see the updated file list */
-    httpd_resp_set_status(req, "303 See Other");
-    httpd_resp_set_hdr(req, "Location", "/");
+    httpd_resp_set_status(req, "200 OK");
     httpd_resp_sendstr(req, "File deleted successfully");
     return ESP_OK;
 }
@@ -533,8 +523,6 @@ static esp_err_t plugins_post_handler(httpd_req_t *req)
 
 static esp_err_t plugins_handler(httpd_req_t *req)
 {
-    char filepath[FILE_PATH_MAX];
-    struct stat file_stat;
     char buf[512];
     int len;
     const char *filename = req->uri + sizeof("/plugins") - 1;
@@ -594,9 +582,38 @@ static esp_err_t reboot_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t event_handler(httpd_req_t *req)
+{
+    const char *eventName = req->uri + sizeof("/event/") - 1;
+    if (strlen(eventName) == 0 || eventName[strlen(eventName) - 1] == '/') {
+        // return list of all plugins
+        httpd_resp_send_404(req);
+        return ESP_OK;
+    }
+    ESP_LOGI(TAG, "received event: '%s'", eventName);
+
+    char* confData = spiffs_read_file("/spiffs/events.json"); // todo: possible memory leak in spiffs func
+    if (confData == NULL) {
+        httpd_resp_set_status(req, "200 OK");
+        httpd_resp_sendstr(req, "EVENT NOT FOUND"); // todo: json response
+    }
+    JsonObject& events = jb.parseObject(confData); // todo: problem with multuple clients overriding json object
+    ESP_LOGI(TAG, "events loaded: %d", (int)events["heat_off"]);
+    if (!events.containsKey(eventName)) {
+        httpd_resp_set_status(req, "200 OK");
+        httpd_resp_sendstr(req, "EVENT NOT FOUND"); // todo: json response
+        return ESP_OK;
+    }
+    uint8_t event = events[eventName];
+    TRIGGER_EVENT(event);
+    httpd_resp_set_status(req, "200 OK");
+    httpd_resp_sendstr(req, "OK");
+    return ESP_OK;
+}
+
 httpd_handle_t server = NULL;
 
-void quick_register(char * uri, httpd_method_t method,  esp_err_t handler(httpd_req_t *req), void *ctx) {
+void quick_register(const char * uri, httpd_method_t method,  esp_err_t handler(httpd_req_t *req), void *ctx) {
     httpd_uri_t uri_handler = {
         .uri       = uri,
         .method    = method,
@@ -638,6 +655,7 @@ esp_err_t start_file_server(const char *base_path)
      * allow the same handler to respond to multiple different
      * target URIs which match the wildcard scheme */
     config.uri_match_fn = httpd_uri_match_wildcard;
+    config.max_uri_handlers = 16;
 
     ESP_LOGI(TAG, "Starting HTTP Server");
     if (httpd_start(&server, &config) != ESP_OK) {
@@ -658,6 +676,8 @@ esp_err_t start_file_server(const char *base_path)
     quick_register("/plugins/*", HTTP_GET, plugins_handler, server_data);
     quick_register("/plugins/*", HTTP_POST, plugins_post_handler, server_data);
     //quick_register("/plugins/*", HTTP_DELETE, plugins_delete_handler, server_data);
+
+    quick_register("/event/*", HTTP_GET, event_handler, server_data);
 
     quick_register("/filelist", HTTP_GET, http_resp_dir_html, server_data);
     quick_register("/reboot", HTTP_GET, reboot_handler, server_data);

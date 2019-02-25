@@ -27,6 +27,7 @@ static const char *TAG = "example";
 #include "plugins/p003_bmp280.h"
 #include "plugins/p004_ds18x20.h"
 #include "plugins/p005_regulator.h"
+#include "plugins/p006_analog.h"
 
 #include "lib/rule_engine.h"
 
@@ -45,6 +46,7 @@ Plugin* DHTPlugin_myProtoype = Plugin::addPrototype(2, new DHTPlugin);
 Plugin* BMP280Plugin_myProtoype = Plugin::addPrototype(3, new BMP280Plugin);
 Plugin* DS18x20Plugin_myProtoype = Plugin::addPrototype(4, new DS18x20Plugin);
 Plugin* RegulatorPlugin_myProtoype = Plugin::addPrototype(5, new RegulatorPlugin);
+Plugin* AnalogPlugin_myProtoype = Plugin::addPrototype(6, new AnalogPlugin);
 
 extern "C" void app_main()
 {
@@ -69,10 +71,6 @@ extern "C" void app_main()
 
     // todo: initialize services
 
-    // todo: start rule engine task
-    
-    // todo: init plugins
-    
     JsonArray &plugins = cfgObject["plugins"];
     int pi = 0;
     for (auto plugin : plugins){
@@ -80,18 +78,20 @@ extern "C" void app_main()
         active_plugins[pi] = Plugin::getPluginInstance((int)plugin["type"]);
         active_plugins[pi]->init(plugin);
         pi++;
-
-    //     //struct plugin_definition *p = plugin_sys_get(plugin["type"]);
-    //     //Plugin p = new p->plugin_class;
-    //     // get the plugin class
-    //     // create new instance
-    //     // store it to the list of initialized plugins
     }
 
-    // open rule file and read it in
     long rule_length;
     uint8_t *rules = (uint8_t*)spiffs_read_file("/spiffs/rules.dat", &rule_length);
-    parse_rules(rules, rule_length);
+    if (rules != NULL && rule_length > 0) {
+        ESP_LOGI(TAG, "parsing rule file of size: %ld", rule_length);
+        parse_rules(rules, rule_length);
+    }
+
+    for(;;) {
+        ESP_LOGD(TAG, "executing rule engine");
+        run_rules();
+        vTaskDelay( 1000 / portTICK_PERIOD_MS);
+    }
 }
 
 // when configuration is updated: (how to detect it ?) easiest way is to reboot ... web endpoint to save config (thru Config object), somewhere along the way we check what needs to be updated
