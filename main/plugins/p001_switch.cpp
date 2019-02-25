@@ -3,7 +3,6 @@
 const char *P001_TAG = "SwitchPlugin";
 
 PLUGIN_CONFIG(SwitchPlugin, interval, gpio)
-PLUGIN_STATS(SwitchPlugin, state, state)
 
 void SwitchPlugin::task(void * pvParameters)
 {
@@ -36,4 +35,24 @@ bool SwitchPlugin::init(JsonObject &params) {
 
     xTaskCreatePinnedToCore(this->task, P001_TAG, 4096, this, 5, NULL, 1);
     return true;
+}
+
+bool SwitchPlugin::getState(JsonObject &params) {
+    params["state"] = state;
+    return true;
+}
+
+bool SwitchPlugin::setState(JsonObject &params) {
+    state = params["state"];
+    return true;
+}
+
+void* SwitchPlugin::getStatePtr(uint8_t val) {
+    ESP_LOGI(P001_TAG, "return state ptr %d (%p)", val, &state);
+    if (val == 0) return &state;
+    return NULL;
+}
+
+void SwitchPlugin::setStatePtr(uint8_t n, uint8_t *val) {
+    if (n == 0) state = *val;
 }

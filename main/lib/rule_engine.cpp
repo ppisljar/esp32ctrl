@@ -35,7 +35,7 @@ bool compare(byte** ptr, byte *val, byte *old) {
             case 6: // <>
                 break;
         }
-        old[i] = val[i];
+        old[i] = 1; //val[i];
     }
     *ptr+= cmd[1];
     return match;
@@ -50,20 +50,24 @@ bool multi_compare(byte **ptr) {
     cmd++;
     byte *old;
     for (byte i = 0; i < len; i++) {
-        ESP_LOGI(TAG_RE, "reading plugin variable");
+
         Plugin *p = active_plugins[cmd[0]];
         byte *var = (byte*)p->getStatePtr(cmd[1]);
-        ESP_LOGI(TAG_RE, "getting ptr to old data");
+        ESP_LOGI(TAG_RE, "reading plugin %d (%p) variable %d (%p)", cmd[0], p, cmd[1], var);
+
         uint16_t oldId = *cmd;
         if (!rule_data_ptrs[oldId]) {
             rule_data_ptrs[oldId] = old_values + old_values_free_ptr;
             old_values_free_ptr += cmd[4];
         }
         old = (byte*)rule_data_ptrs[oldId];
+        ESP_LOGI(TAG_RE, "getting ptr to old data (%p)", old);
         cmd+=2;
         ESP_LOGI(TAG_RE, "comparing");
         if (!compare(&cmd, var, old)) match = false;
+
     }
+    *ptr = cmd;
     return match;
 }
 
@@ -80,20 +84,21 @@ int parse_rules(byte *rules, long len) {
 
 int lastrun = 0;
 void run_rules() {
+    uint16_t diff = ((xTaskGetTickCount() * portTICK_PERIOD_MS) - lastrun) / 10; // todo: needs to check for overflow
+    ESP_LOGD(TAG_RE, "diff since last run: %d (%li)", diff, (long)((xTaskGetTickCount() * portTICK_PERIOD_MS) - lastrun));
+    for (byte ti = 0; ti < 16; ti++) {
+        ESP_LOGD(TAG_RE, "checking timer %d time: %d", ti, timers[ti]);
+        if (timers[ti] > 0) timers[ti] = timers[ti] > diff ? timers[ti] - diff : 0;
+    }
+
     for (auto rule : rule_list) {
-        if (rule == NULL) return;
-        ESP_LOGI(TAG_RE, "checking rule [%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
+        if (rule == NULL) continue;
+        ESP_LOGI(TAG_RE, "checking rule type:[%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
         byte *cmd = rule;
         byte *old;
         uint16_t oldId;
         Plugin *p;
         byte *var;
-
-        uint16_t diff = (xTaskGetTickCount() * portTICK_PERIOD_MS) - lastrun; // todo: needs to check for overflow
-        for (byte ti = 0; ti < 16; ti++) {
-            if (timers[ti] > 0) timers[ti] = timers[ti] > diff ? timers[ti] - diff : 0;
-        }
-
         bool match = false;
 
         switch (cmd[0]) { // trigger type (0: var, 1: event, 2: timer, 3: system
@@ -119,8 +124,12 @@ void run_rules() {
                 break;
             // timer
             case 2:
+                ESP_LOGI(TAG_RE, "checking timer %d time: %d", cmd[1], timers[cmd[1]]);
                 match = IS_TIMER_TRIGGERED(cmd[1]);
-                if (match) CLEAR_TIMER(cmd[1]);
+                if (match) {
+                    ESP_LOGI(TAG_RE, "timer %d triggered, clearing", cmd[1]);
+                    CLEAR_TIMER(cmd[1]);
+                }
                 cmd += 2;
                 break;
         }
@@ -146,8 +155,8 @@ void run_rules() {
                         cmd += 2;
                         break;
                     case CMD_TIMER:
-                        ESP_LOGI(TAG_RE, "cmd triggering timer %d", cmd[1]);
-                        TRIGGER_TIMER(cmd[1], cmd[2]);
+                        ESP_LOGI(TAG_RE, "cmd triggering timer %d time: %d", cmd[1], cmd[2]*100);
+                        TRIGGER_TIMER(cmd[1], cmd[2]*100);
                         cmd += 3;
                         break;
                     // sets state on device
@@ -197,5 +206,7 @@ void run_rules() {
         }
     }
 
+
     lastrun = xTaskGetTickCount() * portTICK_PERIOD_MS;
+    ESP_LOGD(TAG_RE, "updated last run to %d", lastrun);
 }
