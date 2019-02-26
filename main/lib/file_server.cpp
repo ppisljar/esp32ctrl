@@ -490,7 +490,7 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-StaticJsonBuffer<JSON_OBJECT_SIZE(10)> jb;
+StaticJsonBuffer<JSON_OBJECT_SIZE(20)> jb;
 static esp_err_t plugins_post_handler(httpd_req_t *req)
 {
 
@@ -545,6 +545,28 @@ static esp_err_t plugins_handler(httpd_req_t *req)
     // plugin.set("state", varObject);
 
     len = plugin.printTo(buf, 512);
+    httpd_resp_send_chunk(req, buf, len);
+    httpd_resp_sendstr_chunk(req, NULL);
+
+    // try to get specific registered plugin
+    return ESP_OK;
+}
+
+
+
+static esp_err_t plugins_state_handler(httpd_req_t *req)
+{
+    char buf[512];
+    int len;
+
+    JsonArray& plugins = jb.createArray();
+    for (auto plugin : active_plugins) {
+        if (plugin == NULL) continue;
+        JsonObject &p = plugins.createNestedObject();
+        plugin->getState(p);
+    }
+
+    len = plugins.printTo(buf, 512);
     httpd_resp_send_chunk(req, buf, len);
     httpd_resp_sendstr_chunk(req, NULL);
 
@@ -676,6 +698,7 @@ esp_err_t start_file_server(const char *base_path)
     quick_register("/plugins/*", HTTP_GET, plugins_handler, server_data);
     quick_register("/plugins/*", HTTP_POST, plugins_post_handler, server_data);
     //quick_register("/plugins/*", HTTP_DELETE, plugins_delete_handler, server_data);
+    quick_register("/plugin_state/*", HTTP_GET, plugins_state_handler, server_data);
 
     quick_register("/event/*", HTTP_GET, event_handler, server_data);
 

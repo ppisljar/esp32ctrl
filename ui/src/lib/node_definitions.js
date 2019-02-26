@@ -59,13 +59,9 @@ export const nodes = [
         inputs: [1],
         outputs: [1, 2],
         config: [{
-            name: 'device',
-            type: 'number',
-            values: ['Clock#Time'],
-        }, {
-            name: 'variable',
-            type: 'number',
-            values: ['Clock#Time'],
+            name: 'state',
+            type: 'select',
+            values: [],
         },{
             name: 'equality',
             type: 'select',
@@ -76,10 +72,11 @@ export const nodes = [
         }],
         indent: true,
         toString: function() {
-            return `IF ${this.config[0].value}${this.config[1].value}${this.config[2].value}`;
+            return `IF ${this.config[0].values.find(v => v.value == this.config[0].value).name}${this.config[1].value}${this.config[2].value}`;
         },
         toDsl: function() {
-            return [`\xFC\x01${String.fromCharCode(this.config[0].value)}${String.fromCharCode(this.config[1].value)}${String.fromCharCode(this.config[2].value)}\x01${String.fromCharCode(this.config[3].value)}%%output%%`, `\xFD%%output%%\xFE`];
+            const devprop = this.config[0].value.split('-').map(v => String.fromCharCode(v)).join('');
+            return [`\xFC\x01${devprop}${String.fromCharCode(this.config[1].value)}\x01${String.fromCharCode(this.config[2].value)}%%output%%`, `\xFD%%output%%\xFE`];
         }
     }, {
         group: 'LOGIC',
@@ -98,6 +95,27 @@ export const nodes = [
         }
     },
     // ACTIONS
+    {
+        group: 'ACTIONS',
+        type: 'set state',
+        inputs: [1],
+        outputs: [1],
+        config: [{
+            name: 'state',
+            type: 'select',
+            values: [],
+        }, {
+            name: 'value',
+            type: 'select',
+            values: [0, 1],
+        }],
+        toString: function() {
+            return `SET ${this.config[0].values.find(v => v.value == this.config[0].value).name} = ${this.config[1].value}`;
+        },
+        toDsl: function() {
+            return [`\xF0${this.config[0].value}\x01${String.fromCharCode(this.config[1].value)}`];
+        }
+    },
     {
         group: 'ACTIONS',
         type: 'GPIO',

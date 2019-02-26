@@ -48,7 +48,7 @@ bool SwitchPlugin::setState(JsonObject &params) {
 }
 
 void* SwitchPlugin::getStatePtr(uint8_t val) {
-    ESP_LOGI(P001_TAG, "return state ptr %d (%p)", val, &state);
+    ESP_LOGD(P001_TAG, "return state ptr %d (%p)", val, &state);
     if (val == 0) return &state;
     return NULL;
 }

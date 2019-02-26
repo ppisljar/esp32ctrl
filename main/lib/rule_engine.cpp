@@ -18,14 +18,16 @@ extern Plugin *active_plugins[10];
 // comparison: [type][len][value] : x>5
 bool compare(byte** ptr, byte *val, byte *old) {
     byte *cmd = *ptr;
-    ESP_LOGI(TAG_RE, "compare val(%p) old(%p) [%x %x %x]", val, old, cmd[0], cmd[1], cmd[2]);
+    
     bool match = true;
     for (byte i = 0; i < cmd[1]; i++) {
         switch (cmd[0]) {
             case 0: // every change
-                if (cmd[i + 2] != old[i]) match = false;
+                ESP_LOGI(TAG_RE, "compare val(%p):%d old(%p):%d", val, val[i], old, old[i]);
+                if (val[i] == old[i]) match = false;
                 break;
             case 1: // equals
+                ESP_LOGI(TAG_RE, "compare val(%p):%d to :%d", val, val[i], cmd[i + 2]);
                 if (cmd[i + 2] != val[i]) match = false;
                 break;
             case 2: // <
@@ -35,9 +37,9 @@ bool compare(byte** ptr, byte *val, byte *old) {
             case 6: // <>
                 break;
         }
-        old[i] = 1; //val[i];
+        old[i] = 1; // todo: val[i];
     }
-    *ptr+= cmd[1];
+    *ptr+= cmd[1] + 2;
     return match;
 }
 
