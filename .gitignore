@@ -3,3 +3,4 @@ build/
 makefs.sh
 spiffs.bin
 sdkconfig.old
+sdkconfig

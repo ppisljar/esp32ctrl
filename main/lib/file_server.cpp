@@ -511,6 +511,7 @@ static esp_err_t plugins_post_handler(httpd_req_t *req)
     char buf[512];
     int remaining = req->content_len;
     httpd_req_recv(req, buf, MIN(remaining, 512));
+    jb.clear();
     JsonObject& params = jb.parseObject(buf);
     active_plugins[plugin_id]->setConfig(params);
 
@@ -559,6 +560,7 @@ static esp_err_t plugins_state_handler(httpd_req_t *req)
     char buf[512];
     int len;
 
+    jb.clear();
     JsonArray& plugins = jb.createArray();
     for (auto plugin : active_plugins) {
         if (plugin == NULL) continue;
@@ -619,6 +621,7 @@ static esp_err_t event_handler(httpd_req_t *req)
         httpd_resp_set_status(req, "200 OK");
         httpd_resp_sendstr(req, "EVENT NOT FOUND"); // todo: json response
     }
+    jb.clear();
     JsonObject& events = jb.parseObject(confData); // todo: problem with multuple clients overriding json object
     ESP_LOGI(TAG, "events loaded: %d", (int)events["heat_off"]);
     if (!events.containsKey(eventName)) {
