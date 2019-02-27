@@ -13,7 +13,7 @@ export const getConfigNodes = async (devices) => {
     const vars = [];
     const nodes = devices.map((device, i) => {
         const taskValues = device.settings.values || [];
-        taskValues.map((value, j) => vars.push({ value: `${i}${j}`, name: `${device.name}#${value.name}` }));
+        taskValues.map((value, j) => vars.push({ value: `${i}-${j}`, name: `${device.name}#${value.name}` }));
         const result = [{
             group: 'TRIGGERS',
             type: device.name || `${i}-${device.type}`,

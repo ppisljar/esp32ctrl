@@ -65,18 +65,20 @@ export const nodes = [
         },{
             name: 'equality',
             type: 'select',
-            values: ['=', '<', '>', '<=', '>=', '!=']
+            values: ['changed', '=', '<', '>', '<=', '>=', '!=']
         },{
             name: 'value',
             type: 'text',
         }],
         indent: true,
         toString: function() {
-            return `IF ${this.config[0].values.find(v => v.value == this.config[0].value).name}${this.config[1].value}${this.config[2].value}`;
+            const val = this.config[0].values.find(v => v.value == this.config[0].value);
+            return `IF ${val ? val.name : ''}${this.config[1].value}${this.config[2].value}`;
         },
         toDsl: function() {
+            const eq = this.config[1].values.findIndex(v => v === this.config[1].value);
             const devprop = this.config[0].value.split('-').map(v => String.fromCharCode(v)).join('');
-            return [`\xFC\x01${devprop}${String.fromCharCode(this.config[1].value)}\x01${String.fromCharCode(this.config[2].value)}%%output%%`, `\xFD%%output%%\xFE`];
+            return [`\xFC\x01${devprop}${String.fromCharCode(eq)}\x01${String.fromCharCode(this.config[2].value)}%%output%%`, `\xFD%%output%%\xFE`];
         }
     }, {
         group: 'LOGIC',
@@ -110,10 +112,12 @@ export const nodes = [
             values: [0, 1],
         }],
         toString: function() {
-            return `SET ${this.config[0].values.find(v => v.value == this.config[0].value).name} = ${this.config[1].value}`;
+            const val = this.config[0].values.find(v => v.value == this.config[0].value);
+            return `SET ${val ? val.name : ''} = ${this.config[1].value}`;
         },
         toDsl: function() {
-            return [`\xF0${this.config[0].value}\x01${String.fromCharCode(this.config[1].value)}`];
+            const devprop = this.config[0].value.split('-').map(v => String.fromCharCode(v)).join('');
+            return [`\xF0${devprop}\x01${String.fromCharCode(this.config[1].value)}`];
         }
     },
     {

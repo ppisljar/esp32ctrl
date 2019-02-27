@@ -37,6 +37,10 @@ const loadChart = (config, chart, from) => {
                 cfg.value = config.v[i];
             });
             node.render();
+            node.destroy = () => {
+                chart.renderedNodes.splice( chart.renderedNodes.indexOf(node), 1 );
+                node = null;
+            };
             chart.renderedNodes.push(node);
         }
         
@@ -484,7 +488,7 @@ export class FlowEditor {
             node.destroy = () => {
                 this.renderedNodes.splice( this.renderedNodes.indexOf(node), 1 );
                 node = null;
-            }
+            };
             this.renderedNodes.push(node);            
         });
     }

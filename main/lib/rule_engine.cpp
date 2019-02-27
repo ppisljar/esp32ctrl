@@ -97,7 +97,7 @@ void run_rules() {
 
     for (auto rule : rule_list) {
         if (rule == NULL) continue;
-        ESP_LOGI(TAG_RE, "checking rule type:[%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
+        ESP_LOGD(TAG_RE, "checking rule type:[%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
         byte *cmd = rule;
         byte *old;
         uint16_t oldId;
@@ -128,10 +128,10 @@ void run_rules() {
                 break;
             // timer
             case 2:
-                ESP_LOGI(TAG_RE, "checking timer %d time: %d", cmd[1], timers[cmd[1]]);
+                ESP_LOGD(TAG_RE, "checking timer %d time: %d", cmd[1], timers[cmd[1]]);
                 match = IS_TIMER_TRIGGERED(cmd[1]);
                 if (match) {
-                    ESP_LOGI(TAG_RE, "timer %d triggered, clearing", cmd[1]);
+                    ESP_LOGD(TAG_RE, "timer %d triggered, clearing", cmd[1]);
                     CLEAR_TIMER(cmd[1]);
                 }
                 cmd += 2;
@@ -165,8 +165,9 @@ void run_rules() {
                         break;
                     // sets state on device
                     case CMD_SET:
-                        ESP_LOGI(TAG_RE, "cmd set %d", cmd[1]);
+                        ESP_LOGI(TAG_RE, "cmd set %d %d", cmd[1], cmd[2]);
                         p = active_plugins[cmd[1]];
+                        ESP_LOGI(TAG_RE, "cmd set %p %p", p, cmd+4);
                         // we need to know variable name ...
                         // 1. it can be in the rules, will make it slower
                         // 2. we can allow setting variable name by index
@@ -174,7 +175,7 @@ void run_rules() {
 
                         // we need to get value
                         // 1. this depends on the type of variable: byte, 2 bytes, 4 bytes, string
-                        cmd += cmd[3]; // increase by the amount of bytes this command took
+                        cmd += cmd[3] + 4; // increase by the amount of bytes this command took
                         break;
                     // if statement
                     case CMD_IF:
