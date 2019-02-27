@@ -37,6 +37,7 @@ struct file_server_data {
 extern Config *cfg;
 extern Plugin *active_plugins[10];
 extern uint8_t event_triggers[8];
+extern int averagerun;
 
 /* Send HTTP response with a run-time generated html consisting of
  * a list of all files and folders under the requested path */
@@ -633,6 +634,28 @@ static esp_err_t event_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t system_handler(httpd_req_t *req)
+{
+    char buf[512];
+    int len; int ret;
+
+    jb.clear();
+    JsonObject& sys = jb.createObject();
+    sys["uptime"] = xTaskGetTickCount() * portTICK_PERIOD_MS / 1000;
+    sys["heap"] = xPortGetFreeHeapSize();
+
+    sys["re_exec_time"] = averagerun;
+    size_t total = 0, used = 0;
+    ret = esp_spiffs_info(NULL, &total, &used);
+    sys["fs_total"] = total;
+    sys["fs_used"] = used;
+    
+    len = sys.printTo(buf, 512);
+    httpd_resp_send_chunk(req, buf, len);
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+
 httpd_handle_t server = NULL;
 
 void quick_register(const char * uri, httpd_method_t method,  esp_err_t handler(httpd_req_t *req), void *ctx) {
@@ -701,6 +724,7 @@ esp_err_t start_file_server(const char *base_path)
     quick_register("/plugin_state/*", HTTP_GET, plugins_state_handler, server_data);
 
     quick_register("/event/*", HTTP_GET, event_handler, server_data);
+    quick_register("/system", HTTP_GET, system_handler, server_data);
 
     quick_register("/filelist", HTTP_GET, http_resp_dir_html, server_data);
     quick_register("/reboot", HTTP_GET, reboot_handler, server_data);

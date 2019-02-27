@@ -6,7 +6,7 @@
 
 class RegulatorPlugin: public Plugin {
     private:
-        bool output;
+        bool output = 0;
         JsonObject *cfg;
         StaticJsonBuffer<JSON_OBJECT_SIZE(3)> jb;
     public:

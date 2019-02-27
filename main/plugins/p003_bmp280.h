@@ -7,9 +7,9 @@
 
 class BMP280Plugin: public Plugin {
     private:
-        float temperature;
-        float pressure;
-        float humidity;
+        float temperature = 0;
+        float pressure = 0;
+        float humidity = 0;
         int type = 0;
         JsonObject *cfg;
     public:

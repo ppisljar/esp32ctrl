@@ -5,9 +5,9 @@
 
 class SwitchPlugin: public Plugin {
     private:
-        int interval;
-        int gpio;
-        bool state;
+        int interval = 60;
+        int gpio = 255;
+        bool state = 0;
         JsonObject *cfg;
     public:
         Plugin* clone() const { 

@@ -84,8 +84,10 @@ int parse_rules(byte *rules, long len) {
     return rules_found;
 }
 
+int averagerun = 1000;
 int lastrun = 0;
 void run_rules() {
+    int startrun = (xTaskGetTickCount() * portTICK_PERIOD_MS);
     uint16_t diff = ((xTaskGetTickCount() * portTICK_PERIOD_MS) - lastrun) / 10; // todo: needs to check for overflow
     ESP_LOGD(TAG_RE, "diff since last run: %d (%li)", diff, (long)((xTaskGetTickCount() * portTICK_PERIOD_MS) - lastrun));
     for (byte ti = 0; ti < 16; ti++) {
@@ -210,5 +212,7 @@ void run_rules() {
 
 
     lastrun = xTaskGetTickCount() * portTICK_PERIOD_MS;
+    averagerun = (9* averagerun + (lastrun - startrun))/10;
+
     ESP_LOGD(TAG_RE, "updated last run to %d", lastrun);
 }

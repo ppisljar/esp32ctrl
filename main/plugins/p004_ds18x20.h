@@ -9,7 +9,7 @@ class DS18x20Plugin: public Plugin {
     private:
         float temperature[16];
         ds18x20_addr_t addrs[16];
-        int sensor_count;
+        int sensor_count = 0;
         JsonObject *cfg;
     public:
         Plugin* clone() const {

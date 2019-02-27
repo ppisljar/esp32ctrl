@@ -10,7 +10,7 @@
 
 class AnalogPlugin: public Plugin {
     private:
-        int value;
+        int value = 0;
         JsonObject *cfg;
     public:
         Plugin* clone() const {
