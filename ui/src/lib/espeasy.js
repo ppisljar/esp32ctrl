@@ -2,11 +2,11 @@ import miniToastr from 'mini-toastr';
 import { loader } from './loader';
 
 export const getJsonStat = async (url = '') => {
-    return await fetch(`${url}/json`).then(response => response.json())
+    return await fetch(`${url}/plugin_state/`).then(response => response.json())
 }
 
 export const loadDevices = async (url) => {
-    return getJsonStat(url).then(response => response.Sensors);
+    return getJsonStat(url); //.then(response => response.Sensors);
 }
 
 export const getConfigNodes = async (devices) => {

@@ -32,8 +32,12 @@ export class DevicesPage extends Component {
                 const device = devices.find(d => d.value === task.type);
                 const deviceType = device ? device.name : '--unknown--';
                 const enabledProp = `plugins[${i}].enabled`;
-                const deviceLive = this.state.devices.find(device => device.TaskNumber == i);
-                const vals = deviceLive ? deviceLive.TaskValues : [];
+                const deviceLive = this.state.devices[i];
+                const vals = deviceLive ? Object.keys(deviceLive).map(key => ({ name: key, value: deviceLive[key]})) : [];
+                vals.forEach(v => {
+                    if (v.value === true) v.value = 1;
+                    if (v.value === false) v.value = 0;
+                });
                 return (
                     <div class="device">
                         <div class="info">
@@ -43,7 +47,7 @@ export class DevicesPage extends Component {
                         </div>
                         <div class="vars">
                          {vals.map(v => {
-                                return (<span>{v.Name}: {v.Value} </span>);
+                                return (<span>{v.name}: {v.value} </span>);
                             })}
                         </div>
                     </div>
@@ -65,7 +69,7 @@ export class DevicesPage extends Component {
     }
 
     componentDidMount() {
-        //this.fetchDevices();
+        this.fetchDevices();
     }
 
     componentWillMount() {
