@@ -22,6 +22,7 @@ static const char *TAG = "example";
 #include "lib/file_server.h"
 #include "wifi.h"
 #include "plugins/plugin.h"
+#include "plugins/c001_i2c.h"
 #include "plugins/p001_switch.h"
 #include "plugins/p002_dht.h"
 #include "plugins/p003_bmp280.h"
@@ -41,6 +42,7 @@ struct status {
 
 struct status status;
 
+Plugin* I2CPlugin_myProtoype = Plugin::addPrototype(10, new I2CPlugin);
 Plugin* SwitchPlugin_myProtoype = Plugin::addPrototype(1, new SwitchPlugin);
 Plugin* DHTPlugin_myProtoype = Plugin::addPrototype(2, new DHTPlugin);
 Plugin* BMP280Plugin_myProtoype = Plugin::addPrototype(3, new BMP280Plugin);
