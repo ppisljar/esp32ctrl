@@ -15,6 +15,12 @@ void IO::addAnalogPins(uint8_t number, struct IO_ANALOG_PINS *pins) {
     io_a_pins.push_back(pins);
 }
 
+void IO::addPWMPins(uint8_t number, struct IO_PWM_PINS *pins) {
+    pins->start = io_p_pins.empty() ? 0 : io_p_pins.back()->end + 1;
+    pins->end = pins->start + number;
+    io_p_pins.push_back(pins);
+}
+
 struct IO_DIGITAL_PINS* IO::getDigitalPin(uint8_t pin_nr) {
     for (struct IO_DIGITAL_PINS *pin: io_d_pins) {
         if (pin_nr >= pin->start && pin_nr <= pin->end) {
@@ -26,6 +32,15 @@ struct IO_DIGITAL_PINS* IO::getDigitalPin(uint8_t pin_nr) {
 
 struct IO_ANALOG_PINS* IO::getAnalogPin(uint8_t pin_nr) {
     for (struct IO_ANALOG_PINS *pin: io_a_pins) {
+        if (pin_nr >= pin->start && pin_nr <= pin->end) {
+            return pin;
+        }
+    }
+    return NULL;
+}
+
+struct IO_PWM_PINS* IO::getPWMPin(uint8_t pin_nr) {
+    for (struct IO_PWM_PINS *pin: io_p_pins) {
         if (pin_nr >= pin->start && pin_nr <= pin->end) {
             return pin;
         }

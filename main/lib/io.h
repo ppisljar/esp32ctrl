@@ -26,18 +26,28 @@ struct IO_ANALOG_PINS {
   io_analog_read_fn_t* analog_read = 0;
 };
 
+struct IO_PWM_PINS {
+  uint8_t start;
+  uint8_t end;
+  io_analog_write_fn_t* analog_write = 0;
+  io_analog_read_fn_t* analog_read = 0;
+};
+
 class IO
 {
     private:
         static std::list<struct IO_DIGITAL_PINS*> io_d_pins;
         static std::list<struct IO_ANALOG_PINS*> io_a_pins;
+        static std::list<struct IO_PWM_PINS*> io_p_pins;
     public:
         IO() {}
 
         static void addDigitalPins(uint8_t number, struct IO_DIGITAL_PINS *pins);
         static void addAnalogPins(uint8_t number, struct IO_ANALOG_PINS *pins);
+        static void addPWMPins(uint8_t number, struct IO_PWM_PINS *pins);
         static struct IO_DIGITAL_PINS* getDigitalPin(uint8_t pin_nr);
         static struct IO_ANALOG_PINS* getAnalogPin(uint8_t pin_nr);
+        static struct IO_PWM_PINS* getPWMPin(uint8_t pin_nr);
 
         uint8_t digitalRead(uint8_t pin);
         esp_err_t digitalWrite(uint8_t pin, bool value);
