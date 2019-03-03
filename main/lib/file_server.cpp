@@ -12,6 +12,7 @@
 #include "config.h"
 #include "../plugins/plugin.h"
 #include "rule_engine.h"
+#include "logging.h"
 
 /* Max length a file path can have on storage */
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
@@ -659,6 +660,13 @@ static esp_err_t system_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t logs_handler(httpd_req_t *req)
+{
+    xlog_web(req);
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+
 httpd_handle_t server = NULL;
 
 void quick_register(const char * uri, httpd_method_t method,  esp_err_t handler(httpd_req_t *req), void *ctx) {
@@ -728,6 +736,7 @@ esp_err_t start_file_server(const char *base_path)
 
     quick_register("/event/*", HTTP_GET, event_handler, server_data);
     quick_register("/system", HTTP_GET, system_handler, server_data);
+    quick_register("/logs", HTTP_GET, logs_handler, server_data);
 
     quick_register("/filelist", HTTP_GET, http_resp_dir_html, server_data);
     quick_register("/reboot", HTTP_GET, reboot_handler, server_data);

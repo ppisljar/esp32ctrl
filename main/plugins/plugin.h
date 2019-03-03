@@ -3,9 +3,13 @@
 
 #include "ArduinoJson.h"
 #include "esp_log.h"
+#include "esp_system.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "../lib/io.h"
 #include <map>
+
+extern IO io;
 
 #define __CONCATENATE(arg1, arg2) __CONCATENATE2(arg1, arg2)
 #define __CONCATENATE1(arg1, arg2) __CONCATENATE2(arg1, arg2)

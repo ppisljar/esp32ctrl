@@ -29,12 +29,19 @@ static const char *TAG = "example";
 #include "plugins/p004_ds18x20.h"
 #include "plugins/p005_regulator.h"
 #include "plugins/p006_analog.h"
+#include "plugins/p007_ads111x.h"
+#include "plugins/p008_mcp23017.h"
+#include "plugins/p009_pcf8574.h"
 
 #include "lib/rule_engine.h"
+#include "lib/logging.h"
+#include "lib/io.h"
 
 // global config object
 Config *cfg;
 Plugin *active_plugins[10];
+I2CPlugin *i2c_plugin;
+IO io;
 
 struct status {
     bool wifi_connected = false;
@@ -42,13 +49,15 @@ struct status {
 
 struct status status;
 
-Plugin* I2CPlugin_myProtoype = Plugin::addPrototype(10, new I2CPlugin);
 Plugin* SwitchPlugin_myProtoype = Plugin::addPrototype(1, new SwitchPlugin);
 Plugin* DHTPlugin_myProtoype = Plugin::addPrototype(2, new DHTPlugin);
 Plugin* BMP280Plugin_myProtoype = Plugin::addPrototype(3, new BMP280Plugin);
 Plugin* DS18x20Plugin_myProtoype = Plugin::addPrototype(4, new DS18x20Plugin);
 Plugin* RegulatorPlugin_myProtoype = Plugin::addPrototype(5, new RegulatorPlugin);
 Plugin* AnalogPlugin_myProtoype = Plugin::addPrototype(6, new AnalogPlugin);
+Plugin* ADS111xPlugin_myProtoype = Plugin::addPrototype(7, new ADS111xPlugin);
+Plugin* MCP23017Plugin_myProtoype = Plugin::addPrototype(8, new MCP23017Plugin);
+Plugin* PCF8574Plugin_myProtoype = Plugin::addPrototype(8, new PCF8574Plugin);
 
 extern "C" void app_main()
 {
@@ -72,13 +81,32 @@ extern "C" void app_main()
     initialise_wifi(cfgObject["wifi"]["ssid"], cfgObject["wifi"]["pass"], &status);   
 
     // todo: initialize services
+    //JsonObject &io_cfg = cfgObject["io"];
+    struct IO_DIGITAL_PINS pins;
+    pins.set_direction = (io_set_direction_fn_t*)gpio_set_direction;
+    pins.digital_read = (io_digital_read_fn_t*)gpio_get_level;
+    pins.digital_write = (io_digital_write_fn_t*)gpio_set_level;
+    //pins.analog_read = gpio_get_level;
+    //pins.analog_write = gpio_set_level;
+    io.addDigitalPins(40, &pins);
+
+    if (cfgObject["hardware"]["i2c"]["enabled"]) {
+        JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];
+        i2c_plugin = new I2CPlugin();
+        i2c_plugin->init(i2c_conf);
+    }
+
+//    if (cfgObject["ntp"]["enabled"]) {
+//        initNTP(cfgObject["ntp"]);
+//    }
 
     JsonArray &plugins = cfgObject["plugins"];
     int pi = 0;
     for (auto plugin : plugins){
+        JsonObject& params = plugin["params"];
         ESP_LOGI(TAG, "initializing plugin type: %i", (int)plugin["type"]);
         active_plugins[pi] = Plugin::getPluginInstance((int)plugin["type"]);
-        active_plugins[pi]->init(plugin);
+        active_plugins[pi]->init(params);
         pi++;
     }
 
@@ -88,6 +116,8 @@ extern "C" void app_main()
         ESP_LOGI(TAG, "parsing rule file of size: %ld", rule_length);
         parse_rules(rules, rule_length);
     }
+
+    init_logging();
 
     for(;;) {
         ESP_LOGD(TAG, "executing rule engine");

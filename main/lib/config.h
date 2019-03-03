@@ -7,6 +7,8 @@
 #define config_filename "/spiffs/config.json"
 #define config_default_json "{\"wifi\":{\"ssid\":\"Teltonika_Router\",\"pass\":\"secpass123\"},\"plugins\":[]}"
 
+
+
 class Config
 {
     private:

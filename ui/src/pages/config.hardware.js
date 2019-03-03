@@ -26,6 +26,11 @@ const pinState = [
     { name: 'Input', value: 3 },
 ];
 
+const freq = [
+    { name: '100kHz', value: 100000 },
+    { name: '400kHz', value: 400000 }
+];
+
 const formConfig = {
     groups: {
         led: {
@@ -44,8 +49,10 @@ const formConfig = {
         i2c: {
             name: 'I2C Settings',
             configs: {
+                enabled: { name: 'Enabled', type: 'checkbox' },
                 sda: { name: 'GPIO - SDA', type: 'select', options: pins },
                 scl: { name: 'GPIO - SCL', type: 'select', options: pins },
+                freq: { name: 'Frequency', type: 'select', options: freq }
             }
         },
         spi: {

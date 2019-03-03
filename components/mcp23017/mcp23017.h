@@ -11,7 +11,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include <i2cdev.h>
+#include <I2Cdev.h>
 
 #define MCP23017_I2C_ADDR_BASE 0x20
 
@@ -49,35 +49,6 @@ typedef enum
     MCP23017_INT_ANY_EDGE      //!< Interrupt on any edge
 } mcp23017_gpio_intr_t;
 
-/**
- * @brief Initialize device descriptior
- * SCL frequency is 1MHz
- * @param dev Pointer to I2C device descriptor
- * @param port I2C port number
- * @param addr I2C address,
- * @param sda_gpio SDA GPIO
- * @param scl_gpio SCL GPIO
- * @return `ESP_OK` on success
- */
-esp_err_t mcp23017_init_desc(i2c_dev_t *dev, i2c_port_t port, uint8_t addr, gpio_num_t sda_gpio, gpio_num_t scl_gpio);
-
-/**
- * @brief Free device descriptor
- * @param dev Pointer to I2C device descriptor
- * @return `ESP_OK` on success
- */
-esp_err_t mcp23017_free_desc(i2c_dev_t *dev);
-
-/**
- * @brief Enable or disable I2C hardware addressing (usage of pins A0..A2)
- * Warining! According to the datasheet, hardware addressing is disabled by default.
- * @param dev Pointer to I2C device descriptor
- * @param enable `true` to enable hardware addressing
- * @param new_addr New I2C address (`0b0100<A2><A1><A0>` after the addressing enabled).
- *                 If `enable` is `false`, address will be set automatically
- * @return `ESP_OK` on success
- */
-esp_err_t mcp23017_setup_hw_addr(i2c_dev_t *dev, bool enable, uint8_t new_addr);
 
 /**
  * Get INTA/INTB pins mode
@@ -85,7 +56,7 @@ esp_err_t mcp23017_setup_hw_addr(i2c_dev_t *dev, bool enable, uint8_t new_addr);
  * @param[out] mode Buffer to store mode
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_get_int_out_mode(i2c_dev_t *dev, mcp23017_int_out_mode_t *mode);
+esp_err_t mcp23017_get_int_out_mode(uint8_t dev, mcp23017_int_out_mode_t *mode);
 
 /**
  * Set INTA/INTB pins mode
@@ -93,7 +64,7 @@ esp_err_t mcp23017_get_int_out_mode(i2c_dev_t *dev, mcp23017_int_out_mode_t *mod
  * @param mode INTA/INTB pins mode
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_set_int_out_mode(i2c_dev_t *dev, mcp23017_int_out_mode_t mode);
+esp_err_t mcp23017_set_int_out_mode(uint8_t dev, mcp23017_int_out_mode_t mode);
 
 /**
  * @brief Get GPIO pins mode
@@ -102,7 +73,7 @@ esp_err_t mcp23017_set_int_out_mode(i2c_dev_t *dev, mcp23017_int_out_mode_t mode
  * @param[out] val Buffer to store mode, 0 bit for PORTA/GPIO0..15 bit for PORTB/GPIO7
  * @return
  */
-esp_err_t mcp23017_port_get_mode(i2c_dev_t *dev, uint16_t *val);
+esp_err_t mcp23017_port_get_mode(uint8_t dev, uint16_t *val);
 
 /**
  * @brief Set GPIO pins mode
@@ -111,7 +82,7 @@ esp_err_t mcp23017_port_get_mode(i2c_dev_t *dev, uint16_t *val);
  * @param val Mode, 0 bit for PORTA/GPIO0..15 bit for PORTB/GPIO7
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_port_set_mode(i2c_dev_t *dev, uint16_t val);
+esp_err_t mcp23017_port_set_mode(uint8_t dev, uint16_t val);
 
 /**
  * @brief Get GPIO pullups status
@@ -120,7 +91,7 @@ esp_err_t mcp23017_port_set_mode(i2c_dev_t *dev, uint16_t val);
  * @param[out] val Pullup status, 0 bit for PORTA/GPIO0..15 bit for PORTB/GPIO7
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_port_get_pullup(i2c_dev_t *dev, uint16_t *val);
+esp_err_t mcp23017_port_get_pullup(uint8_t dev, uint16_t *val);
 
 /**
  * @brief Set GPIO pullups status
@@ -129,7 +100,7 @@ esp_err_t mcp23017_port_get_pullup(i2c_dev_t *dev, uint16_t *val);
  * @param val Pullup status, 0 bit for PORTA/GPIO0..15 bit for PORTB/GPIO7
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_port_set_pullup(i2c_dev_t *dev, uint16_t val);
+esp_err_t mcp23017_port_set_pullup(uint8_t dev, uint16_t val);
 
 /**
  * @brief Read GPIO port value
@@ -137,7 +108,7 @@ esp_err_t mcp23017_port_set_pullup(i2c_dev_t *dev, uint16_t val);
  * @param[out] val 16-bit GPIO port value, 0 bit for PORTA/GPIO0..15 bit for PORTB/GPIO7
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_port_read(i2c_dev_t *dev, uint16_t *val);
+esp_err_t mcp23017_port_read(uint8_t dev, uint16_t *val);
 
 /**
  * @brief Write value to GPIO port
@@ -145,7 +116,7 @@ esp_err_t mcp23017_port_read(i2c_dev_t *dev, uint16_t *val);
  * @param value GPIO port value, 0 bit for PORTA/GPIO0..15 bit for PORTB/GPIO7
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_port_write(i2c_dev_t *dev, uint16_t val);
+esp_err_t mcp23017_port_write(uint8_t dev, uint16_t val);
 
 /**
  * Get GPIO pin mode
@@ -154,7 +125,7 @@ esp_err_t mcp23017_port_write(i2c_dev_t *dev, uint16_t val);
  * @param[out] mode GPIO pin mode
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_get_mode(i2c_dev_t *dev, uint8_t pin, mcp23017_gpio_mode_t *mode);
+esp_err_t mcp23017_get_mode(uint8_t dev, uint8_t pin, mcp23017_gpio_mode_t *mode);
 
 /**
  * Set GPIO pin mode
@@ -163,7 +134,7 @@ esp_err_t mcp23017_get_mode(i2c_dev_t *dev, uint8_t pin, mcp23017_gpio_mode_t *m
  * @param mode GPIO pin mode
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_set_mode(i2c_dev_t *dev, uint8_t pin, mcp23017_gpio_mode_t mode);
+esp_err_t mcp23017_set_mode(uint8_t dev, uint8_t pin, mcp23017_gpio_mode_t mode);
 
 /**
  * @brief Get pullup mode of GPIO pin
@@ -172,7 +143,7 @@ esp_err_t mcp23017_set_mode(i2c_dev_t *dev, uint8_t pin, mcp23017_gpio_mode_t mo
  * @param[out] enable pullup mode
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_get_pullup(i2c_dev_t *dev, uint8_t pin, bool *enable);
+esp_err_t mcp23017_get_pullup(uint8_t dev, uint8_t pin, bool *enable);
 
 /**
  * @brief Set pullup mode of GPIO pin
@@ -181,7 +152,7 @@ esp_err_t mcp23017_get_pullup(i2c_dev_t *dev, uint8_t pin, bool *enable);
  * @param enable `true` to enable pullup
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_set_pullup(i2c_dev_t *dev, uint8_t pin, bool enable);
+esp_err_t mcp23017_set_pullup(uint8_t dev, uint8_t pin, bool enable);
 
 /**
  * @brief Read GPIO pin level
@@ -190,7 +161,7 @@ esp_err_t mcp23017_set_pullup(i2c_dev_t *dev, uint8_t pin, bool enable);
  * @param[out] val `true` if pin currently in high state
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_get_level(i2c_dev_t *dev, uint8_t pin, uint32_t *val);
+esp_err_t mcp23017_get_level(uint8_t dev, uint8_t pin, uint32_t *val);
 
 /**
  * @brief Set GPIO pin level
@@ -200,7 +171,7 @@ esp_err_t mcp23017_get_level(i2c_dev_t *dev, uint8_t pin, uint32_t *val);
  * @param[out] val `true` if pin currently in high state
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_set_level(i2c_dev_t *dev, uint8_t pin, uint32_t val);
+esp_err_t mcp23017_set_level(uint8_t dev, uint8_t pin, uint32_t val);
 
 /**
  * Setup interrupt for group of GPIO pins
@@ -209,7 +180,7 @@ esp_err_t mcp23017_set_level(i2c_dev_t *dev, uint8_t pin, uint32_t val);
  * @param intr Interrupt mode
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_port_set_interrupt(i2c_dev_t *dev, uint16_t mask, mcp23017_gpio_intr_t intr);
+esp_err_t mcp23017_port_set_interrupt(uint8_t dev, uint16_t mask, mcp23017_gpio_intr_t intr);
 
 /**
  * Setup interrupt for GPIO pin
@@ -218,7 +189,7 @@ esp_err_t mcp23017_port_set_interrupt(i2c_dev_t *dev, uint16_t mask, mcp23017_gp
  * @param intr Interrupt mode
  * @return `ESP_OK` on success
  */
-esp_err_t mcp23017_set_interrupt(i2c_dev_t *dev, uint8_t pin, mcp23017_gpio_intr_t intr);
+esp_err_t mcp23017_set_interrupt(uint8_t dev, uint8_t pin, mcp23017_gpio_intr_t intr);
 
 
 #ifdef __cplusplus

@@ -17,6 +17,7 @@
 extern "C" {
 #endif
 
+#define CONFIG_I2CDEV_TIMEOUT 1000
 /**
  * I2C device descriptor
  */
