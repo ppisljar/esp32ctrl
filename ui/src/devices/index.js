@@ -3,7 +3,11 @@ import { dht } from './2_dht';
 import { bmx280 } from './3_bmx280';
 import { ds18b20 } from './4_ds18b20';
 import { levelControl } from './5_level_control';
-//import { dht } from './5_dht';
+import { pcf8574 } from "./9_pcf8574";
+import { mcp23017 } from "./8_mcp23017";
+import { ads1115 } from "./7_ads1115";
+import { analog } from "./6_analog";
+
 // import { bmp085 } from './6_bmp085';
 // import { pcf8591 } from './7_pcf8591';
 // import { rfidWeigand } from './8_rfid';
@@ -53,11 +57,11 @@ export const devices = [
     { name: 'Environment - BME280/BMP280', value: 3, fields: bmx280 },
     { name: 'Environment - DS18b20', value: 4, fields: ds18b20 },
     { name: 'Generic - Level Control', value: 5, fields: levelControl },
-    // { name: 'Environment - BMP085/180', value: 6, fields: bmp085 },
-    // { name: 'Analog input - PCF8591', value: 7, fields: pcf8591 },
-    // { name: 'RFID - Wiegand', value: 8, fields: rfidWeigand },
-    // { name: 'Switch input - MCP23017', value: 9, fields: inputMcp },
-    // { name: 'Light/Lux - BH1750', value: 10, fields: bh1750 },
+    { name: 'Generic - Analog Input', value: 6, fields: analog },
+    { name: 'IO - ADS1115', value: 7, fields: ads1115 },
+    { name: 'IO - MCP23017', value: 8, fields: mcp23017 },
+    { name: 'IO - PCF8674', value: 9, fields: pcf8574 },
+    //{ name: 'Light/Lux - BH1750', value: 10, fields: bh1750 },
     // { name: 'Extra IO - ProMini Extender', value: 11, fields: pme },
     // { name: 'Display - LCD2004', value: 12, fields: lcd2004 },
     // { name: 'Position - HC-SR04, RCW-0001, etc.', value: 13, fields: hcsr04 },

@@ -1,3 +1,7 @@
+TODO:
+- web, devices should be classes, and then instances ?
+- rule engine: events, timers, interrupts (fast)
+
 # Simple HTTP File Server Example
 
 (See the README.md file in the upper level 'examples' directory for more information about examples.)

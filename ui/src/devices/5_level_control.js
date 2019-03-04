@@ -1,4 +1,4 @@
-import { pins, getTasks, getTaskValues } from './_defs';
+import { getTasks, getTaskValues } from './_defs';
 
 export const levelControl = {
     defaults: () => ({

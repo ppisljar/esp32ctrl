@@ -10,6 +10,6 @@ const presets = [
     ],
   ];
 
-  const plugins = [ ["@babel/plugin-transform-react-jsx", { "pragma":"h" }]]
+  const plugins = [ ["@babel/plugin-transform-react-jsx", { "pragma":"h" }], ["@babel/plugin-proposal-class-properties"]]
   
   module.exports = { presets, plugins };

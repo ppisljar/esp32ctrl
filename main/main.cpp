@@ -57,7 +57,7 @@ Plugin* RegulatorPlugin_myProtoype = Plugin::addPrototype(5, new RegulatorPlugin
 Plugin* AnalogPlugin_myProtoype = Plugin::addPrototype(6, new AnalogPlugin);
 Plugin* ADS111xPlugin_myProtoype = Plugin::addPrototype(7, new ADS111xPlugin);
 Plugin* MCP23017Plugin_myProtoype = Plugin::addPrototype(8, new MCP23017Plugin);
-Plugin* PCF8574Plugin_myProtoype = Plugin::addPrototype(8, new PCF8574Plugin);
+Plugin* PCF8574Plugin_myProtoype = Plugin::addPrototype(9, new PCF8574Plugin);
 
 extern "C" void app_main()
 {

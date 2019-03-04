@@ -1,20 +1,36 @@
-import { pins } from './_defs';
+import { Device } from './_defs';
 
-export const inputSwitch = {
-    defaults: () => ({
-        gpio: 255,
-        interval: 60,
-        'settings.values[0].name': 'Switch',
-    }),
-    params: {
-        name: 'Configuration',
-        configs: {
-            pullup: { name: 'Internal PullUp', type: 'checkbox' },
-            inversed: { name: 'Inversed logic', type: 'checkbox' },
-            gpio: { name: 'GPIO', type: 'select', options: pins },
-            interval: { name: 'Interval', type: 'number' },
-            send_boot_state: { name: 'Send Boot State', type: 'checkbox' },
+class InputSwitch extends Device {
+    constructor() {
+        super();
+
+        this.params = {
+            name: 'Configuration',
+            configs: {
+                gpio: { name: 'GPIO', type: 'select', options: () => { return window.pins() } },
+                interval: { name: 'Interval', type: 'number' },
+            }
+        };
+
+        this.gpio = {
+            name: 'GPIO Settings (global)',
+            configs: {
+                pullup: { name: 'Internal PullUp', type: 'checkbox' },
+                inversed: { name: 'Inversed logic', type: 'checkbox' },
+                send_boot_state: { name: 'Send Boot State', type: 'checkbox' },
+            }
+        };
+
+        this.vals = 1;
+    }
+
+    defaults = () => {
+        return {
+            gpio: 255,
+            interval: 60,
+            'settings.values[0].name': 'Switch',
         }
-    },
-    vals: 1,
+    }
 }
+
+export const inputSwitch = new InputSwitch();

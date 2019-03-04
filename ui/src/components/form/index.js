@@ -65,7 +65,7 @@ export class Form extends Component {
                             if (val === value) {
                                 return (<option value={val} selected>{name}</option>)
                             } else {
-                                return (<option value={val}>{name}</option>);
+                                return (<option value={val} disabled={option.disabled ? true : null}>{name}{option.disabled ? ` [${option.disabled}]` : ''}</option>);
                             }
                         })}
                     </select>

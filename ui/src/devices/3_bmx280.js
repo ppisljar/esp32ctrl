@@ -1,4 +1,3 @@
-import { pins, getTasks, getTaskValues } from './_defs';
 
 const i2c_address = [
     { value: 118, name: '0x76 (118) - (default)' }, 

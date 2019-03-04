@@ -1,5 +1,6 @@
 import { h, render, Component } from 'preact';
 import miniToastr from 'mini-toastr';
+import { pins } from './lib/pins';
 import { Menu } from './components/menu';
 import { Page } from './components/page';
 import { loadConfig } from './lib/config';

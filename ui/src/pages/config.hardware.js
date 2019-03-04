@@ -1,23 +1,11 @@
 import { h, Component } from 'preact';
 import { Form } from '../components/form';
 import { settings } from '../lib/settings';
+import { ioPins } from "../lib/pins";
 
-export const pins = [
-    { name: 'None', value: 255 },
-    { name: 'GPIO-0', value: 0 },
-    { name: 'GPIO-1', value: 1 },
-    { name: 'GPIO-2', value: 2 },
-    { name: 'GPIO-3', value: 3 },
-    { name: 'GPIO-4', value: 4 },
-    { name: 'GPIO-5', value: 5 },
-    { name: 'GPIO-9', value: 9 },
-    { name: 'GPIO-10', value: 10 },
-    { name: 'GPIO-12', value: 12 },
-    { name: 'GPIO-13', value: 13 },
-    { name: 'GPIO-14', value: 14 },
-    { name: 'GPIO-15', value: 15 },
-    { name: 'GPIO-16', value: 16 }
-];
+export const pins = () => {
+    return ioPins.getPins(['digital_in', 'digital_out']);
+};
 
 const pinState = [
     { name: 'Default', value: 0 },

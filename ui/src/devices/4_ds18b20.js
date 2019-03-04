@@ -1,5 +1,3 @@
-import { pins } from './_defs';
-
 export const ds18b20 = {
     defaults: () => ({
         gpio: 255,
@@ -8,7 +6,7 @@ export const ds18b20 = {
     sensor: {
         name: 'Sensor',
         configs: {
-            gpio: { name: 'GPIO', type: 'select', options: pins },
+            gpio: { name: 'GPIO', type: 'select', options: window.pins },
         }
     },
     vals: 1,

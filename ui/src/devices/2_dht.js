@@ -1,5 +1,3 @@
-import { pins } from './_defs';
-
 const sensorModel = [
     { value: 11, name: 'DHT11' }, 
     { value: 22, name: 'DHT22' }, 
@@ -18,7 +16,7 @@ export const dht = {
     params: {
         name: 'Configuration',
         configs: {
-            gpio: { name: 'GPIO Data', type: 'select', options: pins },
+            gpio: { name: 'GPIO Data', type: 'select', options: () => (window.pins()) },
             type: { name: 'Sensor model', type: 'select', options: sensorModel },
         }
     },

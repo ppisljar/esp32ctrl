@@ -2,7 +2,7 @@ import { h, Component } from 'preact';
 import { Form } from '../components/form';
 import { settings } from '../lib/settings';
 import { set } from '../lib/helpers';
-import { pins } from '../devices/_defs';
+import { pins } from '../lib/pins';
 
 export const types = [
     { name: '- None -', value: 0 },

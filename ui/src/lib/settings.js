@@ -9,7 +9,7 @@ const diff = (obj1, obj2, path = '') => {
             return [{ path: `${path}.${key}`, val1, val2 }];
         } else return [];
     }).flat();
-}
+};
 
 class Settings {
     init(settings) {
