@@ -26,10 +26,6 @@ class MCP23017Plugin: public Plugin {
         static void task(void *pvParameters);
         void* getStatePtr(uint8_t );
         void setStatePtr(uint8_t, uint8_t*);
-
-        static esp_err_t setDirection(uint8_t, uint8_t);
-        static esp_err_t digitalWrite(uint8_t, uint8_t);
-        static uint8_t digitalRead(uint8_t);
 };
 
 #endif

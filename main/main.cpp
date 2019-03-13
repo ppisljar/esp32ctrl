@@ -32,6 +32,7 @@ static const char *TAG = "example";
 #include "plugins/p007_ads111x.h"
 #include "plugins/p008_mcp23017.h"
 #include "plugins/p009_pcf8574.h"
+#include "plugins/p010_pca9685.h"
 
 #include "lib/rule_engine.h"
 #include "lib/logging.h"
@@ -58,6 +59,7 @@ Plugin* AnalogPlugin_myProtoype = Plugin::addPrototype(6, new AnalogPlugin);
 Plugin* ADS111xPlugin_myProtoype = Plugin::addPrototype(7, new ADS111xPlugin);
 Plugin* MCP23017Plugin_myProtoype = Plugin::addPrototype(8, new MCP23017Plugin);
 Plugin* PCF8574Plugin_myProtoype = Plugin::addPrototype(9, new PCF8574Plugin);
+Plugin* PCA9685Plugin_myProtoype = Plugin::addPrototype(10, new PCA9685Plugin);
 
 extern "C" void app_main()
 {
@@ -86,9 +88,11 @@ extern "C" void app_main()
     pins.set_direction = (io_set_direction_fn_t*)gpio_set_direction;
     pins.digital_read = (io_digital_read_fn_t*)gpio_get_level;
     pins.digital_write = (io_digital_write_fn_t*)gpio_set_level;
-    //pins.analog_read = gpio_get_level;
-    //pins.analog_write = gpio_set_level;
     io.addDigitalPins(40, &pins);
+
+    struct IO_ANALOG_PINS analogPins;
+    analogPins.analog_read = (io_analog_read_fn_t*)adc1_get_raw;
+    io.addAnalogPins(16, &analogPins);
 
     if (cfgObject["hardware"]["i2c"]["enabled"]) {
         JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];

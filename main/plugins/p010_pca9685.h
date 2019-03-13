@@ -1,20 +1,21 @@
-#ifndef ESP_PLUGIN_009_H
-#define ESP_PLUGIN_009_H
+#ifndef ESP_PLUGIN_010_H
+#define ESP_PLUGIN_010_H
 
 #include "plugin.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
-#include "pcf8574.h"
+#include "pca9685.h"
 
-class PCF8574Plugin: public Plugin {
+class PCA9685Plugin: public Plugin {
     private:
         int value = 0;
         JsonObject *cfg;
-        struct IO_DIGITAL_PINS pins;
+        uint8_t addr;
+        struct IO_ANALOG_PINS pins;
     public:
         Plugin* clone() const {
-            return new PCF8574Plugin;
+            return new PCA9685Plugin;
         }
 
         bool init(JsonObject &params);

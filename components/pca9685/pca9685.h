@@ -11,7 +11,7 @@
 #define __PCA9685_H__
 
 #include <stdbool.h>
-#include <i2cdev.h>
+#include <I2Cdev.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,29 +44,11 @@ typedef enum
 } pca9685_channel_t;
 
 /**
- * @brief Initialize device descriptior
- * @param dev Pointer to I2C device descriptor
- * @param addr PCA9685 address
- * @param port I2C port number
- * @param sda_gpio GPIO pin number for SDA
- * @param scl_gpio GPIO pin number for SCL
- * @return `ESP_OK` on success
- */
-esp_err_t pca9685_init_desc(i2c_dev_t *dev, uint8_t addr, i2c_port_t port, gpio_num_t sda_gpio, gpio_num_t scl_gpio);
-
-/**
- * @brief Free device descriptor
- * @param dev Pointer to I2C device descriptor
- * @return `ESP_OK` on success
- */
-esp_err_t pca9685_free_desc(i2c_dev_t *dev);
-
-/**
  * Init device
  * @param dev Device descriptor
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_init(i2c_dev_t *dev);
+esp_err_t pca9685_init(uint8_t dev);
 
 /**
  * Setup device subaddress (see section 7.3.6 if the datasheet)
@@ -76,14 +58,14 @@ esp_err_t pca9685_init(i2c_dev_t *dev);
  * @param enable True to enable subaddress, false to disable
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_set_subaddr(i2c_dev_t *dev, uint8_t num, uint8_t subaddr, bool enable);
+esp_err_t pca9685_set_subaddr(uint8_t dev, uint8_t num, uint8_t subaddr, bool enable);
 
 /**
  * Restart device (see section 7.3.1.1 of the datasheet)
  * @param dev Device descriptor
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_restart(i2c_dev_t *dev);
+esp_err_t pca9685_restart(uint8_t dev);
 
 /**
  * Check if device is in sleep mode
@@ -91,7 +73,7 @@ esp_err_t pca9685_restart(i2c_dev_t *dev);
  * @param sleeping True if device is sleeping
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_is_sleeping(i2c_dev_t *dev, bool *sleeping);
+esp_err_t pca9685_is_sleeping(uint8_t dev, bool *sleeping);
 
 /**
  * Switch device to low-power mode or wake it up.
@@ -99,7 +81,7 @@ esp_err_t pca9685_is_sleeping(i2c_dev_t *dev, bool *sleeping);
  * @param sleep True for sleep mode, false for wake up
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_sleep(i2c_dev_t *dev, bool sleep);
+esp_err_t pca9685_sleep(uint8_t dev, bool sleep);
 
 /**
  * Get logic inversion of the outputs
@@ -107,7 +89,7 @@ esp_err_t pca9685_sleep(i2c_dev_t *dev, bool sleep);
  * @param inv True if outputs are inverted, false otherwise
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_is_output_inverted(i2c_dev_t *dev, bool *inv);
+esp_err_t pca9685_is_output_inverted(uint8_t dev, bool *inv);
 
 /**
  * Logically invert outputs (see section 7.7 of the datasheet)
@@ -115,7 +97,7 @@ esp_err_t pca9685_is_output_inverted(i2c_dev_t *dev, bool *inv);
  * @param inverted True for inverted outputs
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_set_output_inverted(i2c_dev_t *dev, bool inverted);
+esp_err_t pca9685_set_output_inverted(uint8_t dev, bool inverted);
 
 /**
  * Get outputs mode
@@ -123,7 +105,7 @@ esp_err_t pca9685_set_output_inverted(i2c_dev_t *dev, bool inverted);
  * @param od True if outputs are in open drain mode
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_get_output_open_drain(i2c_dev_t *dev, bool *od);
+esp_err_t pca9685_get_output_open_drain(uint8_t dev, bool *od);
 
 /**
  * Set outputs mode
@@ -131,7 +113,7 @@ esp_err_t pca9685_get_output_open_drain(i2c_dev_t *dev, bool *od);
  * @param open_drain True to set open drain mode, false to normal mode
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_set_output_open_drain(i2c_dev_t *dev, bool od);
+esp_err_t pca9685_set_output_open_drain(uint8_t dev, bool od);
 
 /**
  * Get PWM frequency prescaler.
@@ -139,7 +121,7 @@ esp_err_t pca9685_set_output_open_drain(i2c_dev_t *dev, bool od);
  * @param prescaler Frequency prescaler
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_get_prescaler(i2c_dev_t *dev, uint8_t *prescaler);
+esp_err_t pca9685_get_prescaler(uint8_t dev, uint8_t *prescaler);
 
 /**
  * Set PWM frequency prescaler.
@@ -147,7 +129,7 @@ esp_err_t pca9685_get_prescaler(i2c_dev_t *dev, uint8_t *prescaler);
  * @param prescaler Prescaler value
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_set_prescaler(i2c_dev_t *dev, uint8_t prescaler);
+esp_err_t pca9685_set_prescaler(uint8_t dev, uint8_t prescaler);
 
 /**
  * Get PWM frequency
@@ -155,7 +137,7 @@ esp_err_t pca9685_set_prescaler(i2c_dev_t *dev, uint8_t prescaler);
  * @param freq PWM frequency, Hz
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_get_pwm_frequency(i2c_dev_t *dev, uint16_t *freq);
+esp_err_t pca9685_get_pwm_frequency(uint8_t dev, uint16_t *freq);
 
 /**
  * Set PWM frequency
@@ -163,7 +145,7 @@ esp_err_t pca9685_get_pwm_frequency(i2c_dev_t *dev, uint16_t *freq);
  * @param freq PWM frequency, Hz
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_set_pwm_frequency(i2c_dev_t *dev, uint16_t freq);
+esp_err_t pca9685_set_pwm_frequency(uint8_t dev, uint16_t freq);
 
 /**
  * Set PWM value on output channel
@@ -172,7 +154,7 @@ esp_err_t pca9685_set_pwm_frequency(i2c_dev_t *dev, uint16_t freq);
  * @param val PWM value, 0..4096
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_set_pwm_value(i2c_dev_t *dev, uint8_t channel, uint16_t val);
+esp_err_t pca9685_set_pwm_value(uint8_t dev, uint8_t channel, uint16_t val);
 
 /**
  * Set PWM values on multiple output channels
@@ -182,7 +164,7 @@ esp_err_t pca9685_set_pwm_value(i2c_dev_t *dev, uint8_t channel, uint16_t val);
  * @param values Array of the channel values, each 0..4096
  * @return `ESP_OK` on success
  */
-esp_err_t pca9685_set_pwm_values(i2c_dev_t *dev, uint8_t first_ch, uint8_t channels,
+esp_err_t pca9685_set_pwm_values(uint8_t dev, uint8_t first_ch, uint8_t channels,
         const uint16_t *values);
 
 #ifdef __cplusplus

@@ -7,10 +7,57 @@ PLUGIN_STATS(MCP23017Plugin, value, value)
 
 uint8_t mcp23017_addr = 0;
 
+class MCP23017Plugin_set_direction {
+    private:
+        uint8_t addr;
+        struct IO_DIGITAL_PINS *pins;
+    public:
+        MCP23017Plugin_set_direction(uint8_t addr_, struct IO_DIGITAL_PINS *pins_) {
+            addr = addr_;
+            pins = pins_;
+        }
+        uint8_t operator()(uint8_t pin, uint8_t mode) {
+            return mcp23017_set_mode(addr, pin - pins->start, (mcp23017_gpio_mode_t)mode);
+        }
+};
+
+class MCP23017Plugin_digital_read {
+    private:
+        uint8_t addr;
+        struct IO_DIGITAL_PINS *pins;
+    public:
+        MCP23017Plugin_digital_read(uint8_t addr_, struct IO_DIGITAL_PINS *pins_) {
+            addr = addr_;
+            pins = pins_;
+        }
+        uint8_t operator()(uint8_t pin) {
+            uint32_t level;
+            mcp23017_get_level(mcp23017_addr, pin - pins->start, &level);
+            return (uint8_t)level;
+        }
+};
+
+class MCP23017Plugin_digital_write {
+    private:
+        uint8_t addr;
+        struct IO_DIGITAL_PINS *pins;
+    public:
+        MCP23017Plugin_digital_write(uint8_t addr_, struct IO_DIGITAL_PINS *pins_) {
+            addr = addr_;
+            pins = pins_;
+        }
+        uint8_t operator()(uint8_t pin, uint8_t value) {
+            return mcp23017_set_level(mcp23017_addr, pin - pins->start, value);
+        }
+};
+
 bool MCP23017Plugin::init(JsonObject &params) {
     cfg = &params;
 
-    mcp23017_addr = (*cfg)["addr"];
+    uint8_t mcp23017_addr = (*cfg)["addr"];
+    MCP23017Plugin_digital_read *digitalRead = new MCP23017Plugin_digital_read(mcp23017_addr, &pins);
+    MCP23017Plugin_digital_write *digitalWrite = new MCP23017Plugin_digital_write(mcp23017_addr, &pins);
+    MCP23017Plugin_set_direction *setDirection = new MCP23017Plugin_set_direction(mcp23017_addr, &pins);
     pins.set_direction = (io_set_direction_fn_t*)setDirection;
     pins.digital_write = (io_digital_write_fn_t*)digitalWrite;
     pins.digital_read = (io_digital_read_fn_t*)digitalRead;
@@ -18,24 +65,3 @@ bool MCP23017Plugin::init(JsonObject &params) {
 
     return true;
 }
-
-esp_err_t MCP23017Plugin::setDirection(uint8_t pin, uint8_t mode) {
-    return mcp23017_set_mode(mcp23017_addr, pin, (mcp23017_gpio_mode_t)mode);
-}
-
-esp_err_t MCP23017Plugin::digitalWrite(uint8_t pin, uint8_t value) {
-    return mcp23017_set_level(mcp23017_addr, pin, value);
-}
-
-uint8_t MCP23017Plugin::digitalRead(uint8_t pin) {
-    uint32_t level;
-    mcp23017_get_level(mcp23017_addr, pin, &level);
-    return (uint8_t)level;
-}
-
-// adds pins, this pins can then be used as any other
-// plugin config allows us to precisely define what this pins are doing
-// - input/output
-// - pullups etc
-
-// similar page for core pins
