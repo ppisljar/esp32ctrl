@@ -1,10 +1,10 @@
 import {Device} from './_defs';
 
 const i2cAddr = [
-    { value: 56, name: '0x38' },
-    { value: 57, name: '0x39' },
-    { value: 58, name: '0x3A' },
-    { value: 59, name: '0x3B' },
+    { value: 32, name: '0x20' },
+    { value: 33, name: '0x21' },
+    { value: 34, name: '0x22' },
+    { value: 35, name: '0x23' },
 ];
 
 class PCF8574 extends Device {
@@ -23,7 +23,7 @@ class PCF8574 extends Device {
         'params.addr': 56,
     });
 
-    getDevicePins = (conf) => {
+    getDeviceDigitalPins = (conf) => {
        return [...new Array(8)].map((x,i) => ({
            name: `${conf.name} GPIO${i}`,
            value: i,

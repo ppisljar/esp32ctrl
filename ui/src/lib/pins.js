@@ -22,9 +22,14 @@ class IO_PINS {
                 value: i,
                 capabilities: ['digital_in'],
             };
-            if (pin.value < 32) pin.capabilities.push('digital_out');
-            if (pin.value > 32) pin.capabilities.push('analog_in');
-            this.digitalPins.push(pin);
+            if (pin.value < 32) {
+                pin.capabilities.push('digital_out');
+                this.digitalPins.push(pin);
+            } else {
+                pin.capabilities.push('analog_in');
+                this.analogPins.push(pin);
+            }
+            
         }
 
         for (let i = 0; i < 16; i++) {
@@ -64,8 +69,8 @@ class IO_PINS {
         const startPins = copy(this.digitalPins);
         const pins = plugins.reduce((acc, cur) => {
             const plugin = devices.find(d => d.value === cur.type).fields;
-            if (plugin.getDevicePins) {
-                const pins = plugin.getDevicePins(cur);
+            if (plugin.getDeviceDigitalPins) {
+                const pins = plugin.getDeviceDigitalPins(cur);
                 const start = acc.length;
                 pins.forEach(p => {
                     p.value += start;
@@ -75,6 +80,27 @@ class IO_PINS {
             return acc;
         }, [...startPins]);
         this.setUsedPins(pins);
+        const cs = Array.isArray(capabilities) ? capabilities : [capabilities];
+        return pins.filter(pin => cs.every(c => pin.capabilities.includes(c)));
+    }
+
+    getAnalogPins(capabilities) {
+        const plugins = settings.get('plugins');
+        const startPins = copy(this.analogPins);
+        const pins = plugins.reduce((acc, cur) => {
+            const plugin = devices.find(d => d.value === cur.type).fields;
+            if (plugin.getDeviceAnalogPins) {
+                const pins = plugin.getDeviceAnalogPins(cur);
+                const start = acc.length;
+                pins.forEach(p => {
+                    p.value += start;
+                    acc.push(p);
+                });
+            }
+            return acc;
+        }, [...startPins]);
+        //this.setUsedPins(pins);
+        return pins;
         const cs = Array.isArray(capabilities) ? capabilities : [capabilities];
         return pins.filter(pin => cs.every(c => pin.capabilities.includes(c)));
     }

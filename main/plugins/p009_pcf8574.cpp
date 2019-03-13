@@ -41,8 +41,11 @@ class PCF8574Plugin_digital_write : public IO_digital_write {
         }
         uint8_t operator()(uint8_t pin, uint8_t value) {
             uint8_t val;
+            ESP_LOGI(P009_TAG, "writting %d to pin %d on addr %d with pinStart %d", value, pin, addr, pins->start);
             pcf8574_port_read(addr, &val);
+            ESP_LOGI(P009_TAG, "current port value: %d", val);
             val = (value != 0) ? (val | (1 << (pin - pins->start))) : (val & ~(1 << (pin - pins->start)));
+            ESP_LOGI(P009_TAG, "writing port value: %d", val);
             return pcf8574_port_write(addr, val);  
         }
 };

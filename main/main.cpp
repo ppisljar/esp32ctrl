@@ -15,7 +15,7 @@
 
 //#include "Arduino.h"
 
-static const char *TAG = "example";
+static const char *TAG = "MAIN";
 
 #include "lib/config.h"
 #include "lib/spiffs.h"
@@ -90,13 +90,16 @@ extern "C" void app_main()
 
     struct IO_ANALOG_PINS analogPins;
     analogPins.analog_read = new ESP_analog_read();
-    io.addAnalogPins(16, &analogPins);
+    io.addAnalogPins(8, &analogPins);
 
     if (cfgObject["hardware"]["i2c"]["enabled"]) {
         JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];
         i2c_plugin = new I2CPlugin();
-        i2c_plugin->init(i2c_conf);
-        i2c_plugin->scan();
+        int i2cerr = i2c_plugin->init(i2c_conf);
+        if (i2cerr != ESP_OK) {
+            ESP_LOGE(TAG, "i2c init: error %x", i2cerr);
+        };
+        
     }
 
     if (cfgObject["ntp"]["enabled"]) {
@@ -108,8 +111,9 @@ extern "C" void app_main()
     JsonArray &plugins = cfgObject["plugins"];
     int pi = 0;
     for (auto plugin : plugins){
+        if (!plugin["enabled"]) continue;
         JsonObject& params = plugin["params"];
-        ESP_LOGI(TAG, "initializing plugin type: %i", (int)plugin["type"]);
+        ESP_LOGI(TAG, "initializing plugin '%s' type: %i", plugin["name"].as<char*>(), (int)plugin["type"]);
         active_plugins[pi] = Plugin::getPluginInstance((int)plugin["type"]);
         active_plugins[pi]->init(params);
         pi++;
@@ -123,6 +127,8 @@ extern "C" void app_main()
     }
 
     init_logging();
+
+    i2c_plugin->scan();
 
     for(;;) {
         ESP_LOGD(TAG, "executing rule engine");

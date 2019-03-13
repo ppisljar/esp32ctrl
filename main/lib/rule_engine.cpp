@@ -115,7 +115,7 @@ uint8_t run_rule(byte* start, uint8_t len = 255) {
                 break;
             // sets state on device
             case CMD_SET:
-                ESP_LOGI(TAG_RE, "cmd set %d %d", cmd[1], cmd[2]);
+                ESP_LOGI(TAG_RE, "cmd set %d %d %d", cmd[1], cmd[2], cmd[4]);
                 p = active_plugins[cmd[1]];
                 ESP_LOGI(TAG_RE, "cmd set %p %p", p, cmd+4);
                 // we need to know variable name ...

@@ -15,6 +15,7 @@ class ads1115_analog_read : public IO_analog_read {
             pins = p;
         }
         uint16_t operator()(uint8_t pin) {
+            ESP_LOGI(P007_TAG, "reading pin %d (%d)", pin, pin - pins->start);
             adc0->setMultiplexer(ADS1115_MUX_P0_NG + pin - pins->start);
             return adc0->getConversion(true);    
         }
@@ -28,20 +29,21 @@ bool ADS111xPlugin::init(JsonObject &params) {
     int gain = (*cfg)["gain"] | ADS1115_PGA_6P144;
     int addr = (*cfg)["addr"] | ADS1115_DEFAULT_ADDRESS;
     
-    adc0 = new ADS1115(ADS1115_DEFAULT_ADDRESS);
+    adc0 = new ADS1115(addr);
 
-    auto analogRead1 = [&](uint8_t pin) {
-        adc0->setMultiplexer(ADS1115_MUX_P0_NG + pin - pins.start);
-        return adc0->getConversion(true);   
-    };
+    // auto analogRead1 = [&](uint8_t pin) {
+    //     adc0->setMultiplexer(ADS1115_MUX_P0_NG + pin - pins.start);
+    //     return adc0->getConversion(true);   
+    // };
 
     pins.analog_read =  new ads1115_analog_read(adc0, &pins);
-    io.addAnalogPins(8, &pins);
+    io.addAnalogPins(4, &pins);
 
     if (adc0->testConnection()) {
         ESP_LOGI(P007_TAG, "ADS1115 connection successful");
     } else {
         ESP_LOGI(P007_TAG, "ADS1115 connection failed");
+        return false;
     }
 
     adc0->initialize();

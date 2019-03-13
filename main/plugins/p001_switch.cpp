@@ -56,5 +56,12 @@ void* SwitchPlugin::getStatePtr(uint8_t val) {
 }
 
 void SwitchPlugin::setStatePtr(uint8_t n, uint8_t *val) {
-    if (n == 0) state = *val;
+    int gpio = (*cfg)["gpio"] | 255;
+
+    if (n == 0) {
+        state = *val;
+        if (gpio != 255) {
+            io.digitalWrite(gpio, state);
+        }
+    }
 }

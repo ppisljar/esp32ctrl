@@ -23,7 +23,7 @@ class PCA9685 extends Device {
         'params.addr': 56,
     });
 
-    getDevicePins = (conf) => {
+    getDeviceDigitalPins = (conf) => {
        return [...new Array(16)].map((x,i) => ({
            name: `${conf.name} GPIO${i}`,
            value: i,
