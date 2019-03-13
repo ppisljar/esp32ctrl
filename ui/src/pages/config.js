@@ -16,6 +16,7 @@ const formConfig = {
                 name: { name: 'Unit Name', type: 'string' },
                 nr: { name: 'Unit Number', type: 'number' },
                 appendToHost: { name: 'Append Unit Name to Hostname', type: 'checkbox' },
+                password: { name: 'Admin Password', type: 'string', var: 'security.pass'}
             }
         },
         wifi: {
@@ -31,28 +32,29 @@ const formConfig = {
         clientIP: {
             name: 'Client IP Filtering',
             configs: {
-                blocklevel: { name: 'IP Block Level', type: 'select', options: ipBlockLevel, var: 'security.IPblockLevel' },
-                lowerrange: { name: 'Access IP lower range', type: 'ip', var: 'security.AllowedIPrangeLow' },
-                upperrange: { name: 'Access IP upper range', type: 'ip', var: 'security.AllowedIPrangeHigh' },
+                blocklevel: { name: 'IP Block Level', type: 'select', options: ipBlockLevel, var: 'security.ip_block.enabled' },
+                lowerrange: { name: 'Access IP lower range', type: 'ip', var: 'security.ip_block.start' },
+                upperrange: { name: 'Access IP upper range', type: 'ip', var: 'security.ip_block.end' },
             }
         },
         ip: {
             name: 'IP Settings',
             configs: {
-                ip: { name: 'IP', type: 'ip' },
-                gw: { name: 'Gateway', type: 'ip' },
-                subnet: { name: 'Subnet', type: 'ip' },
-                dns: { name: 'DNS', type: 'ip' },
+                enabled: { name: 'Static IP', type: 'checkbox', var: 'wifi.static_ip.enabled'},
+                ip: { name: 'IP', type: 'ip', var: 'wifi.static_ip.ip' },
+                gw: { name: 'Gateway', type: 'ip', var: 'wifi.static_ip.gw' },
+                netmask: { name: 'Subnet', type: 'ip', var: 'wifi.static_ip.netmask' },
+                dns: { name: 'DNS', type: 'ip', var: 'wifi.static_ip.dns' },
             }
         },
-        sleep: {
-            name: 'Sleep Mode',
-            configs: {
-                awaketime: { name: 'Sleep awake time', type: 'number' },
-                sleeptime: { name: 'Sleep time', type: 'number' },
-                sleeponfailiure: { name: 'Sleep on connection failure', type: 'checkbox' },
-            }
-        }
+        // sleep: {
+        //     name: 'Sleep Mode',
+        //     configs: {
+        //         awaketime: { name: 'Sleep awake time', type: 'number' },
+        //         sleeptime: { name: 'Sleep time', type: 'number' },
+        //         sleeponfailiure: { name: 'Sleep on connection failure', type: 'checkbox' },
+        //     }
+        // }
     },
 }
 

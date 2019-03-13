@@ -21,12 +21,6 @@ const formConfig = {
                 host: { name: 'NTP Hostname', type: 'string' },
             }
         },
-        dst: {
-            name: 'DST Settings',
-            configs: {
-                enabled: { name: 'Use DST', type: 'checkbox' },
-            }
-        },
         location: {
             name: 'Location Settings',
             configs: {

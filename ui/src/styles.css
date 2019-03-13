@@ -287,6 +287,18 @@ fieldset > label {
     background: aliceblue;
     padding: 1em;
     margin: 1em;
+    display: flex;
+    flex-direction: row;
+}
+
+.device .icon {
+    padding-right: 20px;
+    font-size: 48px;
+    text-align: center;
+}
+
+.device .body {
+    width: 100%;
 }
 
 .device .info a {

@@ -1,7 +1,10 @@
 #ifndef ESP_LIB_RULE_ENGINE_H
 #define ESP_LIB_RULE_ENGINE_H
 
+#include "../plugins/plugin.h"
+
 int parse_rules(unsigned char *rules, long len);
+uint8_t run_rule(unsigned char* start, uint8_t len);
 void run_rules();
 
 #define TRIGGER_EVENT(x) event_triggers[x/8] |= 1 << (x%8)

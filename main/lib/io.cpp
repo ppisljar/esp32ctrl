@@ -22,8 +22,10 @@ void IO::addPWMPins(uint8_t number, struct IO_PWM_PINS *pins) {
 }
 
 struct IO_DIGITAL_PINS* IO::getDigitalPin(uint8_t pin_nr) {
+    ESP_LOGI("IO", "getting digital pin %d", pin_nr);
     for (struct IO_DIGITAL_PINS *pin: io_d_pins) {
         if (pin_nr >= pin->start && pin_nr <= pin->end) {
+            ESP_LOGI("IO", "found pin %d", pin->start);
             return pin;
         }
     }
@@ -49,24 +51,23 @@ struct IO_PWM_PINS* IO::getPWMPin(uint8_t pin_nr) {
 }
 
 uint8_t IO::digitalRead(uint8_t pin) {
-    io_digital_read_fn_t &fn1 = *getDigitalPin(pin)->digital_read;
-    return fn1(pin);
+    return (*(getDigitalPin(pin)->digital_read))(pin);
 }
 
 esp_err_t IO::digitalWrite(uint8_t pin, bool value) {
-    return getDigitalPin(pin)->digital_write(pin, value);
+    return (*(getDigitalPin(pin)->digital_write))(pin, value);
 }
 
 uint16_t IO::analogRead(uint8_t pin) {
-    return getAnalogPin(pin)->analog_read(pin);
+    return (*(getAnalogPin(pin)->analog_read))(pin);
 }
 
 esp_err_t IO::analogWrite(uint8_t pin, uint16_t value) {
-    return getAnalogPin(pin)->analog_write(pin, value);
+    return (*(getAnalogPin(pin)->analog_write))(pin, value);
 }
 
 esp_err_t IO::setDirection(uint8_t pin, uint8_t direction) {
-    return getDigitalPin(pin)->set_direction(pin, direction);
+    return (*(getDigitalPin(pin)->set_direction))(pin, direction);
 }
 
 // io_analog_read_t analogRead = &io_pins.getPin(pin_nr).analog_read;

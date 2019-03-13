@@ -47,6 +47,10 @@ const formConfig = {
             name: 'SPI Settings',
             configs: {
                 enabled: { name: 'Init SPI', type: 'checkbox' },
+                sclk: { name: 'GPIO - SCLK', type: 'select', options: pins },
+                mosi: { name: 'GPIO - MOSI', type: 'select', options: pins },
+                miso: { name: 'GPIO - MISO', type: 'select', options: pins },
+                ss: { name: 'GPIO - SS', type: 'select', options: pins },
             }
         },
         gpio: {

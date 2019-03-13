@@ -30,6 +30,7 @@
               void setStatePtr(uint8_t, uint8_t*);
               esp_err_t read(uint8_t addr, uint8_t *data_rd, size_t size);
               esp_err_t write(uint8_t addr, uint8_t *data_wr, size_t size);
+              void scan();
       };
 
       #endif

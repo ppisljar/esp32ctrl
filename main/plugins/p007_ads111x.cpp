@@ -5,7 +5,7 @@ const char *P007_TAG = "ADS111xPlugin";
 PLUGIN_CONFIG(ADS111xPlugin, interval, gpio, type)
 PLUGIN_STATS(ADS111xPlugin, value, value)
 
-class ads1115_analog_read {
+class ads1115_analog_read : public IO_analog_read {
     private:
         ADS1115 *adc0;
         IO_ANALOG_PINS *pins;
@@ -29,15 +29,13 @@ bool ADS111xPlugin::init(JsonObject &params) {
     int addr = (*cfg)["addr"] | ADS1115_DEFAULT_ADDRESS;
     
     adc0 = new ADS1115(ADS1115_DEFAULT_ADDRESS);
-    
-    auto analogRead0 = new ads1115_analog_read(adc0, &pins);
 
     auto analogRead1 = [&](uint8_t pin) {
         adc0->setMultiplexer(ADS1115_MUX_P0_NG + pin - pins.start);
         return adc0->getConversion(true);   
     };
 
-    pins.analog_read = (io_analog_read_fn_t*)analogRead0;
+    pins.analog_read =  new ads1115_analog_read(adc0, &pins);
     io.addAnalogPins(8, &pins);
 
     if (adc0->testConnection()) {

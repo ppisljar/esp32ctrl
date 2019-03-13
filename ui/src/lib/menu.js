@@ -21,9 +21,11 @@ import {
     SysVarsPage
 } from '../pages';
 
-import { saveConfig } from '../conf/config.dat';
 import { deleteFile } from './espeasy';
 
+const saveConfig = () => {
+    window.location.href='/config.json';
+}
 class Menus {
     constructor() {
         this.menus = [];
@@ -46,12 +48,11 @@ class Menus {
 
 const menus = [
     { title: 'Devices', href: 'devices', component: DevicesPage, children: [] },
-    { title: 'Controllers', href: 'controllers', component: ControllersPage, children: [] },
+    //{ title: 'Controllers', href: 'controllers', component: ControllersPage, children: [] },
     { title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [] },
     { title: 'Config', href: 'config', component: ConfigPage, children: [
         { title: 'Hardware', href: 'config/hardware', component: ConfigHardwarePage },
         { title: 'Advanced', href: 'config/advanced', component: ConfigAdvancedPage },
-        { title: 'Rules', href: 'config/rules', component: RulesPage },
         { title: 'Save', href: 'config/save', action: saveConfig },
         { title: 'Load', href: 'config/load', component: LoadPage },
         { title: 'Reboot', href: 'config/reboot', component: RebootPage },

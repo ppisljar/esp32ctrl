@@ -7,7 +7,7 @@ PLUGIN_STATS(MCP23017Plugin, value, value)
 
 uint8_t mcp23017_addr = 0;
 
-class MCP23017Plugin_set_direction {
+class MCP23017Plugin_set_direction : public IO_set_direction {
     private:
         uint8_t addr;
         struct IO_DIGITAL_PINS *pins;
@@ -21,7 +21,7 @@ class MCP23017Plugin_set_direction {
         }
 };
 
-class MCP23017Plugin_digital_read {
+class MCP23017Plugin_digital_read : public IO_digital_read {
     private:
         uint8_t addr;
         struct IO_DIGITAL_PINS *pins;
@@ -37,7 +37,7 @@ class MCP23017Plugin_digital_read {
         }
 };
 
-class MCP23017Plugin_digital_write {
+class MCP23017Plugin_digital_write : public IO_digital_write {
     private:
         uint8_t addr;
         struct IO_DIGITAL_PINS *pins;
@@ -58,9 +58,9 @@ bool MCP23017Plugin::init(JsonObject &params) {
     MCP23017Plugin_digital_read *digitalRead = new MCP23017Plugin_digital_read(mcp23017_addr, &pins);
     MCP23017Plugin_digital_write *digitalWrite = new MCP23017Plugin_digital_write(mcp23017_addr, &pins);
     MCP23017Plugin_set_direction *setDirection = new MCP23017Plugin_set_direction(mcp23017_addr, &pins);
-    pins.set_direction = (io_set_direction_fn_t*)setDirection;
-    pins.digital_write = (io_digital_write_fn_t*)digitalWrite;
-    pins.digital_read = (io_digital_read_fn_t*)digitalRead;
+    pins.set_direction = setDirection;
+    pins.digital_write = digitalWrite;
+    pins.digital_read = digitalRead;
     io.addDigitalPins(16, &pins);
 
     return true;

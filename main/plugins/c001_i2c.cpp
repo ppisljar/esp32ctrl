@@ -31,82 +31,6 @@ bool I2CPlugin::init(JsonObject &params) {
     return i2c_driver_install((i2c_port_t)i2c_master_port, conf.mode, 0, 0, 0);
 }
 
-//esp_err_t I2CPlugin::write(uint8_t addr, uint8_t *data_wr, size_t size)
-//{
-//    JsonObject& params = *cfg;
-//    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-//    i2c_master_start(cmd);
-//    i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
-//    i2c_master_write(cmd, data_wr, size, ACK_CHECK_EN);
-//    i2c_master_stop(cmd);
-//    esp_err_t ret = i2c_master_cmd_begin((i2c_i2c_driver_installport_t)params["port"].as<int>(), cmd, 1000 / portTICK_RATE_MS);
-//    i2c_cmd_link_delete(cmd);
-//    return ret;
-//}
-//
-//esp_err_t I2CPlugin::read(uint8_t addr, uint8_t *data_rd, size_t size)
-//{
-//    JsonObject& params = *cfg;
-//    if (size == 0) {
-//        return ESP_OK;
-//    }
-//    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-//    i2c_master_start(cmd);
-//    i2c_master_write_byte(cmd, (addr << 1) | I2C_MASTER_READ, ACK_CHECK_EN);
-//    if (size > 1) {
-//        i2c_master_read(cmd, data_rd, size - 1, (i2c_ack_type_t)ACK_VAL);
-//    }
-//    i2c_master_read_byte(cmd, data_rd + size - 1, (i2c_ack_type_t)NACK_VAL);
-//    i2c_master_stop(cmd);
-//    esp_err_t ret = i2c_master_cmd_begin((i2c_port_t)params["port"].as<int>(), cmd, 1000 / portTICK_RATE_MS);
-//    i2c_cmd_link_delete(cmd);
-//    return ret;
-//}
-//
-//esp_err_t I2CPlugin::readReg8(uint8_t addr, uint8_t *val) {
-//    return read(addr, val, 1);
-//}
-//
-//esp_err_t I2CPlugin::writeReg8(uint8_t addr, uint8_t *val) {
-//    return write(addr, val, 1);
-//}
-//
-//esp_err_t I2CPlugin::readReg16(uint8_t addr, uint8_t *val) {
-//    return read(addr, val, 2);
-//}
-//
-//esp_err_t I2CPlugin::writeReg16(uint8_t addr, uint8_t *val) {
-//    return write(addr, val, 2);
-//}
-//
-//bool I2CPlugin::readBitReg8(uint8_t addr, uint8 bit) {
-//    uint8_t reg = 0;
-//    readReg8(addr, &reg);
-//    return (reg & BV(bit)) >> bit;
-//}
-//
-//bool I2CPlugin::readBitReg16(uint8_t addr, uint8 bit) {
-//    uint16_t reg = 0;
-//    readReg16(addr, &reg);
-//    return (reg & BV(bit)) >> bit;
-//}
-//
-//esp_err_t I2CPlugin::writeBitReg8(uint8_t addr, uint8 bit, uint8_t val) {
-//    uint8_t reg = 0;
-//    readReg8(addr, &reg);
-//    reg = (reg & ~BV(bit)) | (val ? BV(bit) : 0);
-//    writeReg8(addr, &reg);
-//    return ESP_OK;
-//}
-//
-//esp_err_t I2CPlugin::writeBitReg16(uint8_t addr, uint8 bit, uint8_t val) {
-//    uint16_t reg = 0;
-//    readReg16(addr, &reg);
-//    reg = (reg & ~BV(bit)) | (val ? BV(bit) : 0);
-//    writeReg16(addr, &reg);
-//    return ESP_OK;
-//}
-
 bool I2CPlugin::setConfig(JsonObject &params) {
     if (params.containsKey("sda")) {
         (*cfg)["sda"] = params["sda"];
@@ -149,3 +73,29 @@ void I2CPlugin::setStatePtr(uint8_t n, uint8_t *val) {
     if (n == 0) state = *val;
 }
 
+void I2CPlugin::scan() {
+    uint8_t address;
+    printf("     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f\r\n");
+    for (int i = 0; i < 128; i += 16) {
+        printf("%02x: ", i);
+        for (int j = 0; j < 16; j++) {
+            fflush(stdout);
+            address = i + j;
+            i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+            i2c_master_start(cmd);
+            i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
+            i2c_master_stop(cmd);
+            esp_err_t ret = i2c_master_cmd_begin((i2c_port_t)0, cmd, 50 / portTICK_RATE_MS);
+            i2c_cmd_link_delete(cmd);
+            if (ret == ESP_OK) {
+                printf("%02x ", address);
+            } else if (ret == ESP_ERR_TIMEOUT) {
+                printf("UU ");
+            } else {
+                printf("-- ");
+            }
+        }
+        printf("\r\n");
+    }
+
+}

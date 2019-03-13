@@ -20,9 +20,13 @@ static const char *TAG = "example";
 #include "lib/config.h"
 #include "lib/spiffs.h"
 #include "lib/file_server.h"
-#include "wifi.h"
+#include "lib/rule_engine.h"
+#include "lib/logging.h"
+#include "lib/io.h"
 #include "plugins/plugin.h"
 #include "plugins/c001_i2c.h"
+#include "plugins/c002_ntp.h"
+#include "plugins/c003_wifi.h"
 #include "plugins/p001_switch.h"
 #include "plugins/p002_dht.h"
 #include "plugins/p003_bmp280.h"
@@ -33,22 +37,16 @@ static const char *TAG = "example";
 #include "plugins/p008_mcp23017.h"
 #include "plugins/p009_pcf8574.h"
 #include "plugins/p010_pca9685.h"
-
-#include "lib/rule_engine.h"
-#include "lib/logging.h"
-#include "lib/io.h"
+#include "plugins/p011_mqtt.h"
 
 // global config object
 Config *cfg;
 Plugin *active_plugins[10];
 I2CPlugin *i2c_plugin;
+NTPPlugin *ntp_plugin;
+WiFiPlugin *wifi_plugin;
+
 IO io;
-
-struct status {
-    bool wifi_connected = false;
-};
-
-struct status status;
 
 Plugin* SwitchPlugin_myProtoype = Plugin::addPrototype(1, new SwitchPlugin);
 Plugin* DHTPlugin_myProtoype = Plugin::addPrototype(2, new DHTPlugin);
@@ -60,6 +58,7 @@ Plugin* ADS111xPlugin_myProtoype = Plugin::addPrototype(7, new ADS111xPlugin);
 Plugin* MCP23017Plugin_myProtoype = Plugin::addPrototype(8, new MCP23017Plugin);
 Plugin* PCF8574Plugin_myProtoype = Plugin::addPrototype(9, new PCF8574Plugin);
 Plugin* PCA9685Plugin_myProtoype = Plugin::addPrototype(10, new PCA9685Plugin);
+Plugin* MQTTPlugin_myProtoype = Plugin::addPrototype(11, new MQTTPlugin);
 
 extern "C" void app_main()
 {
@@ -78,31 +77,33 @@ extern "C" void app_main()
     JsonObject& cfgObject = cfg->getConfig();
     ESP_LOGI(TAG, "loaded configuration");
 
-    // todo: pass secondary configuration 
+    JsonObject &wifi_config = cfgObject["wifi"];
+    wifi_plugin = new WiFiPlugin();
+    wifi_plugin->init(wifi_config);
 
-    initialise_wifi(cfgObject["wifi"]["ssid"], cfgObject["wifi"]["pass"], &status);   
-
-    // todo: initialize services
     //JsonObject &io_cfg = cfgObject["io"];
     struct IO_DIGITAL_PINS pins;
-    pins.set_direction = (io_set_direction_fn_t*)gpio_set_direction;
-    pins.digital_read = (io_digital_read_fn_t*)gpio_get_level;
-    pins.digital_write = (io_digital_write_fn_t*)gpio_set_level;
+    pins.set_direction = new ESP_set_direction();
+    pins.digital_read = new ESP_digital_read();
+    pins.digital_write = new ESP_digital_write();
     io.addDigitalPins(40, &pins);
 
     struct IO_ANALOG_PINS analogPins;
-    analogPins.analog_read = (io_analog_read_fn_t*)adc1_get_raw;
+    analogPins.analog_read = new ESP_analog_read();
     io.addAnalogPins(16, &analogPins);
 
     if (cfgObject["hardware"]["i2c"]["enabled"]) {
         JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];
         i2c_plugin = new I2CPlugin();
         i2c_plugin->init(i2c_conf);
+        i2c_plugin->scan();
     }
 
-//    if (cfgObject["ntp"]["enabled"]) {
-//        initNTP(cfgObject["ntp"]);
-//    }
+    if (cfgObject["ntp"]["enabled"]) {
+        JsonObject &ntp_conf = cfgObject["ntp"];
+        ntp_plugin = new NTPPlugin();
+        ntp_plugin->init(ntp_conf);
+    }
 
     JsonArray &plugins = cfgObject["plugins"];
     int pi = 0;

@@ -44,6 +44,8 @@ extern int averagerun;
  * a list of all files and folders under the requested path */
 static esp_err_t http_resp_dir_html(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     char fullpath[FILE_PATH_MAX];
     char entrysize[16];
     const char *entrytype;
@@ -129,6 +131,8 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req)
 /* Send HTTP response with the contents of the requested file */
 static esp_err_t http_resp_file(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     char filepath[FILE_PATH_MAX];
     FILE *fd = NULL;
     struct stat file_stat;
@@ -191,6 +195,8 @@ static esp_err_t http_resp_file(httpd_req_t *req)
 /* Handler to download a file kept on the server */
 static esp_err_t download_get_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     // Check if the target is a directory
     if (req->uri[strlen(req->uri) - 1] == '/') {
         // In so, send an html with directory listing
@@ -204,6 +210,7 @@ static esp_err_t download_get_handler(httpd_req_t *req)
 
 #define MAX_FLASH_SIZE  1024000
 static esp_err_t flash_post_handler(httpd_req_t *req) {
+    if (!isAuthenticated(req)) return ESP_OK;
 
     const esp_partition_t *configured = esp_ota_get_boot_partition();
     const esp_partition_t *running = esp_ota_get_running_partition();
@@ -340,6 +347,8 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
 /* Handler to upload a file onto the server */
 static esp_err_t upload_post_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     char filepath[FILE_PATH_MAX];
     FILE *fd = NULL;
     struct stat file_stat;
@@ -452,6 +461,8 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
 /* Handler to delete a file from the server */
 static esp_err_t delete_post_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     char filepath[FILE_PATH_MAX];
     struct stat file_stat;
 
@@ -495,6 +506,7 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
 StaticJsonBuffer<JSON_OBJECT_SIZE(20)> jb;
 static esp_err_t plugins_post_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
 
     /* Skip leading "/upload" from URI to get filename */
     /* Note sizeof() counts NULL termination hence the -1 */
@@ -526,6 +538,8 @@ static esp_err_t plugins_post_handler(httpd_req_t *req)
 
 static esp_err_t plugins_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     char buf[512];
     int len;
     const char *filename = req->uri + sizeof("/plugins") - 1;
@@ -559,6 +573,8 @@ static esp_err_t plugins_handler(httpd_req_t *req)
 
 static esp_err_t plugins_state_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     char buf[512];
     int len;
 
@@ -580,6 +596,8 @@ static esp_err_t plugins_state_handler(httpd_req_t *req)
 
 static esp_err_t plugins_list_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     // get plugin restiry and list all available plugins
     bool first=true;
     char id[4];
@@ -600,6 +618,8 @@ static esp_err_t plugins_list_handler(httpd_req_t *req)
 
 static esp_err_t reboot_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     httpd_resp_set_status(req, "200 OK");
     httpd_resp_sendstr(req, "OK");
     vTaskDelay(2000 / portTICK_PERIOD_MS);
@@ -610,6 +630,8 @@ static esp_err_t reboot_handler(httpd_req_t *req)
 
 static esp_err_t event_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     const char *eventName = req->uri + sizeof("/event/") - 1;
     if (strlen(eventName) == 0 || eventName[strlen(eventName) - 1] == '/') {
         // return list of all plugins
@@ -640,6 +662,8 @@ static esp_err_t event_handler(httpd_req_t *req)
 
 static esp_err_t system_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     char buf[512];
     int len; int ret;
 
@@ -662,7 +686,82 @@ static esp_err_t system_handler(httpd_req_t *req)
 
 static esp_err_t logs_handler(httpd_req_t *req)
 {
+    if (!isAuthenticated(req)) return ESP_OK;
+
     xlog_web(req);
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+
+int8_t level;
+int8_t lastLevel;
+static void json_init() {
+  level = 0;
+  lastLevel = -1;
+}
+
+static void json_quote_name(httpd_req_t *req, const char* val) {
+  if (lastLevel == level) httpd_resp_sendstr_chunk(req, ",");
+  if (strlen(val) > 0) {
+    httpd_resp_sendstr_chunk(req, "\"");
+    httpd_resp_sendstr_chunk(req, val);
+    httpd_resp_sendstr_chunk(req, "\"");
+    httpd_resp_sendstr_chunk(req, ":");
+  }
+}
+
+static void json_quote_val(httpd_req_t *req, const char* val) {
+  httpd_resp_sendstr_chunk(req, "\"");
+  httpd_resp_sendstr_chunk(req, val);
+  httpd_resp_sendstr_chunk(req, "\"");
+}
+
+static void json_open(httpd_req_t *req, bool arr = false, const char* name = "") {
+  json_quote_name(req, name);
+  httpd_resp_sendstr_chunk(req, arr ? "[" : "{");
+  lastLevel = level;
+  level++;
+}
+
+static void json_close(httpd_req_t *req, bool arr = false) {
+  httpd_resp_sendstr_chunk(req, arr ? "]" : "}");
+  level--;
+  lastLevel = level;
+}
+
+static void json_number(httpd_req_t *req, const char* name, const char* value) {
+  json_quote_name(req, name);
+  json_quote_val(req, value);
+  lastLevel = level;
+}
+
+static void json_prop(httpd_req_t *req, const char* name, const char* value) {
+  json_quote_name(req, name);
+  json_quote_val(req, value);
+  lastLevel = level;
+}
+
+static esp_err_t cmd_handler(httpd_req_t *req)
+{
+    if (!isAuthenticated(req)) return ESP_OK;
+
+    const char *eventName = req->uri + sizeof("/cmd/") - 1;
+    if (strlen(eventName) == 0 || eventName[strlen(eventName) - 1] == '/') {
+        // return list of all plugins
+        httpd_resp_send_404(req);
+        return ESP_OK;
+    }
+
+    char buf[255];
+    int len = req->content_len;
+    httpd_req_recv(req, buf, MIN(len, 255));
+
+    run_rule((unsigned char*)buf, len);
+
+    json_init();
+    json_open(req);
+    json_prop(req, "response", "OK");
+    json_close(req);
     httpd_resp_sendstr_chunk(req, NULL);
     return ESP_OK;
 }
@@ -677,6 +776,200 @@ void quick_register(const char * uri, httpd_method_t method,  esp_err_t handler(
         .user_ctx  = ctx
     };
     httpd_register_uri_handler(server, &uri_handler);
+}
+
+char _snonce[33];
+char _sopaque[33];
+#define _srealm "authenticate"
+#define qop_auth "qop=auth"
+
+static char* md5str(char *in, char *out){
+  mbedtls_md5_context _ctx;
+  uint8_t i;
+  uint8_t * _buf = (uint8_t*)malloc(16);
+  if(_buf == NULL)
+    return out;
+  memset(_buf, 0x00, 16);
+  mbedtls_md5_init(&_ctx);
+  mbedtls_md5_starts(&_ctx);
+  mbedtls_md5_update(&_ctx, (const uint8_t *)in, strlen(in));
+  mbedtls_md5_finish(&_ctx, _buf);
+  for(i = 0; i < 16; i++) {
+    sprintf(out + (i * 2), "%02x", _buf[i]);
+  }
+  out[32] = 0;
+  free(_buf);
+  return out;
+}
+
+static bool startsWith(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
+}
+
+void _extractParam(char* authReq, const char* param, const char delimit, char *value){
+  char* _begin = strstr(authReq, param);
+  if (_begin == nullptr) { 
+    value[0] = 0;
+    return;
+  }
+  char* start = _begin + strlen(param);
+  int len = strchr(start, delimit) - start;
+  strncpy(value, start, len);
+  value[len] = 0;
+}
+
+char* _getRandomHexString(char *buffer) {
+  int i;
+  for(i = 0; i < 4; i++) {
+    sprintf (buffer + (i*8), "%08x", esp_random());
+  }
+  return buffer;
+}
+
+bool authenticate(httpd_req_t *req, const char * username, const char * password){
+  if(httpd_req_get_hdr_value_len(req, "Authorization")) {
+    char authReq[255];
+    char _username[17];
+    char _realm[17];
+    char _nonce[33];
+    char _opaque[33];
+    char _uri[33];
+    char _response[33];
+
+    ESP_LOGD(TAG, "checking authorization");
+    httpd_req_get_hdr_value_str(req, "Authorization", authReq, 255);
+    if(startsWith("Digest", authReq)) {
+      ESP_LOGD(TAG, "%s", authReq);
+
+      _extractParam(authReq, "username=\"", '"', _username);
+      if(!strlen(_username) || strcmp(username, _username) != 0) {
+        ESP_LOGD(TAG, "username is empty or does not match! %s:%s", _username, username);
+        authReq[0] = 0;
+        return false;
+      }
+      // extracting required parameters for RFC 2069 simpler Digest
+      _extractParam(authReq, "realm=\"", '"', _realm);
+      _extractParam(authReq, "nonce=\"", '"', _nonce);
+      _extractParam(authReq, "uri=\"", '"', _uri);
+      _extractParam(authReq, "response=\"", '"', _response);
+      _extractParam(authReq, "opaque=\"", '"', _opaque);
+
+      if((!strlen(_realm)) || (!strlen(_nonce)) || (!strlen(_uri)) || (!strlen(_response)) || (!strlen(_opaque))) {
+        authReq[0] = 0;
+        return false;
+      }
+      if(strcmp(_opaque,_sopaque) != 0 || strcmp(_nonce, _snonce) != 0 || strcmp(_realm, _srealm) != 0) {
+        ESP_LOGD(TAG, "something did not match");
+        authReq[0] = 0;
+        return false;
+      }
+      // parameters for the RFC 2617 newer Digest
+      char _nc[33];
+      char _cnonce[33];
+
+      if(strstr(authReq, qop_auth) != nullptr) {
+        _extractParam(authReq, "nc=", ',', _nc);
+        _extractParam(authReq, "cnonce=\"", '"', _cnonce);
+      }
+
+      char _H1[33];
+      char _H2[33];
+      char _in[196];
+      sprintf(_in, "%s:%s:%s", username, _realm, password);
+      md5str(_in, _H1);
+      ESP_LOGD(TAG, "Hash of user:realm:pass [%s] =%s", _in, _H1);
+      
+      int _currentMethod = req->method;
+      if(_currentMethod == HTTP_GET){
+          sprintf(_in, "GET:%s", _uri);
+          md5str(_in, _H2);
+      }else if(_currentMethod == HTTP_POST){
+          sprintf(_in, "POST:%s", _uri);
+          md5str(_in, _H2);
+      }else if(_currentMethod == HTTP_PUT){
+          sprintf(_in, "PUT:%s", _uri);
+          md5str(_in, _H2);
+      }else if(_currentMethod == HTTP_DELETE){
+          sprintf(_in, "DELETE:%s", _uri);
+          md5str(_in, _H2);
+      }else{
+          sprintf(_in, "GET:%s", _uri);
+          md5str(_in, _H2);
+      }
+      ESP_LOGI(TAG, "Hash of GET:uri [%s] =%s", _in, _H2);
+      char _responsecheck[33];
+      if(strstr(authReq, qop_auth) != nullptr) {
+          sprintf(_in, "%s:%s:%s:%s:auth:%s", _H1, _nonce, _nc, _cnonce, _H2);
+          md5str(_in, _responsecheck);
+      } else {
+          sprintf(_in, "%s:%s:%s", _H1, _nonce, _H2);
+          md5str(_in, _responsecheck);
+      }
+      ESP_LOGD(TAG, "The Proper response [%s] =%s:%s", _in, _responsecheck, _response);
+      if(strcmp(_response, _responsecheck) == 0){
+        authReq[0] = 0;
+        return true;
+      }
+    }
+    authReq[0] = 0;
+  }
+  return false;
+}
+
+void requestAuthentication(httpd_req_t *req) {
+    ESP_LOGD(TAG, "requesting authentication");
+    _getRandomHexString(_snonce);
+    _getRandomHexString(_sopaque);
+    char digest_header[196];
+    sprintf(digest_header, "Digest realm=\"%s\", qop=\"auth\", nonce=\"%s\", opaque=\"%s\"", _srealm, _snonce, _sopaque);
+    httpd_resp_set_hdr(req, "WWW-Authenticate", digest_header);
+    httpd_resp_set_status(req, "401 Unauthorized");
+    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+    httpd_resp_send(req, "Please Authenticate", 20);
+    //free(digest_header);
+}
+
+//#define www_username "admin"
+
+bool isAuthenticated(httpd_req_t *req) {
+    ESP_LOGD(TAG, "checking if its authenticted");
+    JsonObject& params = cfg->getConfig();
+    if (params["security"]["ip_block"]["enabled"]) {
+        uint32_t startIp = params["security"]["ip_block"]["start"];
+        uint32_t endIp = params["security"]["ip_block"]["end"];
+
+        struct sockaddr_in6 destAddr;
+        unsigned socklen = sizeof(destAddr);
+
+        int sockfd = httpd_req_to_sockfd(req);
+        if(getpeername(sockfd, (struct sockaddr *)&destAddr, &socklen)<0) {
+            ESP_LOGE(TAG, "getpeername failed, errno:%d",errno);
+        }
+
+        uint32_t clientIp = destAddr.sin6_addr.un.u32_addr[3];
+        if (clientIp < startIp || clientIp > endIp) {
+            ESP_LOGI(TAG, "IP not allowed %d", clientIp);
+            return false;
+        }
+    }
+    char *www_username = (char*)(params["security"]["user"] | "admin");
+    char *www_password = (char*)(params["security"]["pass"].as<char*>());
+    ESP_LOGD(TAG, "isAuthenticated %s:%s", www_username, www_password);
+    if (strlen(www_username) == 0) {
+        ESP_LOGD(TAG, "username not set");
+        return true;
+    }
+    ESP_LOGD(TAG, "need to check user and pass");
+    if (!authenticate(req, www_username, www_password))
+    {
+      ESP_LOGD(TAG, "requesting auth");
+      requestAuthentication(req);
+      return false;
+    }
+    return true;
 }
 
 /* Function to start the file server */
@@ -701,8 +994,7 @@ esp_err_t start_file_server(const char *base_path)
         ESP_LOGE(TAG, "Failed to allocate memory for server data");
         return ESP_ERR_NO_MEM;
     }
-    strlcpy(server_data->base_path, base_path,
-            sizeof(server_data->base_path));
+    strlcpy(server_data->base_path, base_path, sizeof(server_data->base_path));
 
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -735,6 +1027,7 @@ esp_err_t start_file_server(const char *base_path)
     quick_register("/plugin_state/*", HTTP_GET, plugins_state_handler, server_data);
 
     quick_register("/event/*", HTTP_GET, event_handler, server_data);
+    quick_register("/cmd/*", HTTP_POST, cmd_handler, server_data);
     quick_register("/system", HTTP_GET, system_handler, server_data);
     quick_register("/logs", HTTP_GET, logs_handler, server_data);
 

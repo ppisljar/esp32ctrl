@@ -3,34 +3,60 @@
 
 #include "esp_log.h"
 #include "esp_system.h"
+#include <driver/adc.h>
 #include <list>
 
-typedef uint8_t(io_digital_read_fn_t)(uint8_t);
-typedef esp_err_t(io_digital_write_fn_t)(uint8_t, bool);
-typedef uint16_t(io_analog_read_fn_t)(uint8_t);
-typedef esp_err_t(io_analog_write_fn_t)(uint8_t, uint16_t);
-typedef esp_err_t(io_set_direction_fn_t)(uint8_t, uint8_t);
+class IO_set_direction {
+  public:
+    IO_set_direction() {};
+    virtual uint8_t operator()(uint8_t pin, uint8_t mode) = 0;
+};
+
+class IO_digital_read {
+  public:
+    IO_digital_read() {};
+    virtual uint8_t operator()(uint8_t pin) = 0;
+};
+
+class IO_digital_write {
+  public:
+    IO_digital_write() {};
+    virtual uint8_t operator()(uint8_t pin, uint8_t value) = 0;
+};
+
+class IO_analog_read {
+  public:
+    IO_analog_read() {};
+    virtual uint16_t operator()(uint8_t pin) = 0;
+};
+
+class IO_analog_write {
+  public:
+    IO_analog_write() {};
+    virtual uint8_t operator()(uint8_t pin, uint16_t value) = 0;
+};
+
 
 struct IO_DIGITAL_PINS {
   uint8_t start;
   uint8_t end;
-  io_digital_write_fn_t* digital_write = 0;
-  io_digital_read_fn_t* digital_read = 0;
-  io_set_direction_fn_t* set_direction = 0;
+  IO_digital_write* digital_write = 0;
+  IO_digital_read* digital_read = 0;
+  IO_set_direction* set_direction = 0;
 };
 
 struct IO_ANALOG_PINS {
   uint8_t start;
   uint8_t end;
-  io_analog_write_fn_t* analog_write = 0;
-  io_analog_read_fn_t* analog_read = 0;
+  IO_analog_write* analog_write = 0;
+  IO_analog_read* analog_read = 0;
 };
 
 struct IO_PWM_PINS {
   uint8_t start;
   uint8_t end;
-  io_analog_write_fn_t* analog_write = 0;
-  io_analog_read_fn_t* analog_read = 0;
+  IO_analog_write* analog_write = 0;
+  IO_analog_read* analog_read = 0;
 };
 
 class IO
@@ -54,6 +80,49 @@ class IO
         uint16_t analogRead(uint8_t pin);
         esp_err_t analogWrite(uint8_t pin, uint16_t value);
         esp_err_t setDirection(uint8_t pin, uint8_t direction);
+};
+
+
+
+
+class ESP_set_direction : public IO_set_direction {
+    public:
+        ESP_set_direction() { };
+        uint8_t operator()(uint8_t pin, uint8_t mode) {
+            return gpio_set_direction((gpio_num_t)pin, (gpio_mode_t)mode);
+        }
+};
+
+class ESP_digital_read : public IO_digital_read {
+    public:
+        ESP_digital_read() { };
+        uint8_t operator()(uint8_t pin) {
+            return gpio_get_level((gpio_num_t)pin);
+        }
+};
+
+class ESP_digital_write : public IO_digital_write {
+    public:
+        ESP_digital_write() {};
+        uint8_t operator()(uint8_t pin, uint8_t value) {
+            return gpio_set_level((gpio_num_t)pin, value);
+        }
+};
+
+class ESP_analog_read : public IO_analog_read {
+    public:
+        ESP_analog_read() { };
+        uint16_t operator()(uint8_t pin) {
+            return adc1_get_raw((adc1_channel_t)pin);
+        }
+};
+
+class ESP_analog_write : public IO_analog_write {
+    public:
+        ESP_analog_write() {};
+        uint8_t operator()(uint8_t pin, uint16_t value) {
+            return 0;
+        }
 };
 
 /*

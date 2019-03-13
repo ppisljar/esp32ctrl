@@ -1,6 +1,6 @@
 
 #include "rule_engine.h"
-#include "../plugins/plugin.h"
+
 
 #define byte uint8_t
 #define TAG_RE "RuleEngine"
@@ -86,6 +86,81 @@ int parse_rules(byte *rules, long len) {
 
 int averagerun = 1000;
 int lastrun = 0;
+uint8_t run_rule(byte* start, uint8_t len = 255) {
+    byte* cmd = start;
+    Plugin *p;
+    byte *var;
+    while(cmd[0] != CMD_ENDON && ((cmd - start) < len)) {
+        switch(cmd[0]) {
+            case CMD_GPIO:
+                ESP_LOGI(TAG_RE, "cmd GPIO %d = %d", cmd[1], cmd[2]);
+                gpio_set_direction((gpio_num_t)cmd[1], GPIO_MODE_INPUT_OUTPUT);
+                gpio_set_level((gpio_num_t)cmd[1], cmd[2]);
+                cmd += 3;
+                break;
+            case CMD_DELAY:
+                // todo: add pointer to here to the timers ?
+                ESP_LOGI(TAG_RE, "cmd delay %d", cmd[1]);
+                cmd += 2;
+                break;
+            case CMD_EVENT:
+                ESP_LOGI(TAG_RE, "cmd triggering event %d", cmd[1]);
+                TRIGGER_EVENT(cmd[1]);
+                cmd += 2;
+                break;
+            case CMD_TIMER:
+                ESP_LOGI(TAG_RE, "cmd triggering timer %d time: %d", cmd[1], cmd[2]*100);
+                TRIGGER_TIMER(cmd[1], cmd[2]*100);
+                cmd += 3;
+                break;
+            // sets state on device
+            case CMD_SET:
+                ESP_LOGI(TAG_RE, "cmd set %d %d", cmd[1], cmd[2]);
+                p = active_plugins[cmd[1]];
+                ESP_LOGI(TAG_RE, "cmd set %p %p", p, cmd+4);
+                // we need to know variable name ...
+                // 1. it can be in the rules, will make it slower
+                // 2. we can allow setting variable name by index
+                p->setStatePtr(cmd[2], cmd+4);
+
+                // we need to get value
+                // 1. this depends on the type of variable: byte, 2 bytes, 4 bytes, string
+                cmd += cmd[3] + 4; // increase by the amount of bytes this command took
+                break;
+            // if statement
+            case CMD_IF:
+                ESP_LOGI(TAG_RE, "cmd IF");
+                cmd++;
+                if (multi_compare(&cmd)) {
+                    ESP_LOGI(TAG_RE, "IF/IF");
+                    //cmd++;
+                } else {
+                    ESP_LOGI(TAG_RE, "IF/ELSE");
+                    while(cmd[0] != CMD_ELSE) cmd++;
+                    cmd++;
+                }
+                break;
+            // else statement, if we are here it means if was executed and we need to skip code
+            // until we find endif command
+            case CMD_ELSE:
+                ESP_LOGI(TAG_RE, "cmd else");
+                while(cmd[0] != CMD_ENDIF) cmd++;
+                break;
+            // endif commands, does nothing, just marker for if/else
+            case CMD_ENDIF:
+                ESP_LOGI(TAG_RE, "cmd endif");
+                cmd++;
+                break;
+            // plugin provided commands
+            default:
+                ESP_LOGI(TAG_RE, "cmd: %i", cmd[0]);
+                cmd++;
+                break;
+        }
+    }
+    return (uint8_t)(cmd-start);
+}
+
 void run_rules() {
     int startrun = (xTaskGetTickCount() * portTICK_PERIOD_MS);
     uint16_t diff = ((xTaskGetTickCount() * portTICK_PERIOD_MS) - lastrun) / 10; // todo: needs to check for overflow
@@ -140,74 +215,7 @@ void run_rules() {
         if (match) {
             ESP_LOGI(TAG_RE, "match! executing rule [%x %x %x %x]", cmd[0], cmd[1], cmd[2], cmd[3]);
             // for each command
-            while(cmd[0] != CMD_ENDON) {
-                switch(cmd[0]) {
-                    case CMD_GPIO:
-                        ESP_LOGI(TAG_RE, "cmd GPIO %d", cmd[1]);
-                        gpio_set_direction((gpio_num_t)cmd[1], GPIO_MODE_INPUT_OUTPUT);
-                        gpio_set_level((gpio_num_t)cmd[1], cmd[2]);
-                        cmd += 3;
-                        break;
-                    case CMD_DELAY:
-                        // todo: add pointer to here to the timers ?
-                        ESP_LOGI(TAG_RE, "cmd delay %d", cmd[1]);
-                        cmd += 2;
-                        break;
-                    case CMD_EVENT:
-                        ESP_LOGI(TAG_RE, "cmd triggering event %d", cmd[1]);
-                        TRIGGER_EVENT(cmd[1]);
-                        cmd += 2;
-                        break;
-                    case CMD_TIMER:
-                        ESP_LOGI(TAG_RE, "cmd triggering timer %d time: %d", cmd[1], cmd[2]*100);
-                        TRIGGER_TIMER(cmd[1], cmd[2]*100);
-                        cmd += 3;
-                        break;
-                    // sets state on device
-                    case CMD_SET:
-                        ESP_LOGI(TAG_RE, "cmd set %d %d", cmd[1], cmd[2]);
-                        p = active_plugins[cmd[1]];
-                        ESP_LOGI(TAG_RE, "cmd set %p %p", p, cmd+4);
-                        // we need to know variable name ...
-                        // 1. it can be in the rules, will make it slower
-                        // 2. we can allow setting variable name by index
-                        p->setStatePtr(cmd[2], cmd+4);
-
-                        // we need to get value
-                        // 1. this depends on the type of variable: byte, 2 bytes, 4 bytes, string
-                        cmd += cmd[3] + 4; // increase by the amount of bytes this command took
-                        break;
-                    // if statement
-                    case CMD_IF:
-                        ESP_LOGI(TAG_RE, "cmd IF");
-                        cmd++;
-                        if (multi_compare(&cmd)) {
-                            ESP_LOGI(TAG_RE, "IF/IF");
-                            //cmd++;
-                        } else {
-                            ESP_LOGI(TAG_RE, "IF/ELSE");
-                            while(cmd[0] != CMD_ELSE) cmd++;
-                            cmd++;
-                        }
-                        break;
-                    // else statement, if we are here it means if was executed and we need to skip code
-                    // until we find endif command
-                    case CMD_ELSE:
-                        ESP_LOGI(TAG_RE, "cmd else");
-                        while(cmd[0] != CMD_ENDIF) cmd++;
-                        break;
-                    // endif commands, does nothing, just marker for if/else
-                    case CMD_ENDIF:
-                        ESP_LOGI(TAG_RE, "cmd endif");
-                        cmd++;
-                        break;
-                    // plugin provided commands
-                    default:
-                        ESP_LOGI(TAG_RE, "cmd: %i", cmd[0]);
-                        cmd++;
-                        break;
-                }
-            }
+            cmd += run_rule(cmd);
         }
     }
 

@@ -5,7 +5,7 @@ const char *P010_TAG = "PCA9685Plugin";
 PLUGIN_CONFIG(PCA9685Plugin, interval, freq, type)
 PLUGIN_STATS(PCA9685Plugin, value, value)
 
-class PCA9685Plugin_analog_write {
+class PCA9685Plugin_analog_write : public IO_analog_write {
     private:
         uint8_t addr;
         struct IO_ANALOG_PINS *pins;
@@ -27,7 +27,7 @@ bool PCA9685Plugin::init(JsonObject &params) {
 
     pca9685_set_pwm_frequency(addr, freq);
     PCA9685Plugin_analog_write *analogWrite = new PCA9685Plugin_analog_write(addr, &pins);
-    pins.analog_write = (io_analog_write_fn_t*)analogWrite;
+    pins.analog_write = analogWrite;
     io.addAnalogPins(16, &pins);
 
     return true;

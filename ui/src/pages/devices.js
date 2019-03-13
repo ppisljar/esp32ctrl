@@ -2,6 +2,7 @@ import { h, Component } from 'preact';
 import { settings } from '../lib/settings';
 import { devices } from '../devices';
 import { loadDevices } from '../lib/espeasy';
+import { ICON_CLASS } from 'mini-toastr';
 
 export class DevicesPage extends Component {
     constructor(props) {
@@ -38,17 +39,23 @@ export class DevicesPage extends Component {
                     if (v.value === true) v.value = 1;
                     if (v.value === false) v.value = 0;
                 });
+                const iconClass = `${task.icon}`;
                 return (
                     <div class="device">
-                        <div class="info">
-                             {i+1}: <input type="checkbox" defaultChecked={task.enabled} data-prop={enabledProp} onChange={this.handleEnableToggle}></input>
-                             &nbsp;&nbsp;{task.name} [{deviceType}]
-                            <a href={editUrl}>edit</a>
+                        <div class="icon">
+                            <span class={iconClass} />
                         </div>
-                        <div class="vars">
-                         {vals.map(v => {
-                                return (<span>{v.name}: {v.value} </span>);
-                            })}
+                        <div class="body">
+                            <div class="info">
+                                {i+1}: <input type="checkbox" defaultChecked={task.enabled} data-prop={enabledProp} onChange={this.handleEnableToggle}></input>
+                                &nbsp;&nbsp;{task.name} [{deviceType}]
+                                <a href={editUrl}>edit</a>
+                            </div>
+                            <div class="vars">
+                            {vals.map(v => {
+                                    return (<span>{v.name}: {v.value} </span>);
+                                })}
+                            </div>
                         </div>
                     </div>
                     )

@@ -2,6 +2,28 @@ import { h, Component } from 'preact';
 import { get, set, getKeys } from '../../lib/helpers';
 import { settings } from '../../lib/settings';
 
+const longToByteArray = function(/*long*/long) {
+    // we want to represent the input as a 8-bytes array
+    var byteArray = [0, 0, 0, 0, 0, 0, 0, 0];
+
+    for ( var index = 0; index < byteArray.length; index ++ ) {
+        var byte = long & 0xff;
+        byteArray [ index ] = byte;
+        long = (long - byte) / 256 ;
+    }
+
+    return byteArray;
+};
+
+const byteArrayToLong = function(/*byte[]*/byteArray) {
+    var value = 0;
+    for ( var i = byteArray.length - 1; i >= 0; i--) {
+        value = (value * 256) + byteArray[i];
+    }
+
+    return value;
+};
+
 export class Form extends Component {
     constructor(props) {
         super(props);
@@ -11,10 +33,21 @@ export class Form extends Component {
                 let val = this.form.elements[id].value;
                 if (config.type === 'checkbox') {
                     val =  this.form.elements[id].checked ? 1 : 0;
-                } else if (config.type === 'number' || config.type === 'ip') {
+                } else if (config.type === 'number') {
                     val = parseFloat(val);
                 } else if (config.type === 'select') {
                     val = isNaN(val) ? val : parseInt(val);
+                } else if (config.type === 'ip') {
+                    const part = parseInt(id.split('.').pop());
+                    let currentValue;
+                    if (prop.startsWith('ROOT')) {
+                        currentValue = settings.get(prop.replace('ROOT.', ''));
+                    } else {
+                        currentValue = get(this.props.selected, prop);
+                    }
+                    const arr = longToByteArray(currentValue);
+                    arr[part] = val;
+                    val = byteArrayToLong(arr); 
                 }
                 if (prop.startsWith('ROOT')) {
                     settings.set(prop.replace('ROOT.', ''), val);
@@ -41,11 +74,12 @@ export class Form extends Component {
                     <input id={id} type="number" value={value} min={config.min} max={config.max} onChange={this.onChange(id, varName, config)}/>
                 ) ;
             case 'ip':
+                const ip = value ? longToByteArray(value): [0,0,0,0];
                 return [
-                    (<input id={`${id}.0`} type="number" min="0" max="255" onChange={this.onChange(`${id}.0`, `${varName}.0`, config)} style="width: 80px" value={value ? value[0] : null} />),
-                    (<input id={`${id}.1`} type="number" min="0" max="255" onChange={this.onChange(`${id}.1`, `${varName}.1`, config)} style="width: 80px" value={value ? value[1] : null} />),
-                    (<input id={`${id}.2`} type="number" min="0" max="255" onChange={this.onChange(`${id}.2`, `${varName}.2`, config)} style="width: 80px" value={value ? value[2] : null} />),
-                    (<input id={`${id}.3`} type="number" min="0" max="255" onChange={this.onChange(`${id}.3`, `${varName}.3`, config)} style="width: 80px" value={value ? value[3] : null} />)
+                    (<input id={`${id}.0`} type="number" min="0" max="255" onChange={this.onChange(`${id}.0`, varName, config)} style="width: 80px" value={ip ? ip[0] : 0} />),
+                    (<input id={`${id}.1`} type="number" min="0" max="255" onChange={this.onChange(`${id}.1`, varName, config)} style="width: 80px" value={ip ? ip[1] : 0} />),
+                    (<input id={`${id}.2`} type="number" min="0" max="255" onChange={this.onChange(`${id}.2`, varName, config)} style="width: 80px" value={ip ? ip[2] : 0} />),
+                    (<input id={`${id}.3`} type="number" min="0" max="255" onChange={this.onChange(`${id}.3`, varName, config)} style="width: 80px" value={ip ? ip[3] : 0} />)
                 ]
             case 'password':
                 return (

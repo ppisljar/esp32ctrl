@@ -1,5 +1,24 @@
 import { h, Component } from 'preact';
 
+const CMD = {
+  SET     : 0xf0,
+  SET_CFG : 0xf1,
+  EVENT   : 0xf2,
+  TIMER   : 0xf3,
+  DELAY   : 0xf4,
+  RESET   : 0xf5,
+  GPIO    : 0xf6,
+  GET     : 0xf7,
+  GET_CFG : 0xf8,
+  VAR     : 0xf9,
+  SEND    : 0xfa,
+  X8      : 0xfb,
+  IF      : 0xfc,
+  ELSE    : 0xfd,
+  ENDIF   : 0xfe,
+  ENDON   : 0xff,
+}
+
 export class ToolsPage extends Component {
     constructor(props) {
         super(props);
@@ -7,16 +26,34 @@ export class ToolsPage extends Component {
         this.history = '';
 
         this.sendCommand = (e) => {
-            fetch(`/control?cmd=${this.cmd.value}`).then(response => response.text()).then(response => {
+            const cmdParts = this.cmd.value.split(',');
+            const cmdArray = [];
+            const cmd = CMD[cmdParts[0].toUpperCase()];
+            if (!cmd) return;
+            
+            cmdParts.forEach((part, i) => {
+                if (i === 0) {
+                    cmdArray.push(cmd);
+                    return;
+                }
+                const val = parseInt(part);
+                cmdArray.push(val);
+            });
+
+            fetch(`/cmd/3`, {
+                method: 'POST',
+                body: new Uint8Array(cmdArray),
+            }).then(response => response.text()).then(response => {
                 this.cmdOutput.value = response;
             });
         }
     }
 
     fetch() {
-        fetch('/logjson').then(response => response.json()).then(response => {
-            response.Log.Entries.map(log => {
-                this.history += `<div class="log_level${log.level}"><span class="date">${(new Date(log.timestamp).toLocaleTimeString())}</span><span class="value">${log.text}</span></div>`;
+        fetch('/logs').then(response => response.text()).then(response => {
+            response.split('\n').map(log => {
+                if (log.trim() === '') return;
+                this.history += `<div class="log_level"><span class="date"></span><span class="value">${log}</span></div>`;
                 this.log.innerHTML = this.history;
                 if (true) {
                     this.log.scrollTop = this.log.scrollHeight;

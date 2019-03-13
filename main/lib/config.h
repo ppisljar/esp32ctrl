@@ -5,7 +5,7 @@
 #include "ArduinoJson.h"
 
 #define config_filename "/spiffs/config.json"
-#define config_default_json "{\"wifi\":{\"ssid\":\"Teltonika_Router\",\"pass\":\"secpass123\"},\"plugins\":[]}"
+#define config_default_json "{\"web\":{\"user\":\"admin\",\"pass\":\"admin\"},\"wifi\":{\"ssid\":\"Teltonika_Router\",\"pass\":\"secpass123\"},\"plugins\":[]}"
 
 
 
