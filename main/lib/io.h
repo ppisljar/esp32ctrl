@@ -43,18 +43,6 @@ struct IO_DIGITAL_PINS {
   IO_digital_write* digital_write = 0;
   IO_digital_read* digital_read = 0;
   IO_set_direction* set_direction = 0;
-};
-
-struct IO_ANALOG_PINS {
-  uint8_t start;
-  uint8_t end;
-  IO_analog_write* analog_write = 0;
-  IO_analog_read* analog_read = 0;
-};
-
-struct IO_PWM_PINS {
-  uint8_t start;
-  uint8_t end;
   IO_analog_write* analog_write = 0;
   IO_analog_read* analog_read = 0;
 };
@@ -63,17 +51,11 @@ class IO
 {
     private:
         static std::list<struct IO_DIGITAL_PINS*> io_d_pins;
-        static std::list<struct IO_ANALOG_PINS*> io_a_pins;
-        static std::list<struct IO_PWM_PINS*> io_p_pins;
     public:
         IO() {}
 
         static void addDigitalPins(uint8_t number, struct IO_DIGITAL_PINS *pins);
-        static void addAnalogPins(uint8_t number, struct IO_ANALOG_PINS *pins);
-        static void addPWMPins(uint8_t number, struct IO_PWM_PINS *pins);
         static struct IO_DIGITAL_PINS* getDigitalPin(uint8_t pin_nr);
-        static struct IO_ANALOG_PINS* getAnalogPin(uint8_t pin_nr);
-        static struct IO_PWM_PINS* getPWMPin(uint8_t pin_nr);
 
         uint8_t digitalRead(uint8_t pin);
         esp_err_t digitalWrite(uint8_t pin, bool value);
@@ -89,6 +71,7 @@ class ESP_set_direction : public IO_set_direction {
     public:
         ESP_set_direction() { };
         uint8_t operator()(uint8_t pin, uint8_t mode) {
+            if (pin > 31) return ESP_FAIL;
             return gpio_set_direction((gpio_num_t)pin, (gpio_mode_t)mode);
         }
 };
@@ -97,6 +80,8 @@ class ESP_digital_read : public IO_digital_read {
     public:
         ESP_digital_read() { };
         uint8_t operator()(uint8_t pin) {
+            if (pin > 31) return 0;
+            ESP_LOGI("IO", "ESP get level %d", pin);
             return gpio_get_level((gpio_num_t)pin);
         }
 };
@@ -105,6 +90,8 @@ class ESP_digital_write : public IO_digital_write {
     public:
         ESP_digital_write() {};
         uint8_t operator()(uint8_t pin, uint8_t value) {
+            if (pin > 31) return ESP_FAIL;
+            ESP_LOGI("IO", "ESP set level %d = %d", pin, value);
             return gpio_set_level((gpio_num_t)pin, value);
         }
 };
@@ -113,7 +100,8 @@ class ESP_analog_read : public IO_analog_read {
     public:
         ESP_analog_read() { };
         uint16_t operator()(uint8_t pin) {
-            return adc1_get_raw((adc1_channel_t)pin);
+            if (pin < 32) return 0;
+            return adc1_get_raw((adc1_channel_t)(pin-32));
         }
 };
 

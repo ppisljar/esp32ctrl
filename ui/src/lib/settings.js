@@ -1,10 +1,11 @@
 import { get, set, getKeys } from './helpers';
 
 const diff = (obj1, obj2, path = '') => {
-    return getKeys(obj2).map(key => {
+    const keys = [ ...new Set([...getKeys(obj1), ...getKeys(obj2)])];
+    return keys.map(key => {
         const val1 = obj1[key];
         const val2 = obj2[key];
-        if (val1 instanceof Object) return diff(val1, val2, path ? `${path}.${key}` : key);
+        if (val1 instanceof Object && val2 instanceof Object) return diff(val1, val2, path ? `${path}.${key}` : key);
         else if (val1 !== val2) {
             return [{ path: `${path}.${key}`, val1, val2 }];
         } else return [];
@@ -15,6 +16,10 @@ class Settings {
     init(settings) {
         this.settings = settings;
         this.apply();
+    }
+
+    user(userName) {
+        this.userName = userName;
     }
 
     get(prop = -1) {

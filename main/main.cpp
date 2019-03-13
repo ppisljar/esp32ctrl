@@ -60,6 +60,9 @@ Plugin* PCF8574Plugin_myProtoype = Plugin::addPrototype(9, new PCF8574Plugin);
 Plugin* PCA9685Plugin_myProtoype = Plugin::addPrototype(10, new PCA9685Plugin);
 Plugin* MQTTPlugin_myProtoype = Plugin::addPrototype(11, new MQTTPlugin);
 
+uint8_t ledPin;
+bool ledInverted;
+
 extern "C" void app_main()
 {
     //initArduino();
@@ -77,6 +80,10 @@ extern "C" void app_main()
     JsonObject& cfgObject = cfg->getConfig();
     ESP_LOGI(TAG, "loaded configuration");
 
+    uint8_t resetPin = cfgObject["hardware"]["reset"]["pin"] | 255;
+    ledPin = cfgObject["hardware"]["led"]["gpio"] | 255;
+    ledInverted = cfgObject["hardware"]["led"]["inverted"] | false;
+
     JsonObject &wifi_config = cfgObject["wifi"];
     wifi_plugin = new WiFiPlugin();
     wifi_plugin->init(wifi_config);
@@ -86,11 +93,8 @@ extern "C" void app_main()
     pins.set_direction = new ESP_set_direction();
     pins.digital_read = new ESP_digital_read();
     pins.digital_write = new ESP_digital_write();
+    pins.analog_read = new ESP_analog_read();
     io.addDigitalPins(40, &pins);
-
-    struct IO_ANALOG_PINS analogPins;
-    analogPins.analog_read = new ESP_analog_read();
-    io.addAnalogPins(8, &analogPins);
 
     if (cfgObject["hardware"]["i2c"]["enabled"]) {
         JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];
@@ -99,7 +103,6 @@ extern "C" void app_main()
         if (i2cerr != ESP_OK) {
             ESP_LOGE(TAG, "i2c init: error %x", i2cerr);
         };
-        
     }
 
     if (cfgObject["ntp"]["enabled"]) {
@@ -131,9 +134,13 @@ extern "C" void app_main()
     i2c_plugin->scan();
 
     for(;;) {
+        // if (resetPin < 32 && gpio_get_level((gpio_num_t)resetPin) == 0) {
+        //     ESP_LOGI(TAG, "reset button pressed");
+        //     esp_restart();
+        // }
         ESP_LOGD(TAG, "executing rule engine");
         run_rules();
-        vTaskDelay( 1000 / portTICK_PERIOD_MS);
+        vTaskDelay( 100 / portTICK_PERIOD_MS);
     }
 }
 

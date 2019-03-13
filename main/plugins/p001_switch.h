@@ -11,7 +11,6 @@ class SwitchPlugin: public Plugin {
         JsonObject *cfg;
     public:
         Plugin* clone() const { 
-            ESP_LOGI("PLUGIN", "cloning ...");
             return new SwitchPlugin; 
         }
 

@@ -4,7 +4,7 @@ import { settings } from '../lib/settings';
 import { ioPins } from "../lib/pins";
 
 export const pins = () => {
-    return ioPins.getPins(['digital_in', 'digital_out']);
+    return ioPins.getPins(['core', 'digital_in', 'digital_out']);
 };
 
 const pinState = [
@@ -68,6 +68,23 @@ const formConfig = {
                 13: { name: 'Pin Mode GPIO-13', type: 'select', options: pinState },
                 14: { name: 'Pin Mode GPIO-14', type: 'select', options: pinState },
                 15: { name: 'Pin Mode GPIO-15', type: 'select', options: pinState },
+                16: { name: 'Pin Mode GPIO-16', type: 'select', options: pinState },
+                17: { name: 'Pin Mode GPIO-17', type: 'select', options: pinState },
+                18: { name: 'Pin Mode GPIO-18', type: 'select', options: pinState },
+                19: { name: 'Pin Mode GPIO-19', type: 'select', options: pinState },
+                20: { name: 'Pin Mode GPIO-20', type: 'select', options: pinState },
+                21: { name: 'Pin Mode GPIO-21', type: 'select', options: pinState },
+                22: { name: 'Pin Mode GPIO-22', type: 'select', options: pinState },
+                23: { name: 'Pin Mode GPIO-23', type: 'select', options: pinState },
+                24: { name: 'Pin Mode GPIO-24', type: 'select', options: pinState },
+                25: { name: 'Pin Mode GPIO-25', type: 'select', options: pinState },
+                26: { name: 'Pin Mode GPIO-26', type: 'select', options: pinState },
+                27: { name: 'Pin Mode GPIO-27', type: 'select', options: pinState },
+                28: { name: 'Pin Mode GPIO-28', type: 'select', options: pinState },
+                29: { name: 'Pin Mode GPIO-29', type: 'select', options: pinState },
+                30: { name: 'Pin Mode GPIO-30', type: 'select', options: pinState },
+                31: { name: 'Pin Mode GPIO-31', type: 'select', options: pinState },
+                
             }
         }
     },

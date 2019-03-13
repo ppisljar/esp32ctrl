@@ -50,7 +50,7 @@ bool SwitchPlugin::setState(JsonObject &params) {
 }
 
 void* SwitchPlugin::getStatePtr(uint8_t val) {
-    ESP_LOGD(P001_TAG, "return state ptr %d (%p)", val, &state);
+    ESP_LOGI(P001_TAG, "return state ptr %d (%p) [%d]", val, &state, state);
     if (val == 0) return &state;
     return NULL;
 }
@@ -60,6 +60,7 @@ void SwitchPlugin::setStatePtr(uint8_t n, uint8_t *val) {
 
     if (n == 0) {
         state = *val;
+        ESP_LOGI(P001_TAG, "updating state %d (%p) [%d]", n, &state, state);
         if (gpio != 255) {
             io.digitalWrite(gpio, state);
         }

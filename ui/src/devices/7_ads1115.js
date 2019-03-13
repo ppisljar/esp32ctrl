@@ -10,7 +10,7 @@ export const ads1115 = {
     defaults: () => ({
         'params.addr': 72,
     }),
-    getDeviceAnalogPins: (conf) => {
+    getDevicePins: (conf) => {
         return [...new Array(4)].map((x,i) => ({
             name: `${conf.name} GPIO${i}`,
             value: i,

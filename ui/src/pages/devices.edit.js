@@ -8,6 +8,7 @@ const baseFields = {
     enabled: { name: 'Enabled', type: 'checkbox', var: 'enabled' },
     name: { name: 'Name', type: 'string', var: 'name' },
     icon: { name: 'Icon', type: 'string', var: 'icon' },
+    lock: { name: 'Lock', type: 'checkbox', var: 'lock', adminOnly: true },
 };
 
 const getFormConfig = (type) => {

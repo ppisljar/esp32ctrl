@@ -23,9 +23,10 @@ class PCF8574Plugin_digital_read : public IO_digital_read {
             pins = pins_;
         }
         uint8_t operator()(uint8_t pin) {
-            uint8_t val;
+            uint8_t val = 0;
             ESP_LOGI(P009_TAG, "reading pin %d on addr %d with pinStart %d", pin, addr, pins->start);
             pcf8574_port_read(addr, &val);
+            ESP_LOGI(P009_TAG, "current port value: %d", val);
             return (val >> (pin - pins->start)) & 1;
         }
 };
@@ -40,7 +41,7 @@ class PCF8574Plugin_digital_write : public IO_digital_write {
             pins = pins_;
         }
         uint8_t operator()(uint8_t pin, uint8_t value) {
-            uint8_t val;
+            uint8_t val = 0;
             ESP_LOGI(P009_TAG, "writting %d to pin %d on addr %d with pinStart %d", value, pin, addr, pins->start);
             pcf8574_port_read(addr, &val);
             ESP_LOGI(P009_TAG, "current port value: %d", val);
@@ -63,6 +64,16 @@ bool PCF8574Plugin::init(JsonObject &params) {
     pins.digital_write = digitalWrite;
     pins.digital_read = digitalRead;
     io.addDigitalPins(8, &pins);
+
+    uint8_t val = 0;
+    pcf8574_port_read(pcf8574_addr, &val);
+    ESP_LOGI(P009_TAG, "initial port value: %d", val);
+    val = 0;
+    pcf8574_port_write(pcf8574_addr, val);
+    val = 0;
+    pcf8574_port_read(pcf8574_addr, &val);
+    ESP_LOGI(P009_TAG, "af.boot port value: %d", val);
+
 
     return true;
 }

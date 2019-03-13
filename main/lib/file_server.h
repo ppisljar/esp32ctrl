@@ -23,7 +23,7 @@
 #include "mbedtls/md5.h"
 
 esp_err_t start_file_server(const char *base_path);
-static bool isAuthenticated(httpd_req_t *req);
-static bool authenticate(httpd_req_t *req, const char * username, const char * password);
+bool isAuthenticated(httpd_req_t *req);
+bool authenticate(httpd_req_t *req, const char * username, const char * password);
 
 #endif

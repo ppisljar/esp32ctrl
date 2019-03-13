@@ -1,7 +1,9 @@
 import { h, Component } from 'preact';
+import { settings } from '../../lib/settings';
 
 export class Menu extends Component {
     renderMenuItem(menu) {
+        if (menu.adminOnly && settings.userName !== 'admin') return (null);
         if (menu.action) {
             return (
             <li class="pure-menu-item">

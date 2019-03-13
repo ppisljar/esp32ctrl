@@ -40,6 +40,213 @@ extern Plugin *active_plugins[10];
 extern uint8_t event_triggers[8];
 extern int averagerun;
 
+
+char _snonce[33];
+char _sopaque[33];
+#define _srealm "authenticate"
+#define qop_auth "qop=auth"
+
+static char* md5str(char *in, char *out){
+  mbedtls_md5_context _ctx;
+  uint8_t i;
+  uint8_t * _buf = (uint8_t*)malloc(16);
+  if(_buf == NULL)
+    return out;
+  memset(_buf, 0x00, 16);
+  mbedtls_md5_init(&_ctx);
+  mbedtls_md5_starts(&_ctx);
+  mbedtls_md5_update(&_ctx, (const uint8_t *)in, strlen(in));
+  mbedtls_md5_finish(&_ctx, _buf);
+  for(i = 0; i < 16; i++) {
+    sprintf(out + (i * 2), "%02x", _buf[i]);
+  }
+  out[32] = 0;
+  free(_buf);
+  return out;
+}
+
+static bool startsWith(const char *pre, const char *str)
+{
+    size_t lenpre = strlen(pre),
+           lenstr = strlen(str);
+    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
+}
+
+void _extractParam(char* authReq, const char* param, const char delimit, char *value){
+  char* _begin = strstr(authReq, param);
+  if (_begin == nullptr) { 
+    value[0] = 0;
+    return;
+  }
+  char* start = _begin + strlen(param);
+  int len = strchr(start, delimit) - start;
+  strncpy(value, start, len);
+  value[len] = 0;
+}
+
+char* _getRandomHexString(char *buffer) {
+  int i;
+  for(i = 0; i < 4; i++) {
+    sprintf (buffer + (i*8), "%08x", esp_random());
+  }
+  return buffer;
+}
+
+#define USER_ADMIN "admin"
+#define USER_USER "user"
+#define USER_VIEW "view"
+
+bool authenticate(httpd_req_t *req){
+  JsonObject& params = cfg->getConfig();
+  //char *username = (char*)(params["security"]["user"] | "admin");
+  char password[32];
+  strlcpy(password, params["security"]["pass"] | "", 32);
+  if(httpd_req_get_hdr_value_len(req, "Authorization")) {
+    char authReq[255];
+    char _username[17];
+    char _realm[17];
+    char _nonce[33];
+    char _opaque[33];
+    char _uri[33];
+    char _response[33];
+
+    ESP_LOGI(TAG, "checking authorization");
+    httpd_req_get_hdr_value_str(req, "Authorization", authReq, 255);
+    if(startsWith("Digest", authReq)) {
+      ESP_LOGI(TAG, "%s", authReq);
+
+      _extractParam(authReq, "username=\"", '"', _username);
+      if(!strlen(_username)) {
+        ESP_LOGI(TAG, "username is empty %s", _username);
+        authReq[0] = 0;
+        return false;
+      }
+
+      if (strcmp(_username, USER_ADMIN) == 0) {}
+      else if (strcmp(_username, USER_USER) == 0) {
+        strlcpy(password, params["security"]["userpass"] | "", 32);
+      } else if (strcmp(_username, USER_VIEW) == 0) {
+        strlcpy(password, params["security"]["viewpass"] | "", 32);
+      } else {
+          ESP_LOGI(TAG, "username is invalid %s", _username);
+      }
+      // extracting required parameters for RFC 2069 simpler Digest
+      _extractParam(authReq, "realm=\"", '"', _realm);
+      _extractParam(authReq, "nonce=\"", '"', _nonce);
+      _extractParam(authReq, "uri=\"", '"', _uri);
+      _extractParam(authReq, "response=\"", '"', _response);
+      _extractParam(authReq, "opaque=\"", '"', _opaque);
+
+      if((!strlen(_realm)) || (!strlen(_nonce)) || (!strlen(_uri)) || (!strlen(_response)) || (!strlen(_opaque))) {
+        authReq[0] = 0;
+        return false;
+      }
+      if(strcmp(_opaque,_sopaque) != 0 || strcmp(_nonce, _snonce) != 0 || strcmp(_realm, _srealm) != 0) {
+        ESP_LOGI(TAG, "something did not match");
+        authReq[0] = 0;
+        return false;
+      }
+      // parameters for the RFC 2617 newer Digest
+      char _nc[33];
+      char _cnonce[33];
+
+      if(strstr(authReq, qop_auth) != nullptr) {
+        _extractParam(authReq, "nc=", ',', _nc);
+        _extractParam(authReq, "cnonce=\"", '"', _cnonce);
+      }
+
+      char _H1[33];
+      char _H2[33];
+      char _in[196];
+      sprintf(_in, "%s:%s:%s", _username, _realm, password);
+      md5str(_in, _H1);
+      ESP_LOGI(TAG, "Hash of user:realm:pass [%s] =%s", _in, _H1);
+      
+      int _currentMethod = req->method;
+      if(_currentMethod == HTTP_GET){
+          sprintf(_in, "GET:%s", _uri);
+          md5str(_in, _H2);
+      }else if(_currentMethod == HTTP_POST){
+          sprintf(_in, "POST:%s", _uri);
+          md5str(_in, _H2);
+      }else if(_currentMethod == HTTP_PUT){
+          sprintf(_in, "PUT:%s", _uri);
+          md5str(_in, _H2);
+      }else if(_currentMethod == HTTP_DELETE){
+          sprintf(_in, "DELETE:%s", _uri);
+          md5str(_in, _H2);
+      }else{
+          sprintf(_in, "GET:%s", _uri);
+          md5str(_in, _H2);
+      }
+      ESP_LOGI(TAG, "Hash of GET:uri [%s] =%s", _in, _H2);
+      char _responsecheck[33];
+      if(strstr(authReq, qop_auth) != nullptr) {
+          sprintf(_in, "%s:%s:%s:%s:auth:%s", _H1, _nonce, _nc, _cnonce, _H2);
+          md5str(_in, _responsecheck);
+      } else {
+          sprintf(_in, "%s:%s:%s", _H1, _nonce, _H2);
+          md5str(_in, _responsecheck);
+      }
+      ESP_LOGI(TAG, "The Proper response [%s] =%s:%s", _in, _responsecheck, _response);
+      if(strcmp(_response, _responsecheck) == 0){
+        authReq[0] = 0;
+        httpd_resp_set_hdr(req, "User", _username);
+        return true;
+      }
+    }
+    authReq[0] = 0;
+  }
+  return false;
+}
+
+
+
+void requestAuthentication(httpd_req_t *req) {
+    ESP_LOGD(TAG, "requesting authentication");
+    _getRandomHexString(_snonce);
+    _getRandomHexString(_sopaque);
+    char digest_header[196];
+    sprintf(digest_header, "Digest realm=\"%s\", qop=\"auth\", nonce=\"%s\", opaque=\"%s\"", _srealm, _snonce, _sopaque);
+    httpd_resp_set_hdr(req, "WWW-Authenticate", digest_header);
+    httpd_resp_set_status(req, "401 Unauthorized");
+    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
+    httpd_resp_send(req, "Please Authenticate", 20);
+    //free(digest_header);
+}
+
+bool isAuthenticated(httpd_req_t *req) {
+    ESP_LOGD(TAG, "checking if its authenticted");
+    JsonObject& params = cfg->getConfig();
+    if (params["security"]["ip_block"]["enabled"]) {
+        uint32_t startIp = params["security"]["ip_block"]["start"];
+        uint32_t endIp = params["security"]["ip_block"]["end"];
+
+        struct sockaddr_in6 destAddr;
+        unsigned socklen = sizeof(destAddr);
+
+        int sockfd = httpd_req_to_sockfd(req);
+        if(getpeername(sockfd, (struct sockaddr *)&destAddr, &socklen)<0) {
+            ESP_LOGE(TAG, "getpeername failed, errno:%d",errno);
+        }
+
+        uint32_t clientIp = destAddr.sin6_addr.un.u32_addr[3];
+        if (clientIp < startIp || clientIp > endIp) {
+            ESP_LOGI(TAG, "IP not allowed %d", clientIp);
+            return false;
+        }
+    }
+    
+    ESP_LOGI(TAG, "need to check user and pass");
+    if (!authenticate(req))
+    {
+      ESP_LOGD(TAG, "requesting auth");
+      requestAuthentication(req);
+      return false;
+    }
+    return true;
+}
+
 /* Send HTTP response with a run-time generated html consisting of
  * a list of all files and folders under the requested path */
 static esp_err_t http_resp_dir_html(httpd_req_t *req)
@@ -131,7 +338,7 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req)
 /* Send HTTP response with the contents of the requested file */
 static esp_err_t http_resp_file(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    
 
     char filepath[FILE_PATH_MAX];
     FILE *fd = NULL;
@@ -143,6 +350,7 @@ static esp_err_t http_resp_file(httpd_req_t *req)
     /* Concatenate the requested file path */
     strcat(filepath, req->uri);
     if (stat(filepath, &file_stat) == -1) {
+        if (!isAuthenticated(req)) return ESP_OK;
         ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
         /* If file doesn't exist respond with 404 Not Found */
         httpd_resp_send_404(req);
@@ -151,6 +359,7 @@ static esp_err_t http_resp_file(httpd_req_t *req)
 
     fd = fopen(filepath, "r");
     if (!fd) {
+        if (!isAuthenticated(req)) return ESP_OK;
         ESP_LOGE(TAG, "Failed to read existing file : %s", filepath);
         /* If file exists but unable to open respond with 500 Server Error */
         httpd_resp_set_status(req, "500 Server Error");
@@ -158,6 +367,7 @@ static esp_err_t http_resp_file(httpd_req_t *req)
         return ESP_OK;
     }
 
+    if (!IS_FILE_EXT(req->uri, ".htm") && !IS_FILE_EXT(req->uri, ".html") && !IS_FILE_EXT(req->uri, ".css") && !IS_FILE_EXT(req->uri, ".js") && !isAuthenticated(req)) return ESP_OK;
     ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filepath, file_stat.st_size);
     set_content_type_from_file(req);
 
@@ -776,200 +986,6 @@ void quick_register(const char * uri, httpd_method_t method,  esp_err_t handler(
         .user_ctx  = ctx
     };
     httpd_register_uri_handler(server, &uri_handler);
-}
-
-char _snonce[33];
-char _sopaque[33];
-#define _srealm "authenticate"
-#define qop_auth "qop=auth"
-
-static char* md5str(char *in, char *out){
-  mbedtls_md5_context _ctx;
-  uint8_t i;
-  uint8_t * _buf = (uint8_t*)malloc(16);
-  if(_buf == NULL)
-    return out;
-  memset(_buf, 0x00, 16);
-  mbedtls_md5_init(&_ctx);
-  mbedtls_md5_starts(&_ctx);
-  mbedtls_md5_update(&_ctx, (const uint8_t *)in, strlen(in));
-  mbedtls_md5_finish(&_ctx, _buf);
-  for(i = 0; i < 16; i++) {
-    sprintf(out + (i * 2), "%02x", _buf[i]);
-  }
-  out[32] = 0;
-  free(_buf);
-  return out;
-}
-
-static bool startsWith(const char *pre, const char *str)
-{
-    size_t lenpre = strlen(pre),
-           lenstr = strlen(str);
-    return lenstr < lenpre ? false : strncmp(pre, str, lenpre) == 0;
-}
-
-void _extractParam(char* authReq, const char* param, const char delimit, char *value){
-  char* _begin = strstr(authReq, param);
-  if (_begin == nullptr) { 
-    value[0] = 0;
-    return;
-  }
-  char* start = _begin + strlen(param);
-  int len = strchr(start, delimit) - start;
-  strncpy(value, start, len);
-  value[len] = 0;
-}
-
-char* _getRandomHexString(char *buffer) {
-  int i;
-  for(i = 0; i < 4; i++) {
-    sprintf (buffer + (i*8), "%08x", esp_random());
-  }
-  return buffer;
-}
-
-bool authenticate(httpd_req_t *req, const char * username, const char * password){
-  if(httpd_req_get_hdr_value_len(req, "Authorization")) {
-    char authReq[255];
-    char _username[17];
-    char _realm[17];
-    char _nonce[33];
-    char _opaque[33];
-    char _uri[33];
-    char _response[33];
-
-    ESP_LOGD(TAG, "checking authorization");
-    httpd_req_get_hdr_value_str(req, "Authorization", authReq, 255);
-    if(startsWith("Digest", authReq)) {
-      ESP_LOGD(TAG, "%s", authReq);
-
-      _extractParam(authReq, "username=\"", '"', _username);
-      if(!strlen(_username) || strcmp(username, _username) != 0) {
-        ESP_LOGD(TAG, "username is empty or does not match! %s:%s", _username, username);
-        authReq[0] = 0;
-        return false;
-      }
-      // extracting required parameters for RFC 2069 simpler Digest
-      _extractParam(authReq, "realm=\"", '"', _realm);
-      _extractParam(authReq, "nonce=\"", '"', _nonce);
-      _extractParam(authReq, "uri=\"", '"', _uri);
-      _extractParam(authReq, "response=\"", '"', _response);
-      _extractParam(authReq, "opaque=\"", '"', _opaque);
-
-      if((!strlen(_realm)) || (!strlen(_nonce)) || (!strlen(_uri)) || (!strlen(_response)) || (!strlen(_opaque))) {
-        authReq[0] = 0;
-        return false;
-      }
-      if(strcmp(_opaque,_sopaque) != 0 || strcmp(_nonce, _snonce) != 0 || strcmp(_realm, _srealm) != 0) {
-        ESP_LOGD(TAG, "something did not match");
-        authReq[0] = 0;
-        return false;
-      }
-      // parameters for the RFC 2617 newer Digest
-      char _nc[33];
-      char _cnonce[33];
-
-      if(strstr(authReq, qop_auth) != nullptr) {
-        _extractParam(authReq, "nc=", ',', _nc);
-        _extractParam(authReq, "cnonce=\"", '"', _cnonce);
-      }
-
-      char _H1[33];
-      char _H2[33];
-      char _in[196];
-      sprintf(_in, "%s:%s:%s", username, _realm, password);
-      md5str(_in, _H1);
-      ESP_LOGD(TAG, "Hash of user:realm:pass [%s] =%s", _in, _H1);
-      
-      int _currentMethod = req->method;
-      if(_currentMethod == HTTP_GET){
-          sprintf(_in, "GET:%s", _uri);
-          md5str(_in, _H2);
-      }else if(_currentMethod == HTTP_POST){
-          sprintf(_in, "POST:%s", _uri);
-          md5str(_in, _H2);
-      }else if(_currentMethod == HTTP_PUT){
-          sprintf(_in, "PUT:%s", _uri);
-          md5str(_in, _H2);
-      }else if(_currentMethod == HTTP_DELETE){
-          sprintf(_in, "DELETE:%s", _uri);
-          md5str(_in, _H2);
-      }else{
-          sprintf(_in, "GET:%s", _uri);
-          md5str(_in, _H2);
-      }
-      ESP_LOGI(TAG, "Hash of GET:uri [%s] =%s", _in, _H2);
-      char _responsecheck[33];
-      if(strstr(authReq, qop_auth) != nullptr) {
-          sprintf(_in, "%s:%s:%s:%s:auth:%s", _H1, _nonce, _nc, _cnonce, _H2);
-          md5str(_in, _responsecheck);
-      } else {
-          sprintf(_in, "%s:%s:%s", _H1, _nonce, _H2);
-          md5str(_in, _responsecheck);
-      }
-      ESP_LOGD(TAG, "The Proper response [%s] =%s:%s", _in, _responsecheck, _response);
-      if(strcmp(_response, _responsecheck) == 0){
-        authReq[0] = 0;
-        return true;
-      }
-    }
-    authReq[0] = 0;
-  }
-  return false;
-}
-
-void requestAuthentication(httpd_req_t *req) {
-    ESP_LOGD(TAG, "requesting authentication");
-    _getRandomHexString(_snonce);
-    _getRandomHexString(_sopaque);
-    char digest_header[196];
-    sprintf(digest_header, "Digest realm=\"%s\", qop=\"auth\", nonce=\"%s\", opaque=\"%s\"", _srealm, _snonce, _sopaque);
-    httpd_resp_set_hdr(req, "WWW-Authenticate", digest_header);
-    httpd_resp_set_status(req, "401 Unauthorized");
-    httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
-    httpd_resp_send(req, "Please Authenticate", 20);
-    //free(digest_header);
-}
-
-//#define www_username "admin"
-
-bool isAuthenticated(httpd_req_t *req) {
-    ESP_LOGD(TAG, "checking if its authenticted");
-    JsonObject& params = cfg->getConfig();
-    if (params["security"]["ip_block"]["enabled"]) {
-        uint32_t startIp = params["security"]["ip_block"]["start"];
-        uint32_t endIp = params["security"]["ip_block"]["end"];
-
-        struct sockaddr_in6 destAddr;
-        unsigned socklen = sizeof(destAddr);
-
-        int sockfd = httpd_req_to_sockfd(req);
-        if(getpeername(sockfd, (struct sockaddr *)&destAddr, &socklen)<0) {
-            ESP_LOGE(TAG, "getpeername failed, errno:%d",errno);
-        }
-
-        uint32_t clientIp = destAddr.sin6_addr.un.u32_addr[3];
-        if (clientIp < startIp || clientIp > endIp) {
-            ESP_LOGI(TAG, "IP not allowed %d", clientIp);
-            return false;
-        }
-    }
-    char *www_username = (char*)(params["security"]["user"] | "admin");
-    char *www_password = (char*)(params["security"]["pass"].as<char*>());
-    ESP_LOGD(TAG, "isAuthenticated %s:%s", www_username, www_password);
-    if (strlen(www_username) == 0) {
-        ESP_LOGD(TAG, "username not set");
-        return true;
-    }
-    ESP_LOGD(TAG, "need to check user and pass");
-    if (!authenticate(req, www_username, www_password))
-    {
-      ESP_LOGD(TAG, "requesting auth");
-      requestAuthentication(req);
-      return false;
-    }
-    return true;
 }
 
 /* Function to start the file server */

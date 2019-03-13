@@ -16,7 +16,9 @@ const formConfig = {
                 name: { name: 'Unit Name', type: 'string' },
                 nr: { name: 'Unit Number', type: 'number' },
                 appendToHost: { name: 'Append Unit Name to Hostname', type: 'checkbox' },
-                password: { name: 'Admin Password', type: 'string', var: 'security.pass'}
+                view_password: { name: 'View Password', type: 'string', var: 'security.viewpass'},
+                edit_password: { name: 'User Password', type: 'string', var: 'security.userpass'},
+                admin_password: { name: 'Admin Password', type: 'string', var: 'security.pass'},
             }
         },
         wifi: {

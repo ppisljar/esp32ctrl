@@ -7,18 +7,14 @@ class InputSwitch extends Device {
         this.params = {
             name: 'Configuration',
             configs: {
-                gpio: { name: 'GPIO', type: 'select', options: () => { return window.pins() } },
+                gpio: { name: 'GPIO', type: 'gpio' },
                 interval: { name: 'Interval', type: 'number' },
             }
         };
 
         this.gpio = {
             name: 'GPIO Settings (global)',
-            configs: {
-                pullup: { name: 'Internal PullUp', type: 'checkbox' },
-                inversed: { name: 'Inversed logic', type: 'checkbox' },
-                send_boot_state: { name: 'Send Boot State', type: 'checkbox' },
-            }
+            configs: {}
         };
 
         this.vals = 1;

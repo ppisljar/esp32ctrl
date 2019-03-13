@@ -8,9 +8,9 @@ PLUGIN_STATS(ADS111xPlugin, value, value)
 class ads1115_analog_read : public IO_analog_read {
     private:
         ADS1115 *adc0;
-        IO_ANALOG_PINS *pins;
+        IO_DIGITAL_PINS *pins;
     public:
-        ads1115_analog_read(ADS1115 *adc, IO_ANALOG_PINS *p) {
+        ads1115_analog_read(ADS1115 *adc, IO_DIGITAL_PINS *p) {
             adc0 = adc;
             pins = p;
         }
@@ -37,7 +37,7 @@ bool ADS111xPlugin::init(JsonObject &params) {
     // };
 
     pins.analog_read =  new ads1115_analog_read(adc0, &pins);
-    io.addAnalogPins(4, &pins);
+    io.addDigitalPins(4, &pins);
 
     if (adc0->testConnection()) {
         ESP_LOGI(P007_TAG, "ADS1115 connection successful");

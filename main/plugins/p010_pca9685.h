@@ -12,7 +12,7 @@ class PCA9685Plugin: public Plugin {
         int value = 0;
         JsonObject *cfg;
         uint8_t addr;
-        struct IO_ANALOG_PINS pins;
+        struct IO_DIGITAL_PINS pins;
     public:
         Plugin* clone() const {
             return new PCA9685Plugin;

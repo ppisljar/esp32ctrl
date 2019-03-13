@@ -2,6 +2,9 @@
 
 static const char *TAG = "WiFiPlugin";
 
+extern uint8_t ledPin;
+extern bool ledInverted;
+
 PLUGIN_CONFIG(WiFiPlugin, mode, ssid, pass, ssid2, pass2, static_ip)
 PLUGIN_STATS(WiFiPlugin, status.wifi_connected, status.wifi_connected)
 
@@ -17,23 +20,25 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             ESP_ERROR_CHECK(esp_wifi_connect());
             break;
         case SYSTEM_EVENT_STA_GOT_IP:
+            if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 0 : 1);
             p.status.wifi_connected = true;
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_GOT_IP");
             ESP_LOGI(TAG, "Got IP: '%s'",
                     ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
             break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
+            if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 1 : 0);
             p.status.wifi_connected = false;
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_DISCONNECTED");
 			ESP_LOGI(TAG, "reason: %d\n",event->event_info.disconnected.reason);
 
-            if (mode == 1) { 
-                p.secondarySSID = (strlen(params["ssid2"]) > 0 && !p.secondarySSID);
-                char *ssid = p.secondarySSID ? (char*)params["ssid2"].as<char*>() : (char*)params["ssid"].as<char*>();
-                char *pass = p.secondarySSID ? (char*)params["pass2"].as<char*>() : (char*)params["pass"].as<char*>();
-                strcpy((char*)p.wifi_config.sta.ssid, ssid);
-                strcpy((char*)p.wifi_config.sta.password, pass);
-            }
+            // if (mode == 1) { 
+            //     p.secondarySSID = (strlen(params["ssid2"]) > 0 && !p.secondarySSID);
+            //     char *ssid = p.secondarySSID ? (char*)params["ssid2"].as<char*>() : (char*)params["ssid"].as<char*>();
+            //     char *pass = p.secondarySSID ? (char*)params["pass2"].as<char*>() : (char*)params["pass"].as<char*>();
+            //     strcpy((char*)p.wifi_config.sta.ssid, ssid);
+            //     strcpy((char*)p.wifi_config.sta.password, pass);
+            // }
             ESP_ERROR_CHECK(esp_wifi_connect());
             break;
         default:

@@ -11,33 +11,33 @@ function copy(o) {
     return output;
 }
 
+const pinState = [
+    { name: 'Default', value: 0 },
+    { name: 'Low', value: 1 },
+    { name: 'High', value: 2 },
+    { name: 'Input', value: 3 },
+];
+
 class IO_PINS {
     constructor() {
-        this.digitalPins = [];
-        this.analogPins = [];
-
+        this.digitalPins = [{ name: '-- select --', value: 255, capabilities: ['digital_in', 'analog_in', 'digital_out', 'analog_out'], configs: {}}];
         for (let i = 0; i < 40; i++) {
             const pin = {
                 name: `ESP32 GPIO${i}`,
                 value: i,
-                capabilities: ['digital_in'],
+                capabilities: ['core', 'digital_in'],
+                configs: {},
             };
             if (pin.value < 32) {
+                pin.configs.pull_up = { name: `Pin ${pin.value} pull up`, type: 'checkbox' };
+                pin.configs.boot_state = { name: `Pin ${pin.value} boot state`, type: 'select', options: pinState, var: `ROOT.hardware.gpio.${pin.value}` };
                 pin.capabilities.push('digital_out');
-                this.digitalPins.push(pin);
             } else {
                 pin.capabilities.push('analog_in');
-                this.analogPins.push(pin);
             }
-            
+            this.digitalPins.push(pin);
         }
-
-        for (let i = 0; i < 16; i++) {
-            this.analogPins.push({
-                name: `ESP32 A${i}`,
-                value: i,
-            });
-        }
+        
     }
 
     setUsedPins(allPins) {
@@ -58,7 +58,7 @@ class IO_PINS {
             if (plugin.getDeviceUsedPins) {
                 const pins = plugin.getDeviceUsedPins(cur);
                 pins.forEach(p => {
-                    allPins.find(ap => ap.value === p).disabled = cur.name;
+                    allPins.find(ap => ap.value == p).disabled = cur.name;
                 });
             }
         }, []);
@@ -67,40 +67,19 @@ class IO_PINS {
     getPins(capabilities) {
         const plugins = settings.get('plugins');
         const startPins = copy(this.digitalPins);
-        const pins = plugins.reduce((acc, cur) => {
+        let lastNr = startPins[startPins.length-1].value;
+        const pins = plugins.reduce((acc, cur, i) => {
             const plugin = devices.find(d => d.value === cur.type).fields;
-            if (plugin.getDeviceDigitalPins) {
-                const pins = plugin.getDeviceDigitalPins(cur);
-                const start = acc.length;
+            if (plugin.getDevicePins) {
+                const pins = plugin.getDevicePins(cur, i);
                 pins.forEach(p => {
-                    p.value += start;
+                    p.value = ++lastNr;
                     acc.push(p);
                 });
             }
             return acc;
         }, [...startPins]);
         this.setUsedPins(pins);
-        const cs = Array.isArray(capabilities) ? capabilities : [capabilities];
-        return pins.filter(pin => cs.every(c => pin.capabilities.includes(c)));
-    }
-
-    getAnalogPins(capabilities) {
-        const plugins = settings.get('plugins');
-        const startPins = copy(this.analogPins);
-        const pins = plugins.reduce((acc, cur) => {
-            const plugin = devices.find(d => d.value === cur.type).fields;
-            if (plugin.getDeviceAnalogPins) {
-                const pins = plugin.getDeviceAnalogPins(cur);
-                const start = acc.length;
-                pins.forEach(p => {
-                    p.value += start;
-                    acc.push(p);
-                });
-            }
-            return acc;
-        }, [...startPins]);
-        //this.setUsedPins(pins);
-        return pins;
         const cs = Array.isArray(capabilities) ? capabilities : [capabilities];
         return pins.filter(pin => cs.every(c => pin.capabilities.includes(c)));
     }

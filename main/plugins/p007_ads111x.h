@@ -13,7 +13,7 @@ class ADS111xPlugin: public Plugin {
         JsonObject *cfg;
         ADS1115 *adc0;
         uint8_t addr;
-        struct IO_ANALOG_PINS pins;
+        struct IO_DIGITAL_PINS pins;
     public:
         Plugin* clone() const {
             return new ADS111xPlugin;

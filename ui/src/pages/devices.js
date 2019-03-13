@@ -4,6 +4,8 @@ import { devices } from '../devices';
 import { loadDevices } from '../lib/espeasy';
 import { ICON_CLASS } from 'mini-toastr';
 
+const user = "admin";
+
 export class DevicesPage extends Component {
     constructor(props) {
         super(props);
@@ -21,9 +23,17 @@ export class DevicesPage extends Component {
             plugins.push({ type: 0, name: 'new device', enabled: false, params: {}});
             window.location.hash = `#devices/edit/${plugins.length - 1}`;
         }
+
+        const removeItem = (items, i) => items.slice(0, i-1).concat(items.slice(i, items.length));
+
+        this.deleteDevice = (i) => {
+            settings.settings.plugins = removeItem(settings.settings.plugins, i); 
+            this.forceUpdate();
+        }
     }
     render(props) {
-        const tasks = settings.get('plugins');
+        let tasks = settings.get('plugins');
+        if (settings.userName !== 'admin') tasks = tasks.filter(task => !task.lock);
         if (!tasks) return;
         return (
             <div>
@@ -50,6 +60,7 @@ export class DevicesPage extends Component {
                                 {i+1}: <input type="checkbox" defaultChecked={task.enabled} data-prop={enabledProp} onChange={this.handleEnableToggle}></input>
                                 &nbsp;&nbsp;{task.name} [{deviceType}]
                                 <a href={editUrl}>edit</a>
+                                <a onClick={() => {this.deleteDevice(i+1);}}>delete</a>
                             </div>
                             <div class="vars">
                             {vals.map(v => {

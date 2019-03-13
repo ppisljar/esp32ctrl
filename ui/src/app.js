@@ -84,3 +84,5 @@ const load = async () => {
 }
 
 load();
+
+console.log(document.location);

@@ -7,7 +7,7 @@ export class SysVarsPage extends Component {
     }
 
     fetch() {
-        fetch(`/sysinfo_json`).then(response => response.json()).then(vars => {
+        fetch(`/system`).then(response => response.json()).then(vars => {
             this.setState({ vars });
         });
     }
@@ -22,15 +22,16 @@ export class SysVarsPage extends Component {
                         <fieldset>
                         <label>{v}</label>
                         {
-                            Object.keys(value).map((v1, i) => {
-                                const value1 = value[v1];
-                                return (
-                                    <div class="pure-control-group">
-                                        <label class="pure-checkbox">{v1}</label>
-                                        <input readOnly={true} type="text" value={value1} />
-                                    </div>
-                                )
-                            })
+                            value
+                            // Object.keys(value).map((v1, i) => {
+                            //     const value1 = value[v1];
+                            //     return (
+                            //         <div class="pure-control-group">
+                            //             <label class="pure-checkbox">{v1}</label>
+                            //             <input readOnly={true} type="text" value={value1} />
+                            //         </div>
+                            //     )
+                            // })
                         }
                         </fieldset>
                     )

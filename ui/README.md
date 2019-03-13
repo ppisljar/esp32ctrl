@@ -108,3 +108,45 @@ you will need to add a line like this `import { yourPluginName } from './103_you
 before the last line insert something like `{ name: 'My Plugin Name', value: 103, fields: yourPluginName },`, where name is the name as shown in UI, value is your plugin id number and for fields pass the imported object.
 
 5) save all files and from project root run `npm run build`, which will build new files for you in `/build` folder. Its time to test!
+
+
+
+
+
+
+
+
+
+
+
+TODO:
+
+
+
+-- v1
+- testirat DHT, DS
+- ads1115 pin configuration
+- switch: inverted option
+- commands: send event, update state, get state
+
+-- v2:
+- device formulas
+- improving rule system
+--- events should be using event loop
+--- support for hardware timers
+--- support for hardware interrupts
+--- support for adding new commands (by plugins)
+--- support for checking/reading/updating multi byte values
+- adding devices:
+--- rotary encoder (two gpios)
+--- some sensors (check what libs are there i can direclty use)
+
+-- v3:
+- mqtt
+- prominiextender
+--- support ZC detection
+--- support remote one wire protocols
+--- external watchdog
+- redundancy plugin
+--- master/slave mode selection
+--- slave: watchdog master (i2c)

@@ -35,7 +35,7 @@ export class Form extends Component {
                     val =  this.form.elements[id].checked ? 1 : 0;
                 } else if (config.type === 'number') {
                     val = parseFloat(val);
-                } else if (config.type === 'select') {
+                } else if (config.type === 'select' || config.type === 'gpio') {
                     val = isNaN(val) ? val : parseInt(val);
                 } else if (config.type === 'ip') {
                     const part = parseInt(id.split('.').pop());
@@ -55,7 +55,7 @@ export class Form extends Component {
                     set(this.props.selected, prop, val);
                 }
                 if (config.onChange) {
-                    config.onChange(e, this);
+                    config.onChange(e, this, id, prop, val, config);
                 }
 
                 this.forceUpdate();
@@ -64,6 +64,7 @@ export class Form extends Component {
     }
 
     renderConfig(id, config, value, varName) {
+        let options;
         switch (config.type) {
             case 'string':
                 return (
@@ -90,9 +91,9 @@ export class Form extends Component {
                     <input id={id} type="checkbox" defaultChecked={value} onChange={this.onChange(id, varName, config)} />
                 ) ;
             case 'select':
-                const options = (typeof config.options === 'function') ? config.options(this.props.selected) : config.options;
+                options = (typeof config.options === 'function') ? config.options(this.props.selected) : config.options;
                 return (
-                    <select id={id} type="password" onChange={this.onChange(id, varName, config)}>
+                    <select id={id} onChange={this.onChange(id, varName, config )}>
                         {options.map(option => {
                             const name = option instanceof Object ? option.name : option;
                             const val = option instanceof Object ? option.value : option;
@@ -104,6 +105,29 @@ export class Form extends Component {
                         })}
                     </select>
                 ) ;
+            case 'gpio':
+                options = window.pins();
+                const selectPin = (val, form) => {
+                    const pins = window.pins();
+                    const selectedPin = pins.find(pin => pin.value == val);
+                    form.props.config.groups.gpio.configs = { ...selectedPin.configs }
+                    form.forceUpdate();
+                }
+                return (
+                    <select id={id} onChange={this.onChange(id, varName, { ...config, onChange: (e, form, id, prop, val, config) => {
+                        selectPin(val, form);
+                    }})}>
+                        {options.map(option => {
+                            const name = option instanceof Object ? option.name : option;
+                            const val = option instanceof Object ? option.value : option;
+                            if (val === value) {
+                                return (<option value={val} selected>{name}</option>)
+                            } else {
+                                return (<option value={val} disabled={option.disabled ? true : null}>{name}{option.disabled ? ` [${option.disabled}]` : ''}</option>);
+                            }
+                        })}
+                    </select>
+                )
             case 'file':
                 return (
                     <input id={id} type="file" />
@@ -153,6 +177,7 @@ export class Form extends Component {
                 <label>{group.name}</label>
                 {keys.map(key => {
                     const conf = group.configs[key];
+                    if (conf.adminOnly && settings.userName !== 'admin') return (null);
                     return this.renderConfigGroup(`${id}.${key}`, conf, values);
                 })}
             </fieldset>
