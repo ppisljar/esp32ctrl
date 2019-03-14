@@ -8,6 +8,7 @@ class InputSwitch extends Device {
             name: 'Configuration',
             configs: {
                 gpio: { name: 'GPIO', type: 'gpio' },
+                invert: { name: 'Invert', type: 'checkbox' },
                 interval: { name: 'Interval', type: 'number' },
             }
         };
@@ -22,8 +23,10 @@ class InputSwitch extends Device {
 
     defaults = () => {
         return {
-            gpio: 255,
+            'params.gpio': 255,
+            'params.invert': false,
             interval: 60,
+
             'settings.values[0].name': 'Switch',
         }
     }

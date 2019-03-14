@@ -110,14 +110,14 @@ bool authenticate(httpd_req_t *req){
     char _uri[33];
     char _response[33];
 
-    ESP_LOGI(TAG, "checking authorization");
+    ESP_LOGD(TAG, "checking authorization");
     httpd_req_get_hdr_value_str(req, "Authorization", authReq, 255);
     if(startsWith("Digest", authReq)) {
-      ESP_LOGI(TAG, "%s", authReq);
+      ESP_LOGD(TAG, "%s", authReq);
 
       _extractParam(authReq, "username=\"", '"', _username);
       if(!strlen(_username)) {
-        ESP_LOGI(TAG, "username is empty %s", _username);
+        ESP_LOGD(TAG, "username is empty %s", _username);
         authReq[0] = 0;
         return false;
       }
@@ -128,7 +128,7 @@ bool authenticate(httpd_req_t *req){
       } else if (strcmp(_username, USER_VIEW) == 0) {
         strlcpy(password, params["security"]["viewpass"] | "", 32);
       } else {
-          ESP_LOGI(TAG, "username is invalid %s", _username);
+          ESP_LOGD(TAG, "username is invalid %s", _username);
       }
       // extracting required parameters for RFC 2069 simpler Digest
       _extractParam(authReq, "realm=\"", '"', _realm);
@@ -142,7 +142,7 @@ bool authenticate(httpd_req_t *req){
         return false;
       }
       if(strcmp(_opaque,_sopaque) != 0 || strcmp(_nonce, _snonce) != 0 || strcmp(_realm, _srealm) != 0) {
-        ESP_LOGI(TAG, "something did not match");
+        ESP_LOGD(TAG, "something did not match");
         authReq[0] = 0;
         return false;
       }
@@ -160,7 +160,7 @@ bool authenticate(httpd_req_t *req){
       char _in[196];
       sprintf(_in, "%s:%s:%s", _username, _realm, password);
       md5str(_in, _H1);
-      ESP_LOGI(TAG, "Hash of user:realm:pass [%s] =%s", _in, _H1);
+      ESP_LOGD(TAG, "Hash of user:realm:pass [%s] =%s", _in, _H1);
       
       int _currentMethod = req->method;
       if(_currentMethod == HTTP_GET){
@@ -179,7 +179,7 @@ bool authenticate(httpd_req_t *req){
           sprintf(_in, "GET:%s", _uri);
           md5str(_in, _H2);
       }
-      ESP_LOGI(TAG, "Hash of GET:uri [%s] =%s", _in, _H2);
+      ESP_LOGD(TAG, "Hash of GET:uri [%s] =%s", _in, _H2);
       char _responsecheck[33];
       if(strstr(authReq, qop_auth) != nullptr) {
           sprintf(_in, "%s:%s:%s:%s:auth:%s", _H1, _nonce, _nc, _cnonce, _H2);
@@ -188,7 +188,7 @@ bool authenticate(httpd_req_t *req){
           sprintf(_in, "%s:%s:%s", _H1, _nonce, _H2);
           md5str(_in, _responsecheck);
       }
-      ESP_LOGI(TAG, "The Proper response [%s] =%s:%s", _in, _responsecheck, _response);
+      ESP_LOGD(TAG, "The Proper response [%s] =%s:%s", _in, _responsecheck, _response);
       if(strcmp(_response, _responsecheck) == 0){
         authReq[0] = 0;
         httpd_resp_set_hdr(req, "User", _username);
@@ -232,12 +232,12 @@ bool isAuthenticated(httpd_req_t *req) {
 
         uint32_t clientIp = destAddr.sin6_addr.un.u32_addr[3];
         if (clientIp < startIp || clientIp > endIp) {
-            ESP_LOGI(TAG, "IP not allowed %d", clientIp);
+            ESP_LOGD(TAG, "IP not allowed %d", clientIp);
             return false;
         }
     }
     
-    ESP_LOGI(TAG, "need to check user and pass");
+    ESP_LOGD(TAG, "need to check user and pass");
     if (!authenticate(req))
     {
       ESP_LOGD(TAG, "requesting auth");
@@ -289,7 +289,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
             continue;
         }
         sprintf(entrysize, "%ld", entry_stat.st_size);
-        ESP_LOGI(TAG, "Found %s : %s (%s bytes)", entrytype, entry->d_name, entrysize);
+        ESP_LOGD(TAG, "Found %s : %s (%s bytes)", entrytype, entry->d_name, entrysize);
 
         if (first) { first = false; }
         else { httpd_resp_sendstr_chunk(req, "," ); }
@@ -368,7 +368,7 @@ static esp_err_t http_resp_file(httpd_req_t *req)
     }
 
     if (!IS_FILE_EXT(req->uri, ".htm") && !IS_FILE_EXT(req->uri, ".html") && !IS_FILE_EXT(req->uri, ".css") && !IS_FILE_EXT(req->uri, ".js") && !isAuthenticated(req)) return ESP_OK;
-    ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filepath, file_stat.st_size);
+    ESP_LOGD(TAG, "Sending file : %s (%ld bytes)...", filepath, file_stat.st_size);
     set_content_type_from_file(req);
 
     /* Retrieve the pointer to scratch buffer for temporary storage */
@@ -395,7 +395,7 @@ static esp_err_t http_resp_file(httpd_req_t *req)
 
     /* Close file after sending complete */
     fclose(fd);
-    ESP_LOGI(TAG, "File sending complete");
+    ESP_LOGD(TAG, "File sending complete");
 
     /* Respond with an empty chunk to signal HTTP response completion */
     httpd_resp_send_chunk(req, NULL, 0);
@@ -432,7 +432,7 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
                  configured->address, running->address);
         ESP_LOGW(TAG, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");
     }
-    ESP_LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08x)",
+    ESP_LOGD(TAG, "Running partition type %d subtype %d (offset 0x%08x)",
              running->type, running->subtype, running->address);
 
 
@@ -443,7 +443,7 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
     }
 
     update_partition = esp_ota_get_next_update_partition(NULL);
-    ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%x",
+    ESP_LOGD(TAG, "Writing to partition subtype %d at offset 0x%x",
              update_partition->subtype, update_partition->address);
     assert(update_partition != NULL);    
 
@@ -459,7 +459,7 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
 
     while (remaining > 0) {
 
-        ESP_LOGI(TAG, "Remaining size : %d", remaining);
+        ESP_LOGD(TAG, "Remaining size : %d", remaining);
         /* Receive the file part by part into a buffer */
         if ((received = httpd_req_recv(req, buf, MIN(remaining, SCRATCH_BUFSIZE))) <= 0) {
             if (received == HTTPD_SOCK_ERR_TIMEOUT) {
@@ -479,17 +479,17 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
             if (received > sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t) + sizeof(esp_app_desc_t)) {
                 // check current version with downloading
                 memcpy(&new_app_info, &buf[sizeof(esp_image_header_t) + sizeof(esp_image_segment_header_t)], sizeof(esp_app_desc_t));
-                ESP_LOGI(TAG, "New firmware version: %s", new_app_info.version);
+                ESP_LOGD(TAG, "New firmware version: %s", new_app_info.version);
 
                 esp_app_desc_t running_app_info;
                 if (esp_ota_get_partition_description(running, &running_app_info) == ESP_OK) {
-                    ESP_LOGI(TAG, "Running firmware version: %s", running_app_info.version);
+                    ESP_LOGD(TAG, "Running firmware version: %s", running_app_info.version);
                 }
 
                 const esp_partition_t* last_invalid_app = esp_ota_get_last_invalid_partition();
                 esp_app_desc_t invalid_app_info;
                 if (esp_ota_get_partition_description(last_invalid_app, &invalid_app_info) == ESP_OK) {
-                    ESP_LOGI(TAG, "Last invalid firmware version: %s", invalid_app_info.version);
+                    ESP_LOGD(TAG, "Last invalid firmware version: %s", invalid_app_info.version);
                 }
 
                 // check current version with last invalid partition
@@ -520,7 +520,7 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
                     httpd_resp_sendstr(req, "Failed to receive file!");
                     return ESP_FAIL;
                 }
-                ESP_LOGI(TAG, "esp_ota_begin succeeded");
+                ESP_LOGD(TAG, "esp_ota_begin succeeded");
             } else {
                 ESP_LOGE(TAG, "received package is not fit len");
                 httpd_resp_set_status(req, "500 Server Error");
@@ -542,7 +542,7 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
         remaining -= received;
     }
 
-    ESP_LOGI(TAG, "File reception complete");
+    ESP_LOGD(TAG, "File reception complete");
 
     /* Redirect onto root to see the updated file list */
     httpd_resp_set_status(req, "303 See Other");
@@ -583,7 +583,7 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
     /* Concatenate the requested file path */
     strcat(filepath, filename);
     if (stat(filepath, &file_stat) == 0) {
-        ESP_LOGI(TAG, "File already exists : %s", filepath);
+        ESP_LOGD(TAG, "File already exists : %s", filepath);
         /* If file exists respond with 400 Bad Request */
         unlink(filepath);
     }
@@ -608,7 +608,7 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
         return ESP_OK;
     }
 
-    ESP_LOGI(TAG, "Receiving file : %s...", filename);
+    ESP_LOGD(TAG, "Receiving file : %s...", filename);
 
     /* Retrieve the pointer to scratch buffer for temporary storage */
     char *buf = ((struct file_server_data *)req->user_ctx)->scratch;
@@ -620,7 +620,7 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
 
     while (remaining > 0) {
 
-        ESP_LOGI(TAG, "Remaining size : %d", remaining);
+        ESP_LOGD(TAG, "Remaining size : %d", remaining);
         /* Receive the file part by part into a buffer */
         if ((received = httpd_req_recv(req, buf, MIN(remaining, SCRATCH_BUFSIZE))) <= 0) {
             if (received == HTTPD_SOCK_ERR_TIMEOUT) {
@@ -660,7 +660,7 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
 
     /* Close file upon upload completion */
     fclose(fd);
-    ESP_LOGI(TAG, "File reception complete");
+    ESP_LOGD(TAG, "File reception complete");
 
     /* Redirect onto root to see the updated file list */
     httpd_resp_set_status(req, "200 OK");
@@ -703,7 +703,7 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
         return ESP_OK;
     }
 
-    ESP_LOGI(TAG, "Deleting file : %s", filename);
+    ESP_LOGD(TAG, "Deleting file : %s", filename);
     /* Delete file */
     unlink(filepath);
 
@@ -848,7 +848,7 @@ static esp_err_t event_handler(httpd_req_t *req)
         httpd_resp_send_404(req);
         return ESP_OK;
     }
-    ESP_LOGI(TAG, "received event: '%s'", eventName);
+    ESP_LOGD(TAG, "received event: '%s'", eventName);
 
     char* confData = spiffs_read_file("/spiffs/events.json"); // todo: possible memory leak in spiffs func
     if (confData == NULL) {
@@ -857,7 +857,7 @@ static esp_err_t event_handler(httpd_req_t *req)
     }
     jb.clear();
     JsonObject& events = jb.parseObject(confData); // todo: problem with multuple clients overriding json object
-    ESP_LOGI(TAG, "events loaded: %d", (int)events["heat_off"]);
+    ESP_LOGD(TAG, "events loaded: %d", (int)events["heat_off"]);
     if (!events.containsKey(eventName)) {
         httpd_resp_set_status(req, "200 OK");
         httpd_resp_sendstr(req, "EVENT NOT FOUND"); // todo: json response
@@ -1021,7 +1021,7 @@ esp_err_t start_file_server(const char *base_path)
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.max_uri_handlers = 16;
 
-    ESP_LOGI(TAG, "Starting HTTP Server");
+    ESP_LOGD(TAG, "Starting HTTP Server");
     if (httpd_start(&server, &config) != ESP_OK) {
         ESP_LOGE(TAG, "Failed to start file server!");
         return ESP_FAIL;

@@ -9,8 +9,8 @@
 
 class DHTPlugin: public Plugin {
     private:
-        int16_t temperature = 0;
-        int16_t humidity = 0;
+        float temperature = 0;
+        float humidity = 0;
         JsonObject *cfg;
     public:
         Plugin* clone() const {

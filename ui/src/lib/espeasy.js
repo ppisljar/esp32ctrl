@@ -291,6 +291,9 @@ export const storeRule = async (data) => {
     return;
 }
 
+export const getEvents = async (data) => {
+    return fetch ('/events.json').then(r => r.json());
+}
 
 export default {
     getJsonStat, loadDevices, getConfigNodes, getDashboardConfigNodes, getVariables, storeFile, deleteFile, storeDashboardConfig, loadDashboardConfig, storeRuleConfig, loadRuleConfig, storeRule

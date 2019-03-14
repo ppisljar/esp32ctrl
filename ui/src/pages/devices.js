@@ -33,12 +33,12 @@ export class DevicesPage extends Component {
     }
     render(props) {
         let tasks = settings.get('plugins');
-        if (settings.userName !== 'admin') tasks = tasks.filter(task => !task.lock);
         if (!tasks) return;
         return (
             <div>
                 <div><button type="button" onClick={this.addDevice}>add device</button></div>
             {tasks.map((task, i) => {
+                if (settings.userName !== 'admin' && task.lock) return (null);
                 const editUrl = `#devices/edit/${i}`;
                 const device = devices.find(d => d.value === task.type);
                 const deviceType = device ? device.name : '--unknown--';

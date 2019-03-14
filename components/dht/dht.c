@@ -1,205 +1,231 @@
-/**
- * @file dht.c
- *
- * ESP-IDF driver for DHT11/DHT22
- *
- * Ported from esp-open-rtos
- *
- * Copyright (C) 2016 Jonathan Hartsuiker (https://github.com/jsuiker)
- * Copyright (C) 2018 Ruslan V. Uss (https://github.com/UncleRus)
- * BSD Licensed as described in the file LICENSE
- */
+/*------------------------------------------------------------------------------
+
+	DHT22 temperature & humidity sensor AM2302 (DHT22) driver for ESP32
+
+	Jun 2017:	Ricardo Timmermann, new for DHT22  	
+
+	Code Based on Adafruit Industries and Sam Johnston and Coffe & Beer. Please help
+	to improve this code. 
+	
+	This example code is in the Public Domain (or CC0 licensed, at your option.)
+
+	Unless required by applicable law or agreed to in writing, this
+	software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+	CONDITIONS OF ANY KIND, either express or implied.
+
+	PLEASE KEEP THIS CODE IN LESS THAN 0XFF LINES. EACH LINE MAY CONTAIN ONE BUG !!!
+
+---------------------------------------------------------------------------------*/
+
+#define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+
+#include <stdio.h>
+#include "esp_log.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "esp_system.h"
+#include "driver/gpio.h"
+
 #include "dht.h"
 
-#include <freertos/FreeRTOS.h>
-#include <string.h>
-#include <esp_log.h>
+// == global defines =============================================
 
-// DHT timer precision in microseconds
-#define DHT_TIMER_INTERVAL 2
-#define DHT_DATA_BITS 40
+static const char* TAG = "DHT";
 
-/*
- *  Note:
- *  A suitable pull-up resistor should be connected to the selected GPIO line
- *
- *  __           ______          _______                              ___________________________
- *    \    A    /      \   C    /       \   DHT duration_data_low    /                           \
- *     \_______/   B    \______/    D    \__________________________/   DHT duration_data_high    \__
- *
- *
- *  Initializing communications with the DHT requires four 'phases' as follows:
- *
- *  Phase A - MCU pulls signal low for at least 18000 us
- *  Phase B - MCU allows signal to float back up and waits 20-40us for DHT to pull it low
- *  Phase C - DHT pulls signal low for ~80us
- *  Phase D - DHT lets signal float back up for ~80us
- *
- *  After this, the DHT transmits its first bit by holding the signal low for 50us
- *  and then letting it float back high for a period of time that depends on the data bit.
- *  duration_data_high is shorter than 50us for a logic '0' and longer than 50us for logic '1'.
- *
- *  There are a total of 40 data bits transmitted sequentially. These bits are read into a byte array
- *  of length 5.  The first and third bytes are humidity (%) and temperature (C), respectively.  Bytes 2 and 4
- *  are zero-filled and the fifth is a checksum such that:
- *
- *  byte_5 == (byte_1 + byte_2 + byte_3 + btye_4) & 0xFF
- *
- */
+int DHTgpio = 4;				// my default DHT pin = 4
+float humidity = 0.;
+float temperature = 0.;
 
-static const char *TAG = "DHTxx";
+// == set the DHT used pin=========================================
 
-static portMUX_TYPE mux = portMUX_INITIALIZER_UNLOCKED;
-
-#define CHECK_ARG(VAL) do { if (!VAL) return ESP_ERR_INVALID_ARG; } while (0)
-
-#define CHECK_LOGE(x, msg, ...) do { \
-        esp_err_t __; \
-        if ((__ = x) != ESP_OK) { \
-            ESP_LOGE(TAG, msg, ## __VA_ARGS__); \
-            return __; \
-        } \
-    } while (0)
-
-
-/**
- * Wait specified time for pin to go to a specified state.
- * If timeout is reached and pin doesn't go to a requested state
- * false is returned.
- * The elapsed time is returned in pointer 'duration' if it is not NULL.
- */
-static esp_err_t dht_await_pin_state(gpio_num_t pin, uint32_t timeout,
-       int expected_pin_state, uint32_t *duration)
+void setDHTgpio( int gpio )
 {
-    for (uint32_t i = 0; i < timeout; i += DHT_TIMER_INTERVAL)
-    {
-        // need to wait at least a single interval to prevent reading a jitter
-        ets_delay_us(DHT_TIMER_INTERVAL);
-        if (gpio_get_level(pin) == expected_pin_state)
-        {
-            if (duration)
-                *duration = i;
-            return ESP_OK;
-        }
-    }
-
-    return ESP_ERR_TIMEOUT;
+	DHTgpio = gpio;
 }
 
-/**
- * Request data from DHT and read raw bit stream.
- * The function call should be protected from task switching.
- * Return false if error occurred.
- */
-static inline esp_err_t dht_fetch_data(gpio_num_t pin, bool bits[DHT_DATA_BITS])
+// == get temp & hum =============================================
+
+float getHumidity() { return humidity; }
+float getTemperature() { return temperature; }
+
+// == error handler ===============================================
+
+void errorHandler(int response)
 {
-    uint32_t low_duration;
-    uint32_t high_duration;
+	switch(response) {
+	
+		case DHT_TIMEOUT_ERROR :
+			ESP_LOGE( TAG, "Sensor Timeout\n" );
+			break;
 
-    // Phase 'A' pulling signal low to initiate read sequence
-    gpio_set_level(pin, 0);
-    ets_delay_us(20000);
-    gpio_set_level(pin, 1);
+		case DHT_CHECKSUM_ERROR:
+			ESP_LOGE( TAG, "CheckSum error\n" );
+			break;
 
-    // Step through Phase 'B', 40us
-    CHECK_LOGE(dht_await_pin_state(pin, 40, 0, NULL),
-            "Initialization error, problem in phase 'B'");
-    // Step through Phase 'C', 88us
-    CHECK_LOGE(dht_await_pin_state(pin, 88, 1, NULL),
-            "Initialization error, problem in phase 'C'");
-    // Step through Phase 'D', 88us
-    CHECK_LOGE(dht_await_pin_state(pin, 88, 0, NULL),
-            "Initialization error, problem in phase 'D'");
+		case DHT_OK:
+			break;
 
-    // Read in each of the 40 bits of data...
-    for (int i = 0; i < DHT_DATA_BITS; i++)
-    {
-        CHECK_LOGE(dht_await_pin_state(pin, 65, 1, &low_duration),
-                "LOW bit timeout");
-        CHECK_LOGE(dht_await_pin_state(pin, 75, 0, &high_duration),
-                "HIGH bit timeout");
-        bits[i] = high_duration > low_duration;
-    }
-
-    return ESP_OK;
+		default :
+			ESP_LOGE( TAG, "Unknown error\n" );
+	}
 }
 
-/**
- * Pack two data bytes into single value and take into account sign bit.
- */
-static inline int16_t dht_convert_data(dht_sensor_type_t sensor_type, uint8_t msb, uint8_t lsb)
+/*-------------------------------------------------------------------------------
+;
+;	get next state 
+;
+;	I don't like this logic. It needs some interrupt blocking / priority
+;	to ensure it runs in realtime.
+;
+;--------------------------------------------------------------------------------*/
+
+int getSignalLevel( int usTimeOut, bool state )
 {
-    int16_t data;
 
-    if (sensor_type == DHT_TYPE_DHT22)
-    {
-        data = msb & 0x7F;
-        data <<= 8;
-        data |= lsb;
-        if (msb & BIT(7))
-            data = -data;       // convert it to negative
-    }
-    else data = msb * 10;
+	int uSec = 0;
+	while( gpio_get_level(DHTgpio)==state ) {
 
-    return data;
+		if( uSec > usTimeOut ) 
+			return -1;
+		
+		++uSec;
+		ets_delay_us(1);		// uSec delay
+	}
+	
+	return uSec;
 }
 
-esp_err_t dht_read_data(dht_sensor_type_t sensor_type, gpio_num_t pin,
-        int16_t *humidity, int16_t *temperature)
+/*----------------------------------------------------------------------------
+;
+;	read DHT22 sensor
+
+copy/paste from AM2302/DHT22 Docu:
+
+DATA: Hum = 16 bits, Temp = 16 Bits, check-sum = 8 Bits
+
+Example: MCU has received 40 bits data from AM2302 as
+0000 0010 1000 1100 0000 0001 0101 1111 1110 1110
+16 bits RH data + 16 bits T data + check sum
+
+1) we convert 16 bits RH data from binary system to decimal system, 0000 0010 1000 1100 → 652
+Binary system Decimal system: RH=652/10=65.2%RH
+
+2) we convert 16 bits T data from binary system to decimal system, 0000 0001 0101 1111 → 351
+Binary system Decimal system: T=351/10=35.1°C
+
+When highest bit of temperature is 1, it means the temperature is below 0 degree Celsius. 
+Example: 1000 0000 0110 0101, T= minus 10.1°C: 16 bits T data
+
+3) Check Sum=0000 0010+1000 1100+0000 0001+0101 1111=1110 1110 Check-sum=the last 8 bits of Sum=11101110
+
+Signal & Timings:
+
+The interval of whole process must be beyond 2 seconds.
+
+To request data from DHT:
+
+1) Sent low pulse for > 1~10 ms (MILI SEC)
+2) Sent high pulse for > 20~40 us (Micros).
+3) When DHT detects the start signal, it will pull low the bus 80us as response signal, 
+   then the DHT pulls up 80us for preparation to send data.
+4) When DHT is sending data to MCU, every bit's transmission begin with low-voltage-level that last 50us, 
+   the following high-voltage-level signal's length decide the bit is "1" or "0".
+	0: 26~28 us
+	1: 70 us
+
+;----------------------------------------------------------------------------*/
+
+#define MAXdhtData 5	// to complete 40 = 5*8 Bits
+
+int readDHT()
 {
-    CHECK_ARG(humidity);
-    CHECK_ARG(temperature);
+int uSec = 0;
 
-    bool bits[DHT_DATA_BITS];
-    uint8_t data[DHT_DATA_BITS / 8] = { 0 };
+uint8_t dhtData[MAXdhtData];
+uint8_t byteInx = 0;
+uint8_t bitInx = 7;
 
-    gpio_set_direction(pin, GPIO_MODE_INPUT_OUTPUT_OD);
-    gpio_set_level(pin, 1);
+	for (int k = 0; k<MAXdhtData; k++) 
+		dhtData[k] = 0;
 
-    portENTER_CRITICAL(&mux);
-    esp_err_t result = dht_fetch_data(pin, bits);
-    portEXIT_CRITICAL(&mux);
+	// == Send start signal to DHT sensor ===========
 
-    gpio_set_level(pin, 1);
+	gpio_set_direction( DHTgpio, GPIO_MODE_OUTPUT );
 
-    if (result != ESP_OK)
-        return result;
+	// pull down for 3 ms for a smooth and nice wake up 
+	gpio_set_level( DHTgpio, 0 );
+	ets_delay_us( 3000 );			
 
-    for (uint8_t i = 0; i < DHT_DATA_BITS; i++)
-    {
-        // Read each bit into 'result' byte array...
-        data[i / 8] <<= 1;
-        data[i / 8] |= bits[i];
-    }
+	// pull up for 25 us for a gentile asking for data
+	gpio_set_level( DHTgpio, 1 );
+	ets_delay_us( 25 );
 
-    if (data[4] != ((data[0] + data[1] + data[2] + data[3]) & 0xFF))
-    {
-        ESP_LOGE(TAG, "Checksum failed, invalid data received from sensor");
-        return ESP_ERR_INVALID_CRC;
-    }
+	gpio_set_direction( DHTgpio, GPIO_MODE_INPUT );		// change to input mode
+  
+	// == DHT will keep the line low for 80 us and then high for 80us ====
 
-    *humidity = dht_convert_data(sensor_type, data[0], data[1]);
-    *temperature = dht_convert_data(sensor_type, data[2], data[3]);
+	uSec = getSignalLevel( 85, 0 );
+//	ESP_LOGI( TAG, "Response = %d", uSec );
+	if( uSec<0 ) return DHT_TIMEOUT_ERROR; 
 
-    ESP_LOGD(TAG, "Sensor data: humidity=%d, temp=%d", *humidity, *temperature);
+	// -- 80us up ------------------------
 
-    return ESP_OK;
-}
+	uSec = getSignalLevel( 85, 1 );
+//	ESP_LOGI( TAG, "Response = %d", uSec );
+	if( uSec<0 ) return DHT_TIMEOUT_ERROR;
 
-esp_err_t dht_read_float_data(dht_sensor_type_t sensor_type, gpio_num_t pin,
-        float *humidity, float *temperature)
-{
-    CHECK_ARG(humidity);
-    CHECK_ARG(temperature);
+	// == No errors, read the 40 data bits ================
+  
+	for( int k = 0; k < 40; k++ ) {
 
-    int16_t i_humidity, i_temp;
+		// -- starts new data transmission with >50us low signal
 
-    esp_err_t res = dht_read_data(sensor_type, pin, &i_humidity, &i_temp);
-    if (res != ESP_OK)
-        return res;
+		uSec = getSignalLevel( 56, 0 );
+		if( uSec<0 ) return DHT_TIMEOUT_ERROR;
 
-    *humidity = (float)i_humidity / 10;
-    *temperature = (float)i_temp / 10;
+		// -- check to see if after >70us rx data is a 0 or a 1
 
-    return ESP_OK;
+		uSec = getSignalLevel( 75, 1 );
+		if( uSec<0 ) return DHT_TIMEOUT_ERROR;
+
+		// add the current read to the output data
+		// since all dhtData array where set to 0 at the start, 
+		// only look for "1" (>28us us)
+	
+		if (uSec > 40) {
+			dhtData[ byteInx ] |= (1 << bitInx);
+			}
+	
+		// index to next byte
+
+		if (bitInx == 0) { bitInx = 7; ++byteInx; }
+		else bitInx--;
+	}
+
+	// == get humidity from Data[0] and Data[1] ==========================
+
+	humidity = dhtData[0];
+	humidity *= 0x100;					// >> 8
+	humidity += dhtData[1];
+	humidity /= 10;						// get the decimal
+
+	// == get temp from Data[2] and Data[3]
+	
+	temperature = dhtData[2] & 0x7F;	
+	temperature *= 0x100;				// >> 8
+	temperature += dhtData[3];
+	temperature /= 10;
+
+	if( dhtData[2] & 0x80 ) 			// negative temp, brrr it's freezing
+		temperature *= -1;
+
+
+	// == verify if checksum is ok ===========================================
+	// Checksum is the sum of Data 8 bits masked out 0xFF
+	
+	if (dhtData[4] == ((dhtData[0] + dhtData[1] + dhtData[2] + dhtData[3]) & 0xFF)) 
+		return DHT_OK;
+
+	else 
+		return DHT_CHECKSUM_ERROR;
 }

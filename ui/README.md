@@ -121,14 +121,6 @@ before the last line insert something like `{ name: 'My Plugin Name', value: 103
 
 TODO:
 
-
-
--- v1
-- testirat DHT, DS
-- ads1115 pin configuration
-- switch: inverted option
-- commands: send event, update state, get state
-
 -- v2:
 - device formulas
 - improving rule system
@@ -147,6 +139,36 @@ TODO:
 --- support ZC detection
 --- support remote one wire protocols
 --- external watchdog
+
+-- v4:
+- cleanup: forms, ui, libs ... make the code ready for others to look at it :)
+- make ui ready to be actually used 
+- make esp ready (bugs, edge cases)
+
+-- v5:
+- http/s
+- udp
 - redundancy plugin
 --- master/slave mode selection
 --- slave: watchdog master (i2c)
+
+-- v6:
+- authentication
+- more sensors and devices
+- alexa
+
+-- v7:
+- dashboards
+- schedules and recepies
+
+-- v8:
+- mesh
+- bluetooth ctrl
+- bluetooth device (light, speaker)
+
+-- v9:
+- pimp up
+- bug hunting
+- cleanup
+
+-- v1.0beta  (publish github)
