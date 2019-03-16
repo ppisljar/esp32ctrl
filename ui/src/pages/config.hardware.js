@@ -19,6 +19,11 @@ const freq = [
     { name: '400kHz', value: 400000 }
 ];
 
+const timerMode = [
+    { name: 'count up', value: 0 },
+    { name: 'count down', value: 1 },
+]
+
 const formConfig = {
     groups: {
         led: {
@@ -51,6 +56,23 @@ const formConfig = {
                 mosi: { name: 'GPIO - MOSI', type: 'select', options: pins },
                 miso: { name: 'GPIO - MISO', type: 'select', options: pins },
                 ss: { name: 'GPIO - SS', type: 'select', options: pins },
+            }
+        },
+        timer: {
+            name: 'Hardware Timer config',
+            configs: {
+                t1_enabled: { name: 'T1 enabled', type: 'checkbox' },
+                t1_divider: { name: 'T1 divider', type: 'number', min: 2, max: 65535 },
+                ti_mode: { name: 'T1 mode', type: 'select', options: timerMode },
+                t2_enabled: { name: 'T2 enabled', type: 'checkbox' },
+                t2_divider: { name: 'T2 divider', type: 'number', min: 2, max: 65535 },
+                t2_mode: { name: 'T2 mode', type: 'select', options: timerMode },
+                t3_enabled: { name: 'T3 enabled', type: 'checkbox' },
+                t3_divider: { name: 'T3 divider', type: 'number', min: 2, max: 65535 },
+                t3_mode: { name: 'T3 mode', type: 'select', options: timerMode },
+                t4_enabled: { name: 'T4 enabled', type: 'checkbox' },
+                t4_divider: { name: 'T4 divider', type: 'number', min: 2, max: 65535 },
+                t4_mode: { name: 'T4 mode', type: 'select', options: timerMode },
             }
         },
         gpio: {

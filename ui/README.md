@@ -122,7 +122,6 @@ before the last line insert something like `{ name: 'My Plugin Name', value: 103
 TODO:
 
 -- v2:
-- device formulas
 - improving rule system
 --- events should be using event loop
 --- support for hardware timers
@@ -135,10 +134,7 @@ TODO:
 
 -- v3:
 - mqtt
-- prominiextender
---- support ZC detection
---- support remote one wire protocols
---- external watchdog
+- device formulas
 
 -- v4:
 - cleanup: forms, ui, libs ... make the code ready for others to look at it :)
@@ -170,5 +166,11 @@ TODO:
 - pimp up
 - bug hunting
 - cleanup
+
+-- v10:
+- prominiextender
+--- support ZC detection
+--- support remote one wire protocols
+--- external watchdog
 
 -- v1.0beta  (publish github)

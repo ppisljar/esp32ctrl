@@ -15,6 +15,11 @@ void run_rules();
 #define CLEAR_TIMER(x) timers[x] = 0; timer_triggers[x/8] &= ~(1 << (x%8))
 #define IS_TIMER_TRIGGERED(x) timers[x] == 0 && ((timer_triggers[x/8] >> (x%8)) & 1) > 0
 
+#define CMD_HW_INTERRUPT_EN     0xe0
+#define CMD_HW_INTERRUPT_DIS    0xe1
+#define CMD_HW_TIMER_EN         0xe2
+#define CMD_HW_TIMER_DIS        0xe3
+
 #define CMD_SET     0xf0
 #define CMD_SET_CFG 0xf1
 #define CMD_EVENT   0xf2
@@ -26,7 +31,7 @@ void run_rules();
 #define CMD_GET_CFG 0xf8
 #define CMD_VAR     0xf9
 #define CMD_SEND    0xfa
-#define CMD_X8      0xfb
+#define CMD_BITBANG 0xfb
 #define CMD_IF      0xfc
 #define CMD_ELSE    0xfd
 #define CMD_ENDIF   0xfe

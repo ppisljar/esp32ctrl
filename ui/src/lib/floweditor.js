@@ -92,7 +92,9 @@ const exportChart = renderedNodes => {
     // find initial nodes (triggers);
     const triggers = renderedNodes.filter(node => node.group === 'TRIGGERS');
 
-    const eventMap = {};
+    const eventMap = {
+        'init': 0,
+    };
     const events = renderedNodes.filter(node => node.type === 'event').map((event, i) => ({ value: i, name: event.config[0].value }));
     events.forEach(event => {
         eventMap[event.name] = event.value;
