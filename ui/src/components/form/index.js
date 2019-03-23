@@ -28,6 +28,23 @@ export class Form extends Component {
     constructor(props) {
         super(props);
 
+        this.setProp = (prop, val) => {
+            if (prop.startsWith('ROOT')) {
+                settings.set(prop.replace('ROOT.', ''), val);
+            } else {
+                set(this.props.selected, prop, val);
+            }
+        }
+
+        this.getProp = (prop) => {
+            let currentValue;
+            if (prop.startsWith('ROOT')) {
+                currentValue = settings.get(prop.replace('ROOT.', ''));
+            } else {
+                currentValue = get(this.props.selected, prop);
+            }
+            return currentValue;
+        }
         this.onChange = (id, prop, config = {}) => {
             return (e) => {
                 let val = this.form.elements[id].value;
@@ -39,21 +56,11 @@ export class Form extends Component {
                     val = isNaN(val) ? val : parseInt(val);
                 } else if (config.type === 'ip') {
                     const part = parseInt(id.split('.').pop());
-                    let currentValue;
-                    if (prop.startsWith('ROOT')) {
-                        currentValue = settings.get(prop.replace('ROOT.', ''));
-                    } else {
-                        currentValue = get(this.props.selected, prop);
-                    }
-                    const arr = longToByteArray(currentValue);
+                    const arr = longToByteArray(this.getProp(prop));
                     arr[part] = val;
                     val = byteArrayToLong(arr); 
                 }
-                if (prop.startsWith('ROOT')) {
-                    settings.set(prop.replace('ROOT.', ''), val);
-                } else {
-                    set(this.props.selected, prop, val);
-                }
+                this.setProp(prop, val);
                 if (config.onChange) {
                     config.onChange(e, this, id, prop, val, config);
                 }

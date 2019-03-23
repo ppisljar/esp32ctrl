@@ -20,6 +20,7 @@ void SwitchPlugin::task(void * pvParameters)
         if (gpio != 255) {
             uint8_t val = io.digitalRead((gpio_num_t)gpio);
             s->state = invert ? (val > 0 ? 0 : 1) : val; 
+            notify(s, 0, s->state);
             ESP_LOGI(P001_TAG, "reading gpio %d: %d", gpio, s->state);
         }
         ESP_LOGI(P001_TAG, "parameters: interval: %i, gpio: %i", interval, gpio);
@@ -28,9 +29,16 @@ void SwitchPlugin::task(void * pvParameters)
 }
 
 bool SwitchPlugin::init(JsonObject &params) {
-    cfg = &params;
+    cfg = &((JsonObject &)params["params"]);
+    state_cfg = &((JsonArray &)params["state"]);
 
-    ESP_LOGI(P001_TAG, "init gpio:%d interval:%d", params["gpio"].as<int>(), params["interval"].as<int>());
+    // if ((*state_cfg)[0] == nullptr) {
+    //     JsonObject item = (*state_cfg).createNestedObject();
+    //     item["name"] = "Switch";
+    //     item["type"] = 0;
+    // }
+
+    ESP_LOGI(P001_TAG, "init gpio:%d interval:%d", (*cfg)["gpio"].as<int>(), (*cfg)["interval"].as<int>());
 
     uint8_t gpio = (*cfg)["gpio"] | 255;
     if (gpio != 255) {
@@ -43,12 +51,14 @@ bool SwitchPlugin::init(JsonObject &params) {
 }
 
 bool SwitchPlugin::getState(JsonObject &params) {
-    params["state"] = state;
+    const char* stateName = (*state_cfg)[0]["name"];
+    params[stateName] = state;
     return true;
 }
 
 bool SwitchPlugin::setState(JsonObject &params) {
-    state = params["state"];
+    const char* stateName = (*state_cfg)[0]["name"];
+    state = params[stateName];
     return true;
 }
 
@@ -62,8 +72,9 @@ void SwitchPlugin::setStatePtr(uint8_t n, uint8_t *val) {
     int gpio = (*cfg)["gpio"] | 255;
     bool invert = (*cfg)["invert"] | false;
     
-    if (n == 0) {
+    if (n == 0 && state != *val) {
         state = *val;
+        notify(this, n, state);
         ESP_LOGI(P001_TAG, "updating state %d (%p) [%d]", n, &state, state);
         if (gpio != 255) {
             io.digitalWrite(gpio, invert ? !state : state);

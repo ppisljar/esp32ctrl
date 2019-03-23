@@ -8,9 +8,10 @@
     #include "soc/timer_group_struct.h"
     #include "driver/periph_ctrl.h"
     #include "driver/timer.h"
+    #include "driver/gpio.h"
 
     #define TIMER_SCALE(divider)           (TIMER_BASE_CLK / divider)  // convert counter value to seconds
-
+    #define ESP_INTR_FLAG_DEFAULT 0
     /*
     * A sample structure to pass events
     * from the timer interrupt handler to the main program.

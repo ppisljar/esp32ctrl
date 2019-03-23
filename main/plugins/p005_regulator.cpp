@@ -37,7 +37,7 @@ void RegulatorPlugin::task(void * pvParameters)
 }
 
 bool RegulatorPlugin::init(JsonObject &params) {
-    cfg = &params;
+    cfg = &((JsonObject &)params["params"]);
 
     xTaskCreatePinnedToCore(this->task, P005_TAG, 4096, this, 5, NULL, 1);
     return true;

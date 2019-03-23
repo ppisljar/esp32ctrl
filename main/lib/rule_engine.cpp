@@ -1,19 +1,65 @@
 
 #include "rule_engine.h"
-
+#include <map>
 
 #define byte uint8_t
 #define TAG_RE "RuleEngine"
 
 byte *rule_list[20]; //every trigger has its entry
+byte *event_list[20];
 byte old_values[256]; // reserve 128 bytes for storing old values
 byte old_values_free_ptr = 0; // points to the place in array which is free
 std::map<uint16_t, void*> rule_data_ptrs;
-byte event_triggers[8]; // 256 possible events (custom)
+//byte event_triggers[8]; // 256 possible events (custom)
 uint16_t timers[16];
 byte timer_triggers[2];
 
 extern Plugin *active_plugins[10];
+
+ESP_EVENT_DEFINE_BASE(RULE_EVENTS)
+esp_event_loop_handle_t rule_event_loop;
+
+static void user_event_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
+{
+    // Two types of data can be passed in to the event handler: the handler specific data and the event-specific data.
+    //
+    // The handler specific data (handler_args) is a pointer to the original data, therefore, the user should ensure that
+    // the memory location it points to is still valid when the handler executes.
+    //
+    // The event-specific data (event_data) is a pointer to a deep copy of the original data, and is managed automatically.
+    uint32_t event_id = ((uint32_t) event_data);
+    ESP_LOGI(TAG_RE, "user event triggered: %p : %i [%p]", event_data, event_id, event_list[event_id]);
+    run_rule(event_list[event_id], 255);
+}
+
+void init() {
+    esp_event_loop_args_t rule_event_loop_args = {
+        .queue_size = 50,
+        .task_name = "rule_loop_task", // task will be created
+        .task_priority = uxTaskPriorityGet(NULL),
+        .task_stack_size = 2048,
+        .task_core_id = tskNO_AFFINITY
+    };
+
+    ESP_ERROR_CHECK(esp_event_loop_create(&rule_event_loop_args, &rule_event_loop));
+
+    ESP_ERROR_CHECK(esp_event_handler_register_with(rule_event_loop, RULE_EVENTS, RULE_USER_EVENT, user_event_handler, rule_event_loop));
+}
+
+
+static std::map<uint8_t, rule_command_handler_t> custom_commands;
+void register_command(uint8_t cmd_id, rule_command_handler_t handler) {
+    custom_commands.emplace(cmd_id, handler);
+}
+
+uint8_t find_command(uint8_t cmd_id, uint8_t *start) {
+    auto cmd = custom_commands.find(cmd_id);
+    if (cmd != custom_commands.end()) {
+        ESP_LOGI(TAG_RE, "found custom command %i at %p", cmd_id, cmd->second);
+        return (*cmd->second)(start);
+    }
+    return 0;
+}
 
 // comparison: [type][len][value] : x>5
 bool compare(byte** ptr, byte *val, byte *old) {
@@ -54,6 +100,7 @@ bool multi_compare(byte **ptr) {
     for (byte i = 0; i < len; i++) {
 
         Plugin *p = active_plugins[cmd[0]];
+        if (p == nullptr) return false;
         byte *var = (byte*)p->getStatePtr(cmd[1]);
         ESP_LOGI(TAG_RE, "reading plugin %d (%p) variable %d (%p)", cmd[0], p, cmd[1], var);
 
@@ -74,11 +121,18 @@ bool multi_compare(byte **ptr) {
 }
 
 int parse_rules(byte *rules, long len) {
+    init();
     int rules_found = 0;
+    int events_found = 0;
     for (byte i = 0; i < len; i++) {
         if (rules[i] == 0xff && rules[i+1] == 0xfe && rules[i+2] == 0x00 && rules[i+3] == 0xff) {
-            ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
-            rule_list[rules_found++] = rules + i + 4;
+            if (rules[i+4] == 1) {
+                ESP_LOGI(TAG_RE, "found an event on address: %p", (void*)(rules + i + 4 + 2));
+                event_list[events_found++] = rules + i + 4 + 2;
+            } else {
+                ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
+                rule_list[rules_found++] = rules + i + 4;
+            }
         }
     }
     return rules_found;
@@ -118,10 +172,15 @@ uint8_t run_rule(byte* start, uint8_t len = 255) {
                 ESP_LOGI(TAG_RE, "cmd set %d %d %d", cmd[1], cmd[2], cmd[4]);
                 p = active_plugins[cmd[1]];
                 ESP_LOGI(TAG_RE, "cmd set %p %p", p, cmd+4);
+                // TODO: check if plugin exists ..
+                // fuckup: disabling a plugin will require to recompile all rules
+
                 // we need to know variable name ...
                 // 1. it can be in the rules, will make it slower
                 // 2. we can allow setting variable name by index
-                p->setStatePtr(cmd[2], cmd+4);
+                if (p != nullptr) {
+                    p->setStatePtr(cmd[2], cmd+4);
+                }
 
                 // we need to get value
                 // 1. this depends on the type of variable: byte, 2 bytes, 4 bytes, string
@@ -154,6 +213,7 @@ uint8_t run_rule(byte* start, uint8_t len = 255) {
             // plugin provided commands
             default:
                 ESP_LOGI(TAG_RE, "cmd: %i", cmd[0]);
+                cmd += find_command(cmd[0], cmd+1);
                 cmd++;
                 break;
         }
@@ -196,11 +256,11 @@ void run_rules() {
                 match = compare(&cmd, var, old);
                 break;
             // event
-            case 1:
-                match = IS_EVENT_TRIGGERED(cmd[1]);
-                if (match) CLEAR_EVENT(cmd[1]);
-                cmd += 2;
-                break;
+            // case 1:
+            //     match = IS_EVENT_TRIGGERED(cmd[1]);
+            //     if (match) CLEAR_EVENT(cmd[1]);
+            //     cmd += 2;
+            //     break;
             // timer
             case 2:
                 ESP_LOGD(TAG_RE, "checking timer %d time: %d", cmd[1], timers[cmd[1]]);

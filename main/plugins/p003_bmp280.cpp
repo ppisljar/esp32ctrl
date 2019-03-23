@@ -30,7 +30,7 @@ void BMP280Plugin::task(void * pvParameters)
 }
 
 bool BMP280Plugin::init(JsonObject &params) {
-    cfg = &params;
+    cfg = &((JsonObject &)params["params"]);
 
 
 //    if (params["i2c"] != 255) {

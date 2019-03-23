@@ -20,21 +20,31 @@ struct IO_DIGITAL_PINS* IO::getDigitalPin(uint8_t pin_nr) {
 }
 
 uint8_t IO::digitalRead(uint8_t pin) {
-    return (*(getDigitalPin(pin)->digital_read))(pin);
+    auto dpin = getDigitalPin(pin);
+    if (dpin == NULL) return 0;
+    else return (*(dpin->digital_read))(pin);
 }
 
 esp_err_t IO::digitalWrite(uint8_t pin, bool value) {
-    return (*(getDigitalPin(pin)->digital_write))(pin, value);
+    auto dpin = getDigitalPin(pin);
+    if (dpin == NULL) return ESP_FAIL;
+    else return (*(dpin->digital_write))(pin, value);
 }
 
 uint16_t IO::analogRead(uint8_t pin) {
-    return (*(getDigitalPin(pin)->analog_read))(pin);
+    auto dpin = getDigitalPin(pin);
+    if (dpin == NULL) return 0;
+    else return (*(dpin->analog_read))(pin);
 }
 
 esp_err_t IO::analogWrite(uint8_t pin, uint16_t value) {
-    return (*(getDigitalPin(pin)->analog_write))(pin, value);
+    auto dpin = getDigitalPin(pin);
+    if (dpin == NULL) return ESP_FAIL;
+    else return (*(dpin->analog_write))(pin, value);
 }
 
 esp_err_t IO::setDirection(uint8_t pin, uint8_t direction) {
-    return (*(getDigitalPin(pin)->set_direction))(pin, direction);
+    auto dpin = getDigitalPin(pin);
+    if (dpin == NULL) return 0;
+    else return (*(dpin->set_direction))(pin, direction);
 }

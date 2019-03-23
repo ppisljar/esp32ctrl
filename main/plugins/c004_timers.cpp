@@ -12,8 +12,7 @@ static const char *TAG = "TimersPlugin";
 PLUGIN_CONFIG(TimersPlugin, t1_enabled, t2_enabled, t3_enabled, t4_enabled)
 PLUGIN_STATS(TimersPlugin, state, state)
 
-gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-timer_queue = xQueueCreate(10, sizeof(timer_event_t));
+
 
 /* hw interrupt ISR */
 static void IRAM_ATTR gpio_isr_handler(void* arg)
@@ -110,6 +109,9 @@ bool TimersPlugin::init(JsonObject &params) {
     uint16_t divider;
     uint8_t mode;
     uint8_t auto_reload = 1;
+
+    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
+    timer_queue = xQueueCreate(10, sizeof(timer_event_t));
 
 
     // GROUP0 TIMER0 (timer 1)

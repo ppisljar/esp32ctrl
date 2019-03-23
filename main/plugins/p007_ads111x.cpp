@@ -22,7 +22,7 @@ class ads1115_analog_read : public IO_analog_read {
 };
 
 bool ADS111xPlugin::init(JsonObject &params) {
-    cfg = &params;
+    cfg = &((JsonObject &)params["params"]);
 
     int mode = (*cfg)["mode"] | ADS1115_MODE_SINGLESHOT;
     int rate = (*cfg)["rate"] | ADS1115_RATE_8;

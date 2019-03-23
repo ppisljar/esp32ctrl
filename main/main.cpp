@@ -1,12 +1,3 @@
-/* HTTP File Server Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
 #include <sys/param.h>
 #include "esp_event_loop.h"
 #include "esp_log.h"
@@ -115,10 +106,11 @@ extern "C" void app_main()
     int pi = 0;
     for (auto plugin : plugins){
         if (!plugin["enabled"]) continue;
-        JsonObject& params = plugin["params"];
         ESP_LOGI(TAG, "initializing plugin '%s' type: %i", plugin["name"].as<char*>(), (int)plugin["type"]);
         active_plugins[pi] = Plugin::getPluginInstance((int)plugin["type"]);
-        active_plugins[pi]->init(params);
+        active_plugins[pi]->name = plugin["name"].as<char*>();
+        active_plugins[pi]->id = pi;
+        active_plugins[pi]->init(plugin);
         pi++;
     }
 

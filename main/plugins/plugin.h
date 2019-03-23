@@ -8,6 +8,7 @@
 #include "freertos/task.h"
 #include "../lib/io.h"
 #include <map>
+#include <functional>
 
 extern IO io;
 
@@ -114,6 +115,12 @@ class Plugin
         static Plugin* getPluginInstance(int type);
         static Plugin* addPrototype(int type, Plugin* p);
         static std::map<int, Plugin*> protoTable;
+
+        JsonObject *cfg;
+        JsonArray *state_cfg;
+        
+        const char* name;
+        int id;
 };
 
 #define IMPLEMENT_CLONE(TYPE) Plugin* clone() const { return new TYPE(*this); }

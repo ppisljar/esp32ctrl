@@ -30,10 +30,10 @@ void DS18x20Plugin::task(void * pvParameters)
 }
 
 bool DS18x20Plugin::init(JsonObject &params) {
-    cfg = &params;
+    cfg = &((JsonObject &)params["params"]);
 
     if (params["gpio"] != 255) {
-        sensor_count = ds18x20_scan_devices((gpio_num_t)params["gpio"].as<int>(), addrs, 16);
+        sensor_count = ds18x20_scan_devices((gpio_num_t)(*cfg)["gpio"].as<int>(), addrs, 16);
     }
 
     xTaskCreatePinnedToCore(this->task, P004_TAG, 4096, this, 5, NULL, 1);

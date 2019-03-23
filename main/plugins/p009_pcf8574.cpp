@@ -52,7 +52,7 @@ class PCF8574Plugin_digital_write : public IO_digital_write {
 };
 
 bool PCF8574Plugin::init(JsonObject &params) {
-    cfg = &params;
+    cfg = &((JsonObject &)params["params"]);
 
     uint8_t pcf8574_addr = (*cfg)["addr"];
     ESP_LOGI(P009_TAG, "PCF8574 init on addr %d", pcf8574_addr);

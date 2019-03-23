@@ -25,7 +25,7 @@ void AnalogPlugin::task(void * pvParameters)
 }
 
 bool AnalogPlugin::init(JsonObject &params) {
-    cfg = &params;
+    cfg = &((JsonObject &)params["params"]);
 
     int gpio = (*cfg)["gpio"] | 255;
     int atten = (*cfg)["type"] | 0;
