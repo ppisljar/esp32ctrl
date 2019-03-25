@@ -17,7 +17,7 @@ void AnalogPlugin::task(void * pvParameters)
         int gpio = cfg["gpio"] | 255;
 
         if (gpio != 255) {
-            s->value = adc1_get_raw((adc1_channel_t)gpio);
+            SET_STATE(s, value, 9, true, adc1_get_raw((adc1_channel_t)gpio));
         }
 
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);

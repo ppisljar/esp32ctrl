@@ -19,12 +19,12 @@ const lcdCommand = [
     { value: 99, name: 'RESOLUTION_AUTO_HIGH' }, 
 ]
 
-export const lcd2004 = {
+export const alexa = {
     defaults: () => ({
         'configs[0]': 32,
     }),
-    sensor: {
-        name: 'Sensor',
+    params: {
+        name: 'Params',
         configs: {
             i2c_address: { name: 'I2C Address', type: 'select', options: i2c_address, var: 'configs[0]'  },
             size: { name: 'Display Size', type: 'select', options: displaySize, var: 'configs[1]'  },

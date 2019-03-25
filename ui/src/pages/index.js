@@ -12,7 +12,7 @@ export * from './fs';
 export * from './factory_reset';
 export * from './discover';
 export * from './controllers.edit';
-export * from './controllers.notifications';
+export * from './controllers.alexa';
 export * from './devices.edit';
 export * from './diff';
 export * from './rules.editor';

@@ -14,22 +14,19 @@ void DHTPlugin::task(void * pvParameters)
     for( ;; )
     {
         int interval = cfg["interval"] | 60;
+        int gpio = cfg["gpio"] | 255;
         if (interval == 0) interval = 60;
         
         // int sensor_type = cfg["type"] | 0;
         // if (sensor_type > 1) sensor_type = 1;
 
-        //if (gpio != 255) {
+        if (gpio != 255) {
             int ret = readDHT();
 		    errorHandler(ret);
-            s->humidity = getHumidity();
-            s->temperature = getTemperature();
-           //if (dht_read_data((dht_sensor_type_t)sensor_type, (gpio_num_t)gpio, &(s->humidity), &(s->temperature)) == ESP_OK)
-               ESP_LOGI(P002_TAG, "Humidity: %f%% Temp: %fC", s->humidity, s->temperature);
-        //    else
-        //        printf(P002_TAG, "Could not read data from sensor");
-        //}
-
+            SET_STATE(s, temperature, 0, true, getTemperature());
+            SET_STATE(s, humidity, 1, true, getHumidity());
+            ESP_LOGI(P002_TAG, "Humidity: %f%% Temp: %fC", s->humidity, s->temperature);
+        }
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);
     }
 }

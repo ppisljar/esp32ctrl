@@ -10,22 +10,10 @@
 class MCP23017Plugin: public Plugin {
     private:
         int value = 0;
-        JsonObject *cfg;
         uint8_t addr;
         struct IO_DIGITAL_PINS pins;
     public:
-        Plugin* clone() const {
-            return new MCP23017Plugin;
-        }
-
-        bool init(JsonObject &params);
-        bool setState(JsonObject &params);
-        bool setConfig(JsonObject &params);
-        bool getState(JsonObject& );
-        bool getConfig(JsonObject& );
-        static void task(void *pvParameters);
-        void* getStatePtr(uint8_t );
-        void setStatePtr(uint8_t, uint8_t*);
+        DEFINE_PLUGIN(MCP23017Plugin);
 };
 
 #endif

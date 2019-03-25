@@ -18,6 +18,7 @@ static const char *TAG = "MAIN";
 #include "plugins/c001_i2c.h"
 #include "plugins/c002_ntp.h"
 #include "plugins/c003_wifi.h"
+#include "plugins/c005_hue.h"
 #include "plugins/p001_switch.h"
 #include "plugins/p002_dht.h"
 #include "plugins/p003_bmp280.h"
@@ -36,6 +37,7 @@ Plugin *active_plugins[10];
 I2CPlugin *i2c_plugin;
 NTPPlugin *ntp_plugin;
 WiFiPlugin *wifi_plugin;
+HueEmulatorPlugin *hue_plugin;
 
 IO io;
 
@@ -100,6 +102,12 @@ extern "C" void app_main()
         JsonObject &ntp_conf = cfgObject["ntp"];
         ntp_plugin = new NTPPlugin();
         ntp_plugin->init(ntp_conf);
+    }
+
+    if (cfgObject["alexa"]["enabled"]) {
+        JsonObject &hue_conf = cfgObject["alexa"];
+        hue_plugin = new HueEmulatorPlugin();
+        hue_plugin->init(hue_conf);
     }
 
     JsonArray &plugins = cfgObject["plugins"];

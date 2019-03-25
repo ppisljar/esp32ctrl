@@ -191,7 +191,10 @@ bool authenticate(httpd_req_t *req){
       ESP_LOGD(TAG, "The Proper response [%s] =%s:%s", _in, _responsecheck, _response);
       if(strcmp(_response, _responsecheck) == 0){
         authReq[0] = 0;
+        ESP_LOGI(TAG, "logged in with %s", _username);
         httpd_resp_set_hdr(req, "User", _username);
+        httpd_resp_set_hdr(req, "Test", _username);
+        httpd_resp_set_hdr(req, "TestUser", "admin");
         return true;
       }
     }
@@ -215,7 +218,7 @@ void requestAuthentication(httpd_req_t *req) {
     //free(digest_header);
 }
 
-bool isAuthenticated(httpd_req_t *req) {
+bool isAuthenticated(httpd_req_t *req, bool force = true) {
     ESP_LOGD(TAG, "checking if its authenticted");
     JsonObject& params = cfg->getConfig();
     if (params["security"]["ip_block"]["enabled"]) {
@@ -238,21 +241,20 @@ bool isAuthenticated(httpd_req_t *req) {
     }
     
     ESP_LOGD(TAG, "need to check user and pass");
-    if (!authenticate(req))
+    bool authenticated = authenticate(req);
+    if (!authenticated && force)
     {
       ESP_LOGD(TAG, "requesting auth");
       requestAuthentication(req);
       return false;
     }
-    return true;
+    return authenticated;
 }
 
 /* Send HTTP response with a run-time generated html consisting of
  * a list of all files and folders under the requested path */
 static esp_err_t http_resp_dir_html(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
-
     char fullpath[FILE_PATH_MAX];
     char entrysize[16];
     const char *entrytype;
@@ -321,13 +323,13 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
     (strcasecmp(&filename[strlen(filename) - sizeof(ext) + 1], ext) == 0)
 
 /* Set HTTP response content type according to file extension */
-static esp_err_t set_content_type_from_file(httpd_req_t *req)
+static esp_err_t set_content_type_from_file(httpd_req_t *req, char *uri)
 {
-    if (IS_FILE_EXT(req->uri, ".pdf")) {
+    if (IS_FILE_EXT(uri, ".pdf")) {
         return httpd_resp_set_type(req, "application/pdf");
-    } else if (IS_FILE_EXT(req->uri, ".html") || IS_FILE_EXT(req->uri, ".htm")) {
+    } else if (IS_FILE_EXT(uri, ".html") || IS_FILE_EXT(uri, ".htm")) {
         return httpd_resp_set_type(req, "text/html");
-    } else if (IS_FILE_EXT(req->uri, ".jpeg") || IS_FILE_EXT(req->uri, ".jpg")) {
+    } else if (IS_FILE_EXT(uri, ".jpeg") || IS_FILE_EXT(uri, ".jpg")) {
         return httpd_resp_set_type(req, "image/jpeg");
     }
     /* This is a limited set only */
@@ -336,30 +338,28 @@ static esp_err_t set_content_type_from_file(httpd_req_t *req)
 }
 
 /* Send HTTP response with the contents of the requested file */
-static esp_err_t http_resp_file(httpd_req_t *req)
+static esp_err_t http_resp_file(httpd_req_t *req, char* filepath)
 {
-    
-
-    char filepath[FILE_PATH_MAX];
     FILE *fd = NULL;
     struct stat file_stat;
 
-    /* Retrieve the base path of file storage to construct the full path */
-    strcpy(filepath, ((struct file_server_data *)req->user_ctx)->base_path);
+    if (strlen(filepath) == 0) {
+        /* Retrieve the base path of file storage to construct the full path */
+        strcpy(filepath, ((struct file_server_data *)req->user_ctx)->base_path);
 
-    /* Concatenate the requested file path */
-    strcat(filepath, req->uri);
+        /* Concatenate the requested file path */
+        strcat(filepath, req->uri);
+    }
+   
     if (stat(filepath, &file_stat) == -1) {
-        if (!isAuthenticated(req)) return ESP_OK;
         ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
         /* If file doesn't exist respond with 404 Not Found */
-        httpd_resp_send_404(req);
+        
         return ESP_OK;
     }
 
     fd = fopen(filepath, "r");
     if (!fd) {
-        if (!isAuthenticated(req)) return ESP_OK;
         ESP_LOGE(TAG, "Failed to read existing file : %s", filepath);
         /* If file exists but unable to open respond with 500 Server Error */
         httpd_resp_set_status(req, "500 Server Error");
@@ -367,9 +367,8 @@ static esp_err_t http_resp_file(httpd_req_t *req)
         return ESP_OK;
     }
 
-    if (!IS_FILE_EXT(req->uri, ".htm") && !IS_FILE_EXT(req->uri, ".html") && !IS_FILE_EXT(req->uri, ".css") && !IS_FILE_EXT(req->uri, ".js") && !isAuthenticated(req)) return ESP_OK;
-    ESP_LOGD(TAG, "Sending file : %s (%ld bytes)...", filepath, file_stat.st_size);
-    set_content_type_from_file(req);
+    ESP_LOGI(TAG, "Sending file : %s (%ld bytes)...", filepath, file_stat.st_size);
+    set_content_type_from_file(req, filepath);
 
     /* Retrieve the pointer to scratch buffer for temporary storage */
     char *chunk = ((struct file_server_data *)req->user_ctx)->scratch;
@@ -395,7 +394,7 @@ static esp_err_t http_resp_file(httpd_req_t *req)
 
     /* Close file after sending complete */
     fclose(fd);
-    ESP_LOGD(TAG, "File sending complete");
+    ESP_LOGI(TAG, "File sending complete");
 
     /* Respond with an empty chunk to signal HTTP response completion */
     httpd_resp_send_chunk(req, NULL, 0);
@@ -405,22 +404,67 @@ static esp_err_t http_resp_file(httpd_req_t *req)
 /* Handler to download a file kept on the server */
 static esp_err_t download_get_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    //if (!isAuthenticated(req)) return ESP_OK;
 
+    char filepath[FILE_PATH_MAX];
     // Check if the target is a directory
     if (req->uri[strlen(req->uri) - 1] == '/') {
         // In so, send an html with directory listing
         http_resp_dir_html(req);
     } else {
         // Else send the file
-        http_resp_file(req);
+        http_resp_file(req, filepath);
     }
     return ESP_OK;
 }
 
+static esp_err_t config_get_handler(httpd_req_t *req)
+{
+    if (!isAuthenticated(req, true)) return ESP_OK;
+    char filepath[FILE_PATH_MAX];
+    strcpy(filepath, ((struct file_server_data *)req->user_ctx)->base_path);
+    strcpy(filepath + strlen(filepath), "/config.json");
+    http_resp_file(req, filepath);
+    return ESP_OK;
+}
+
+static esp_err_t index_get_handler(httpd_req_t *req)
+{
+    char filepath[FILE_PATH_MAX];
+    strcpy(filepath, ((struct file_server_data *)req->user_ctx)->base_path);
+    strcpy(filepath + strlen(filepath), "/index.dev.htm");
+    ESP_LOGI(TAG, "getting index %s", filepath);
+    http_resp_file(req, filepath);
+    return ESP_OK;
+}
+
+std::function<esp_err_t(httpd_req_t*)> handlers_404[10] = {};
+static esp_err_t handler_404(httpd_req_t *req) {
+    bool responded = false;
+    //if (isAuthenticated(req, false)) {
+        responded = download_get_handler(req);
+    //}
+    for (uint8_t i = 0; i < 10; i++) {
+        if (responded || handlers_404[i] == nullptr) break;
+        handlers_404[i](req);
+    }
+    if (!responded) {
+        httpd_resp_send_404(req);
+    }
+    return ESP_OK;
+}
+
+void http_register_404_handler(std::function<esp_err_t(httpd_req_t*)> fn) {
+    for (uint8_t i = 0; i < 10; i++) {
+        if (handlers_404[i] == nullptr) {
+            handlers_404[i] = fn;
+        }
+    }
+}
+
 #define MAX_FLASH_SIZE  1024000
 static esp_err_t flash_post_handler(httpd_req_t *req) {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, true)) return ESP_OK;
 
     const esp_partition_t *configured = esp_ota_get_boot_partition();
     const esp_partition_t *running = esp_ota_get_running_partition();
@@ -557,7 +601,7 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
 /* Handler to upload a file onto the server */
 static esp_err_t upload_post_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, true)) return ESP_OK;
 
     char filepath[FILE_PATH_MAX];
     FILE *fd = NULL;
@@ -671,7 +715,7 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
 /* Handler to delete a file from the server */
 static esp_err_t delete_post_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_OK;
 
     char filepath[FILE_PATH_MAX];
     struct stat file_stat;
@@ -716,7 +760,7 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
 StaticJsonBuffer<JSON_OBJECT_SIZE(20)> jb;
 static esp_err_t plugins_post_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_OK;
 
     /* Skip leading "/upload" from URI to get filename */
     /* Note sizeof() counts NULL termination hence the -1 */
@@ -748,7 +792,7 @@ static esp_err_t plugins_post_handler(httpd_req_t *req)
 
 static esp_err_t plugins_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_OK;
 
     char buf[512];
     int len;
@@ -783,7 +827,7 @@ static esp_err_t plugins_handler(httpd_req_t *req)
 
 static esp_err_t plugins_state_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_OK;
 
     char buf[512];
     int len;
@@ -806,7 +850,7 @@ static esp_err_t plugins_state_handler(httpd_req_t *req)
 
 static esp_err_t plugins_list_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_OK;
 
     // get plugin restiry and list all available plugins
     bool first=true;
@@ -828,7 +872,7 @@ static esp_err_t plugins_list_handler(httpd_req_t *req)
 
 static esp_err_t reboot_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_FAIL;
 
     httpd_resp_set_status(req, "200 OK");
     httpd_resp_sendstr(req, "OK");
@@ -840,7 +884,7 @@ static esp_err_t reboot_handler(httpd_req_t *req)
 
 static esp_err_t event_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_OK;
 
     const char *eventName = req->uri + sizeof("/event/") - 1;
     if (strlen(eventName) == 0 || eventName[strlen(eventName) - 1] == '/') {
@@ -872,7 +916,7 @@ static esp_err_t event_handler(httpd_req_t *req)
 
 static esp_err_t system_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_OK;
 
     char buf[512];
     int len; int ret;
@@ -896,7 +940,7 @@ static esp_err_t system_handler(httpd_req_t *req)
 
 static esp_err_t logs_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_OK;
 
     xlog_web(req);
     httpd_resp_sendstr_chunk(req, NULL);
@@ -953,7 +997,7 @@ static void json_prop(httpd_req_t *req, const char* name, const char* value) {
 
 static esp_err_t cmd_handler(httpd_req_t *req)
 {
-    if (!isAuthenticated(req)) return ESP_OK;
+    if (!isAuthenticated(req, false)) return ESP_OK;
 
     const char *eventName = req->uri + sizeof("/cmd/") - 1;
     if (strlen(eventName) == 0 || eventName[strlen(eventName) - 1] == '/') {
@@ -978,7 +1022,8 @@ static esp_err_t cmd_handler(httpd_req_t *req)
 
 httpd_handle_t server = NULL;
 
-void quick_register(const char * uri, httpd_method_t method,  esp_err_t handler(httpd_req_t *req), void *ctx) {
+void http_quick_register(const char * uri, httpd_method_t method,  esp_err_t handler(httpd_req_t *req), void *ctx) {
+    ESP_LOGI(TAG, "registering handler %p for uri %s", handler, uri);
     httpd_uri_t uri_handler = {
         .uri       = uri,
         .method    = method,
@@ -988,11 +1033,13 @@ void quick_register(const char * uri, httpd_method_t method,  esp_err_t handler(
     httpd_register_uri_handler(server, &uri_handler);
 }
 
+extern esp_err_t hueemulator_webhandler(httpd_req_t *req);
+
 /* Function to start the file server */
 esp_err_t start_file_server(const char *base_path)
 {
     static struct file_server_data *server_data = NULL;
-
+    ESP_LOGI(TAG, "starting");
     /* Validate file storage base path */
     if (!base_path || strcmp(base_path, "/spiffs") != 0) {
         ESP_LOGE(TAG, "File server presently supports only '/spiffs' as base path");
@@ -1019,7 +1066,7 @@ esp_err_t start_file_server(const char *base_path)
      * allow the same handler to respond to multiple different
      * target URIs which match the wildcard scheme */
     config.uri_match_fn = httpd_uri_match_wildcard;
-    config.max_uri_handlers = 16;
+    config.max_uri_handlers = 20;
 
     ESP_LOGD(TAG, "Starting HTTP Server");
     if (httpd_start(&server, &config) != ESP_OK) {
@@ -1027,35 +1074,39 @@ esp_err_t start_file_server(const char *base_path)
         return ESP_FAIL;
     }
 
-    //quick_register("/", HTTP_GET, index_html_get_handler);
-    quick_register("/update", HTTP_POST, flash_post_handler, server_data);
+    http_quick_register("/", HTTP_GET, index_get_handler, server_data);
+    http_quick_register("/config.json", HTTP_GET, config_get_handler, server_data);
+    http_quick_register("/update", HTTP_POST, flash_post_handler, server_data);
     // upload
     // delete
     // rename
 
-    //quick_register("/config/*", HTTP_GET, plugins_delete_handler, server_data);
-    //quick_register("/config/*", HTTP_POST, plugins_delete_handler, server_data);
+    http_quick_register("/description.xml", HTTP_GET, hueemulator_webhandler, nullptr);
 
-    quick_register("/plugins_list", HTTP_GET, plugins_list_handler, server_data);
-    quick_register("/plugins/*", HTTP_GET, plugins_handler, server_data);
-    quick_register("/plugins/*", HTTP_POST, plugins_post_handler, server_data);
-    //quick_register("/plugins/*", HTTP_DELETE, plugins_delete_handler, server_data);
-    quick_register("/plugin_state/*", HTTP_GET, plugins_state_handler, server_data);
+    //http_quick_register("/config/*", HTTP_GET, plugins_delete_handler, server_data);
+    //http_quick_register("/config/*", HTTP_POST, plugins_delete_handler, server_data);
 
-    quick_register("/event/*", HTTP_GET, event_handler, server_data);
-    quick_register("/cmd/*", HTTP_POST, cmd_handler, server_data);
-    quick_register("/system", HTTP_GET, system_handler, server_data);
-    quick_register("/logs", HTTP_GET, logs_handler, server_data);
+    http_quick_register("/plugins_list", HTTP_GET, plugins_list_handler, server_data);
+    http_quick_register("/plugins/*", HTTP_GET, plugins_handler, server_data);
+    http_quick_register("/plugins/*", HTTP_POST, plugins_post_handler, server_data);
+    //http_quick_register("/plugins/*", HTTP_DELETE, plugins_delete_handler, server_data);
+    http_quick_register("/plugin_state/*", HTTP_GET, plugins_state_handler, server_data);
 
-    quick_register("/filelist", HTTP_GET, http_resp_dir_html, server_data);
-    quick_register("/reboot", HTTP_GET, reboot_handler, server_data);
+    http_quick_register("/event/*", HTTP_GET, event_handler, server_data);
+    http_quick_register("/cmd/*", HTTP_POST, cmd_handler, server_data);
+    http_quick_register("/system", HTTP_GET, system_handler, server_data);
+    http_quick_register("/logs", HTTP_GET, logs_handler, server_data);
+
+    http_quick_register("/filelist", HTTP_GET, http_resp_dir_html, server_data);
+    http_quick_register("/reboot", HTTP_GET, reboot_handler, server_data);
 
 
+    http_quick_register("/api/*", HTTP_PUT, handler_404, server_data);
     /* URI handler for getting uploaded files */
     httpd_uri_t file_download = {
         .uri       = "/*",  // Match all URIs of type /path/to/file (except index.html)
         .method    = HTTP_GET,
-        .handler   = download_get_handler,
+        .handler   = handler_404,
         .user_ctx  = server_data    // Pass server data as context
     };
     httpd_register_uri_handler(server, &file_download);

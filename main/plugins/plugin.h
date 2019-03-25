@@ -7,6 +7,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "../lib/io.h"
+
 #include <map>
 #include <functional>
 
@@ -93,10 +94,24 @@ void* TYPE::getStatePtr(uint8_t val) { \
     FOREACH_MACRO(PLUGIN___STATS_GETPTR, __VA_ARGS__) \
     return NULL; \
 } \
-void TYPE::setStatePtr(uint8_t n, uint8_t *val) { \
+void TYPE::setStatePtr_(uint8_t n, uint8_t *val, bool notify) { \
     FOREACH_MACRO(PLUGIN___STATS_SETPTR, __VA_ARGS__) \
 }
 
+#define DEFINE_PLUGIN(TYPE) \
+    Plugin* clone() const { \
+        return new TYPE; \
+    } \
+    bool init(JsonObject &params); \
+    bool setState(JsonObject &params); \
+    bool setConfig(JsonObject &params); \
+    bool getState(JsonObject& ); \
+    bool getConfig(JsonObject& ); \
+    void* getStatePtr(uint8_t ); \
+    void setStatePtr_(uint8_t, uint8_t*, bool);
+
+#define SET_STATE(plugin, var, var_index, shouldNotify, value) plugin->var = value; \
+            if (shouldNotify) notify(plugin, var_index, plugin->var)
 
 class Plugin
 {
@@ -110,7 +125,10 @@ class Plugin
         virtual bool getState(JsonObject& ) = 0;
         virtual bool getConfig(JsonObject& ) = 0;
         virtual void* getStatePtr(uint8_t var) = 0;
-        virtual void setStatePtr(uint8_t var, uint8_t* val) = 0;
+        virtual void setStatePtr_(uint8_t var, uint8_t* val, bool notify) = 0;
+        void setStatePtr(uint8_t var, uint8_t* val, bool notify = true) {
+            setStatePtr_(var, val, notify);
+        };
 
         static Plugin* getPluginInstance(int type);
         static Plugin* addPrototype(int type, Plugin* p);
@@ -118,7 +136,7 @@ class Plugin
 
         JsonObject *cfg;
         JsonArray *state_cfg;
-        
+
         const char* name;
         int id;
 };

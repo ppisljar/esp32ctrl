@@ -69,7 +69,7 @@ void* I2CPlugin::getStatePtr(uint8_t val) {
     return NULL;
 }
 
-void I2CPlugin::setStatePtr(uint8_t n, uint8_t *val) {
+void I2CPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool notify) {
     if (n == 0) state = *val;
 }
 

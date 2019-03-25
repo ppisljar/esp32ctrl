@@ -10,17 +10,7 @@ class SwitchPlugin: public Plugin {
         int gpio = 255;
         bool state = 0;
     public:
-        Plugin* clone() const { 
-            return new SwitchPlugin; 
-        }
-
-        bool init(JsonObject &params);
-        bool setState(JsonObject &params);
-        bool setConfig(JsonObject &params);
-        bool getState(JsonObject& );
-        bool getConfig(JsonObject& );
-        void* getStatePtr(uint8_t );
-        void setStatePtr(uint8_t, uint8_t*);
+        DEFINE_PLUGIN(SwitchPlugin);
         static void task(void *pvParameters);
 };
 

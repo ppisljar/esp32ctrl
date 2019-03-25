@@ -122,36 +122,13 @@ before the last line insert something like `{ name: 'My Plugin Name', value: 103
 TODO:
 
 -- v2:
-- improving rule system
---- events should be using event loop
---- support for hardware timers
---- support for hardware interrupts
---- support for adding new commands (by plugins)
---- support for checking/reading/updating multi byte values
 - adding devices:
 --- rotary encoder (two gpios)
 --- some sensors (check what libs are there i can direclty use)
-
--- v3:
-- mqtt
 - device formulas
-
--- v4:
-- cleanup: forms, ui, libs ... make the code ready for others to look at it :)
-- make ui ready to be actually used 
-- make esp ready (bugs, edge cases)
-
--- v5:
 - http/s
 - udp
-- redundancy plugin
---- master/slave mode selection
---- slave: watchdog master (i2c)
 
--- v6:
-- authentication
-- more sensors and devices
-- alexa
 
 -- v7:
 - dashboards
@@ -168,6 +145,9 @@ TODO:
 - cleanup
 
 -- v10:
+- redundancy plugin
+--- master/slave mode selection
+--- slave: watchdog master (i2c)
 - prominiextender
 --- support ZC detection
 --- support remote one wire protocols

@@ -18,7 +18,8 @@ import {
     DiffPage, 
     RulesEditorPage, 
     SetupPage,
-    SysVarsPage
+    SysVarsPage,
+    ControllerAlexaPage
 } from '../pages';
 
 import { deleteFile } from './espeasy';
@@ -50,6 +51,7 @@ const menus = [
     { title: 'Devices', href: 'devices', component: DevicesPage, children: [] },
     //{ title: 'Controllers', href: 'controllers', component: ControllersPage, children: [] },
     { title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [] },
+    { title: 'Alexa', href: 'controllers', component: ControllerAlexaPage, children: [] },
     { title: 'Config', adminOnly: true, href: 'config', component: ConfigPage, children: [
         { title: 'Hardware', href: 'config/hardware', component: ConfigHardwarePage },
         { title: 'Advanced', href: 'config/advanced', component: ConfigAdvancedPage },

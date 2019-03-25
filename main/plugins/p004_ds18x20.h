@@ -2,6 +2,7 @@
 #define ESP_PLUGIN_004_H
 
 #include "plugin.h"
+#include "../lib/controller.h"
 #include "esp_log.h"
 #include "ds18x20.h"
 
@@ -10,19 +11,8 @@ class DS18x20Plugin: public Plugin {
         float temperature[16];
         ds18x20_addr_t addrs[16];
         int sensor_count = 0;
-        JsonObject *cfg;
     public:
-        Plugin* clone() const {
-            return new DS18x20Plugin;
-        }
-
-        bool init(JsonObject &params);
-        bool setState(JsonObject &params);
-        bool setConfig(JsonObject &params);
-        bool getState(JsonObject& );
-        bool getConfig(JsonObject& );
-        void* getStatePtr(uint8_t );
-        void setStatePtr(uint8_t, uint8_t*);
+        DEFINE_PLUGIN(DS18x20Plugin);
         static void task(void *pvParameters);
 };
 

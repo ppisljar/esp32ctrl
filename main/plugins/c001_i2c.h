@@ -2,6 +2,7 @@
       #define ESP_PLUGIN_c001_H
 
       #include "plugin.h"
+      #include "../lib/controller.h"
       #include "freertos/FreeRTOS.h"
       #include "freertos/task.h"
       #include "esp_log.h"
@@ -15,19 +16,9 @@
       class I2CPlugin: public Plugin {
           private:
               bool state;
-              JsonObject *cfg;
           public:
-              Plugin* clone() const {
-                  return new I2CPlugin;
-              }
-
-              bool init(JsonObject &params);
-              bool setState(JsonObject &params);
-              bool setConfig(JsonObject &params);
-              bool getState(JsonObject& );
-              bool getConfig(JsonObject& );
-              void* getStatePtr(uint8_t );
-              void setStatePtr(uint8_t, uint8_t*);
+              DEFINE_PLUGIN(I2CPlugin);
+              
               esp_err_t read(uint8_t addr, uint8_t *data_rd, size_t size);
               esp_err_t write(uint8_t addr, uint8_t *data_wr, size_t size);
               void scan();
