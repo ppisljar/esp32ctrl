@@ -7,7 +7,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "../lib/io.h"
-
+#include "tinyexpr.h"
 #include <map>
 #include <functional>
 

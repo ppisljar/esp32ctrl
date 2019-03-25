@@ -114,15 +114,15 @@ export class Form extends Component {
                 ) ;
             case 'gpio':
                 options = window.pins();
-                const selectPin = (val, form) => {
+                const selectPin = (val, name, form) => {
                     const pins = window.pins();
                     const selectedPin = pins.find(pin => pin.value == val);
-                    form.props.config.groups.gpio.configs = { ...selectedPin.configs }
+                    form.props.config.groups[name].configs = { ...selectedPin.configs }
                     form.forceUpdate();
                 }
                 return (
                     <select id={id} onChange={this.onChange(id, varName, { ...config, onChange: (e, form, id, prop, val, config) => {
-                        selectPin(val, form);
+                        selectPin(val, config.name.toLowerCase(), form);
                     }})}>
                         {options.map(option => {
                             const name = option instanceof Object ? option.name : option;

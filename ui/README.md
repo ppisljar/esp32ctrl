@@ -121,23 +121,15 @@ before the last line insert something like `{ name: 'My Plugin Name', value: 103
 
 TODO:
 
--- v2:
-- adding devices:
---- rotary encoder (two gpios)
---- some sensors (check what libs are there i can direclty use)
-- device formulas
-- http/s
-- udp
-
+-- v8:
+- mesh
+- bluetooth ctrl
+- bluetooth device (light, speaker)
 
 -- v7:
 - dashboards
 - schedules and recepies
 
--- v8:
-- mesh
-- bluetooth ctrl
-- bluetooth device (light, speaker)
 
 -- v9:
 - pimp up

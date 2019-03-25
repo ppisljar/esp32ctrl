@@ -9,7 +9,8 @@ import { ads1115 } from "./7_ads1115";
 import { analog } from "./6_analog";
 import { pca9685 } from './10_pca9685';
 import { mqtt } from './11_mqtt';
-import { alexa } from './12_alexa';
+import { rotaryEncoder } from './12_rotary_encoder';
+import { http } from './13_http';
 
 // import { bmp085 } from './6_bmp085';
 // import { pcf8591 } from './7_pcf8591';
@@ -66,7 +67,8 @@ export const devices = [
     { name: 'IO - PCF8674', value: 9, fields: pcf8574 },
     { name: 'IO - PCF8674', value: 10, fields: pca9685 },
     { name: 'Generic - MQTT', value: 11, fields: mqtt },
-    { name: 'Generic - Alexa Hue Emulator', value: 12, fields: alexa },
+    { name: 'Generic - Rotary Encoder', value: 12, fields: rotaryEncoder },
+    { name: 'Generic - HTTP', value: 13, fields: http },
     //{ name: 'Light/Lux - BH1750', value: 10, fields: bh1750 },
     // { name: 'Extra IO - ProMini Extender', value: 11, fields: pme },
     // { name: 'Display - LCD2004', value: 12, fields: lcd2004 },

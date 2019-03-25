@@ -23,8 +23,10 @@ void DHTPlugin::task(void * pvParameters)
         if (gpio != 255) {
             int ret = readDHT();
 		    errorHandler(ret);
-            SET_STATE(s, temperature, 0, true, getTemperature());
-            SET_STATE(s, humidity, 1, true, getHumidity());
+            s->temp[0] = getTemperature();
+            s->temp[1] = getHumidity();
+            SET_STATE(s, temperature, 0, true, te_eval(s->temp_expr));
+            SET_STATE(s, humidity, 1, true, te_eval(s->humi_expr));
             ESP_LOGI(P002_TAG, "Humidity: %f%% Temp: %fC", s->humidity, s->temperature);
         }
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);
@@ -33,8 +35,14 @@ void DHTPlugin::task(void * pvParameters)
 
 bool DHTPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
-
+    state_cfg = &((JsonArray &)params["state"]);
+    
     int gpio = (*cfg)["gpio"] | 255;
+
+    te_variable vars_temp[] = {{"x", &temp[0]}};
+    te_variable vars_humi[] = {{"x", &temp[1]}};
+    temp_expr = te_compile((*state_cfg)[0]["formula"].as<char*>(), vars_temp, 1, 0);
+    humi_expr = te_compile((*state_cfg)[1]["formula"].as<char*>(), vars_humi, 1, 0);
 
     if (gpio != 255) {
         setDHTgpio( gpio );

@@ -30,6 +30,9 @@ static const char *TAG = "MAIN";
 #include "plugins/p009_pcf8574.h"
 #include "plugins/p010_pca9685.h"
 #include "plugins/p011_mqtt.h"
+#include "plugins/p012_rotary_encoder.h"
+#include "plugins/p013_http_ctrl.h"
+
 
 // global config object
 Config *cfg;
@@ -52,6 +55,8 @@ Plugin* MCP23017Plugin_myProtoype = Plugin::addPrototype(8, new MCP23017Plugin);
 Plugin* PCF8574Plugin_myProtoype = Plugin::addPrototype(9, new PCF8574Plugin);
 Plugin* PCA9685Plugin_myProtoype = Plugin::addPrototype(10, new PCA9685Plugin);
 Plugin* MQTTPlugin_myProtoype = Plugin::addPrototype(11, new MQTTPlugin);
+Plugin* RotaryEncoderPlugin_myProtoype = Plugin::addPrototype(12, new RotaryEncoderPlugin);
+Plugin* HTTPCtrlPlugin_myProtoype = Plugin::addPrototype(13, new HTTPCtrlPlugin);
 
 uint8_t ledPin;
 bool ledInverted;
