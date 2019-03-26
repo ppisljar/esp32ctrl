@@ -53,6 +53,7 @@ class MCP23017Plugin_digital_write : public IO_digital_write {
 
 bool MCP23017Plugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
+    state_cfg = &((JsonArray &)params["state"]);
 
     uint8_t mcp23017_addr = (*cfg)["addr"];
     MCP23017Plugin_digital_read *digitalRead = new MCP23017Plugin_digital_read(mcp23017_addr, &pins);

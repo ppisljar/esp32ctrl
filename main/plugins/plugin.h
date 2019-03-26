@@ -77,25 +77,26 @@ bool TYPE::getConfig(JsonObject &params) { \
     return true; \
 }
 
-#define PLUGIN___STATS_GET(VARIABLE, I) params[#VARIABLE] = VARIABLE;
-#define PLUGIN___STATS_SET(VARIABLE, I) VARIABLE = params[#VARIABLE];
+#define PLUGIN___STATS_GET(VARIABLE, I) stateName = (char*)(*state_cfg)[I]["name"].as<char*>(); \
+    params[stateName] = VARIABLE;
+#define PLUGIN___STATS_SET(VARIABLE, I) stateName = (char*)(*state_cfg)[I]["name"].as<char*>(); \
+    VARIABLE = params[stateName];
 #define PLUGIN___STATS_GETPTR(VARIABLE, I) if (val == I) return &VARIABLE;
 #define PLUGIN___STATS_SETPTR(VARIABLE, I) if (n == I) VARIABLE = *val;
 #define PLUGIN_STATS(TYPE, ...) \
 bool TYPE::getState(JsonObject &params) { \
+    char *stateName; \
     FOREACH_MACRO(PLUGIN___STATS_GET, __VA_ARGS__) \
     return true; \
 } \
 bool TYPE::setState(JsonObject &params) { \
+    char *stateName; \
     FOREACH_MACRO(PLUGIN___STATS_SET, __VA_ARGS__) \
     return true; \
 } \
 void* TYPE::getStatePtr(uint8_t val) { \
     FOREACH_MACRO(PLUGIN___STATS_GETPTR, __VA_ARGS__) \
     return NULL; \
-} \
-void TYPE::setStatePtr_(uint8_t n, uint8_t *val, bool notify) { \
-    FOREACH_MACRO(PLUGIN___STATS_SETPTR, __VA_ARGS__) \
 }
 
 #define DEFINE_PLUGIN(TYPE) \
@@ -107,8 +108,7 @@ void TYPE::setStatePtr_(uint8_t n, uint8_t *val, bool notify) { \
     bool setConfig(JsonObject &params); \
     bool getState(JsonObject& ); \
     bool getConfig(JsonObject& ); \
-    void* getStatePtr(uint8_t ); \
-    void setStatePtr_(uint8_t, uint8_t*, bool);
+    void* getStatePtr(uint8_t ); 
 
 #define SET_STATE(plugin, var, var_index, shouldNotify, value) plugin->var = value; \
             if (shouldNotify) notify(plugin, var_index, plugin->var)
@@ -125,7 +125,7 @@ class Plugin
         virtual bool getState(JsonObject& ) = 0;
         virtual bool getConfig(JsonObject& ) = 0;
         virtual void* getStatePtr(uint8_t var) = 0;
-        virtual void setStatePtr_(uint8_t var, uint8_t* val, bool notify) = 0;
+        void setStatePtr_(uint8_t var, uint8_t* val, bool notify) {};
         void setStatePtr(uint8_t var, uint8_t* val, bool notify = true) {
             setStatePtr_(var, val, notify);
         };

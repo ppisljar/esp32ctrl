@@ -33,7 +33,7 @@ class RotaryEncoder extends Device {
             'params.gpio2': 255,
             'params.invert': false,
             interval: 60,
-            'settings.values[0].name': 'State',
+            'state.values[0].name': 'State',
         }
     }
 }

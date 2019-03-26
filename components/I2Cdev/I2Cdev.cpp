@@ -180,19 +180,33 @@ int8_t I2Cdev::readWord(uint8_t devAddr, uint8_t regAddr, uint16_t *data, uint16
  */
 int8_t I2Cdev::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data, uint16_t timeout) {
 	i2c_cmd_handle_t cmd;
-	SelectRegister(devAddr, regAddr);
+	if (SelectRegister(devAddr, regAddr) != ESP_OK) {
+        ESP_LOGE("i2c", "can't select register");
+        return ESP_FAIL;
+    };
 
 	cmd = i2c_cmd_link_create();
-	ESP_ERROR_CHECK(i2c_master_start(cmd));
-	ESP_ERROR_CHECK(i2c_master_write_byte(cmd, (devAddr << 1) | I2C_MASTER_READ, 1));
+	if (i2c_master_start(cmd) != ESP_OK) {
+        ESP_LOGE("i2c", "can't start i2c command");
+        return ESP_FAIL;
+    }
+	if(i2c_master_write_byte(cmd, (devAddr << 1) | I2C_MASTER_READ, 1) != ESP_OK) {
+        ESP_LOGE("i2c", "can't write byte");
+        return ESP_FAIL;
+    }
 
-	if(length>1)
-		ESP_ERROR_CHECK(i2c_master_read(cmd, data, length-1, (i2c_ack_type_t)0));
+	if(length>1) {
+        i2c_master_read(cmd, data, length-1, (i2c_ack_type_t)0);
+    }
+		
 
-	ESP_ERROR_CHECK(i2c_master_read_byte(cmd, data+length-1, (i2c_ack_type_t)1));
+	if (i2c_master_read_byte(cmd, data+length-1, (i2c_ack_type_t)1) != ESP_OK) {
+        ESP_LOGE("i2c", "can't read byte");
+        return ESP_FAIL;
+    }
 
-	ESP_ERROR_CHECK(i2c_master_stop(cmd));
-	ESP_ERROR_CHECK(i2c_master_cmd_begin(I2C_NUM, cmd, 1000/portTICK_PERIOD_MS));
+	i2c_master_stop(cmd);
+	i2c_master_cmd_begin(I2C_NUM, cmd, 1000/portTICK_PERIOD_MS);
 	i2c_cmd_link_delete(cmd);
 
 	return length;
@@ -208,38 +222,67 @@ int8_t I2Cdev::readBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8
  */
 int8_t I2Cdev::readWords(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint16_t *data, uint16_t timeout) {
 	i2c_cmd_handle_t cmd;
-	SelectRegister(devAddr, regAddr);
+	if (SelectRegister(devAddr, regAddr) != ESP_OK) {
+        ESP_LOGE("i2c", "can't select register");
+        return ESP_FAIL;
+    };
 
 	cmd = i2c_cmd_link_create();
-	ESP_ERROR_CHECK(i2c_master_start(cmd));
-	ESP_ERROR_CHECK(i2c_master_write_byte(cmd, (devAddr << 1) | I2C_MASTER_READ, 1));
+	if (i2c_master_start(cmd) != ESP_OK) {
+        ESP_LOGE("i2c", "can't start i2c command");
+        return ESP_FAIL;
+    }
+	if(i2c_master_write_byte(cmd, (devAddr << 1) | I2C_MASTER_READ, 1) != ESP_OK) {
+        ESP_LOGE("i2c", "can't write byte");
+        return ESP_FAIL;
+    }
 
 	if(length>1)
-		ESP_ERROR_CHECK(i2c_master_read(cmd, (uint8_t*)data, (length*2)-1, (i2c_ack_type_t)0));
+		i2c_master_read(cmd, (uint8_t*)data, (length*2)-1, (i2c_ack_type_t)0);
 
-	ESP_ERROR_CHECK(i2c_master_read_byte(cmd, (uint8_t*)data+(length*2)-1, (i2c_ack_type_t)1));
+	if(i2c_master_read_byte(cmd, (uint8_t*)data+(length*2)-1, (i2c_ack_type_t)1) != ESP_OK) {
+        ESP_LOGE("i2c", "can't read byte");
+        return ESP_FAIL;
+    }
 
 	for (uint8_t i = 0; i < length; i++) {
 	    data[i] = (((uint8_t*)data)[i * 2 + 1] << 8) + ((uint8_t*)data)[i * 2];
 	}
 
-	ESP_ERROR_CHECK(i2c_master_stop(cmd));
-	ESP_ERROR_CHECK(i2c_master_cmd_begin(I2C_NUM, cmd, 1000/portTICK_PERIOD_MS));
+	i2c_master_stop(cmd);
+	i2c_master_cmd_begin(I2C_NUM, cmd, 1000/portTICK_PERIOD_MS);
 	i2c_cmd_link_delete(cmd);
 
 	return length;
 }
 
-void I2Cdev::SelectRegister(uint8_t dev, uint8_t reg){
+int8_t I2Cdev::SelectRegister(uint8_t dev, uint8_t reg){
 	i2c_cmd_handle_t cmd;
 
 	cmd = i2c_cmd_link_create();
-	ESP_ERROR_CHECK(i2c_master_start(cmd));
-	ESP_ERROR_CHECK(i2c_master_write_byte(cmd, (dev << 1) | I2C_MASTER_WRITE, 1));
-	ESP_ERROR_CHECK(i2c_master_write_byte(cmd, reg, 1));
-	ESP_ERROR_CHECK(i2c_master_stop(cmd));
-	ESP_ERROR_CHECK(i2c_master_cmd_begin(I2C_NUM, cmd, 1000/portTICK_PERIOD_MS));
+    if (i2c_master_start(cmd) != ESP_OK) {
+        ESP_LOGD("i2c", "can't start i2c command");
+        return ESP_FAIL;
+    }
+	if(i2c_master_write_byte(cmd, (dev << 1) | I2C_MASTER_WRITE, 1) != ESP_OK) {
+        ESP_LOGD("i2c", "can't write byte");
+        return ESP_FAIL;
+    }
+	if(i2c_master_write_byte(cmd, reg, 1) != ESP_OK) {
+        ESP_LOGD("i2c", "can't write byte");
+        return ESP_FAIL;
+    }
+	if(i2c_master_stop(cmd) != ESP_OK) {
+        ESP_LOGD("i2c", "can't send stop");
+        return ESP_FAIL;
+    }
+	if(i2c_master_cmd_begin(I2C_NUM, cmd, 1000/portTICK_PERIOD_MS) != ESP_OK) {
+        ESP_LOGD("i2c", "can't begin");
+        return ESP_FAIL;
+    }
 	i2c_cmd_link_delete(cmd);
+    
+    return ESP_OK;
 }
 
 /** write a single bit in an 8-bit device register.

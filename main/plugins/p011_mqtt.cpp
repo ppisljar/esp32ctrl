@@ -159,6 +159,7 @@ class MQTT_Notify : public Controller_Notify_Handler {
 
 bool MQTTPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
+    state_cfg = &((JsonArray &)params["state"]);
 
     // if (!(*cfg)["topic_format"]) (*cfg)["topic_format"] = "%s/%s";
     // if (!(*cfg)["data_format"]) (*cfg)["data_format"] = "{\"val\":%d}";

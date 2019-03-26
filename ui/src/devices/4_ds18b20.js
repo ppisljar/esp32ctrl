@@ -1,7 +1,7 @@
 export const ds18b20 = {
     defaults: () => ({
         gpio: 255,
-        'settings.values[0].name': 'Temperature',
+        'state.values[0].name': 'Temperature',
     }),
     params: {
         name: 'Sensor',

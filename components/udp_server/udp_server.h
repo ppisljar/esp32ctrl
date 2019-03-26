@@ -54,6 +54,7 @@ private:
   char * tx_buffer;
   size_t tx_buffer_len;
   cbuf * rx_buffer;
+  char buf[1460];
 public:
   WiFiUDP();
   ~WiFiUDP();

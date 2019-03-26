@@ -23,6 +23,7 @@ import {
 } from '../pages';
 
 import { deleteFile } from './espeasy';
+import { DashboardPage } from '../pages/dashboard';
 
 const saveConfig = () => {
     window.location.href='/config.json';
@@ -48,6 +49,7 @@ class Menus {
 }
 
 const menus = [
+    { title: 'Dashboard', href: 'dashboard', component: DashboardPage, children: [] },
     { title: 'Devices', href: 'devices', component: DevicesPage, children: [] },
     //{ title: 'Controllers', href: 'controllers', component: ControllersPage, children: [] },
     { title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [] },

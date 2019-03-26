@@ -81,7 +81,7 @@ class I2Cdev {
         static uint16_t readTimeout;
 
     //private:
-        static void SelectRegister(uint8_t dev, uint8_t reg);
+        static int8_t SelectRegister(uint8_t dev, uint8_t reg);
         //static I2C_TransferReturn_TypeDef transfer(I2C_TransferSeq_TypeDef *seq, uint16_t timeout=I2Cdev::readTimeout);
 };
 

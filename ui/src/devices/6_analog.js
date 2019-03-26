@@ -1,7 +1,8 @@
 
 export const analog = {
     defaults: () => ({
-        'params.gpio': 255
+        'params.gpio': 255,
+        'state.values[0].name': 'Analog',
     }),
     params: {
         name: 'Settings',
@@ -10,5 +11,5 @@ export const analog = {
         }
     },
     data: false,
-    vals: 0,
+    vals: 1,
 }

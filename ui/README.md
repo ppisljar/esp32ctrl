@@ -121,14 +121,6 @@ before the last line insert something like `{ name: 'My Plugin Name', value: 103
 
 TODO:
 
--- v8:
-- bluetooth ctrl
-- bluetooth device (light, speaker)
-
--- v7:
-- dashboards
-- schedules and recepies
-
 
 -- v9:
 - pimp up

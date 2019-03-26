@@ -11,6 +11,7 @@ class SwitchPlugin: public Plugin {
         bool state = 0;
     public:
         DEFINE_PLUGIN(SwitchPlugin);
+        void setStatePtr_(uint8_t, uint8_t*, bool);
         static void task(void *pvParameters);
 };
 

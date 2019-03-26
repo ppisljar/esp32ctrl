@@ -27,7 +27,7 @@ class InputSwitch extends Device {
             'params.invert': false,
             interval: 60,
 
-            'settings.values[0].name': 'Switch',
+            'state.values[0].name': 'Switch',
         }
     }
 }

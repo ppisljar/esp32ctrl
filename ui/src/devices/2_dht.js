@@ -10,8 +10,8 @@ export const dht = {
     defaults: () => ({
         'params.gpio': 255,
         'params.type': 0,
-        'settings.values[0].name': 'Temperature',
-        'settings.values[1].name': 'Humidity',
+        'state.values[0].name': 'Temperature',
+        'state.values[1].name': 'Humidity',
     }),
     params: {
         name: 'Configuration',

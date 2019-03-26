@@ -16,6 +16,7 @@ void BMP280Plugin::task(void * pvParameters)
     for( ;; )
     {
         int interval = cfg["interval"] | 60;
+        if (interval == 0) interval = 60;
 
 //        if (cfg["i2c"] != 255) {
 //            if (bmp280_read_float(&i2c, &s->temperature, &s->pressure, &s->humidity) != ESP_OK)
@@ -31,7 +32,17 @@ void BMP280Plugin::task(void * pvParameters)
 
 bool BMP280Plugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
+    state_cfg = &((JsonArray &)params["state"]);
 
+    te_variable vars_temp[] = {{"x", &temp[0]}};
+    te_variable vars_humi[] = {{"x", &temp[1]}};
+    te_variable vars_pres[] = {{"x", &temp[2]}};
+    const char *temp_formula = (*state_cfg)[0]["formula"] | "x";
+    const char *humi_formula = (*state_cfg)[1]["formula"] | "x";
+    const char *pres_formula = (*state_cfg)[2]["formula"] | "x";
+    temp_expr = te_compile(temp_formula, vars_temp, 1, 0);
+    humi_expr = te_compile(humi_formula, vars_humi, 1, 0);
+    pres_expr = te_compile(pres_formula, vars_pres, 1, 0);
 
 //    if (params["i2c"] != 255) {
 //        // todo: which i2c to use

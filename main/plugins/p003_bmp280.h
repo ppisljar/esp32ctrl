@@ -11,8 +11,14 @@ class BMP280Plugin: public Plugin {
         float pressure = 0;
         float humidity = 0;
         int type = 0;
+        float temp[3];
     public:
         DEFINE_PLUGIN(BMP280Plugin);
+
+        te_expr *temp_expr;
+        te_expr *humi_expr;
+        te_expr *pres_expr;
+
         static void task(void *pvParameters);
 };
 

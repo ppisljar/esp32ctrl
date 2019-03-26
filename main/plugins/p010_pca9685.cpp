@@ -21,6 +21,7 @@ class PCA9685Plugin_analog_write : public IO_analog_write {
 
 bool PCA9685Plugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
+    state_cfg = &((JsonArray &)params["state"]);
 
     uint8_t addr = (*cfg)["addr"];
     uint16_t freq = (*cfg)["freq"];

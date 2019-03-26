@@ -192,9 +192,10 @@ bool authenticate(httpd_req_t *req){
       if(strcmp(_response, _responsecheck) == 0){
         authReq[0] = 0;
         ESP_LOGI(TAG, "logged in with %s", _username);
-        httpd_resp_set_hdr(req, "User", _username);
+        if (strcmp(_username, USER_ADMIN) == 0) httpd_resp_set_hdr(req, "User", USER_ADMIN);
+        if (strcmp(_username, USER_USER) == 0) httpd_resp_set_hdr(req, "User", USER_USER);
+        
         httpd_resp_set_hdr(req, "Test", _username);
-        httpd_resp_set_hdr(req, "TestUser", "admin");
         return true;
       }
     }

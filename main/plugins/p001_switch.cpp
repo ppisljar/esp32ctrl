@@ -3,6 +3,7 @@
 const char *P001_TAG = "SwitchPlugin";
 
 PLUGIN_CONFIG(SwitchPlugin, interval, gpio)
+PLUGIN_STATS(SwitchPlugin, state, state);
 
 void SwitchPlugin::task(void * pvParameters)
 {
@@ -31,12 +32,6 @@ bool SwitchPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]);
 
-    // if ((*state_cfg)[0] == nullptr) {
-    //     JsonObject item = (*state_cfg).createNestedObject();
-    //     item["name"] = "Switch";
-    //     item["type"] = 0;
-    // }
-
     ESP_LOGI(P001_TAG, "init gpio:%d interval:%d", (*cfg)["gpio"].as<int>(), (*cfg)["interval"].as<int>());
 
     uint8_t gpio = (*cfg)["gpio"] | 255;
@@ -47,24 +42,6 @@ bool SwitchPlugin::init(JsonObject &params) {
 
     xTaskCreatePinnedToCore(this->task, P001_TAG, 4096, this, 5, NULL, 1);
     return true;
-}
-
-bool SwitchPlugin::getState(JsonObject &params) {
-    const char* stateName = (*state_cfg)[0]["name"];
-    params[stateName] = state;
-    return true;
-}
-
-bool SwitchPlugin::setState(JsonObject &params) {
-    const char* stateName = (*state_cfg)[0]["name"];
-    state = params[stateName];
-    return true;
-}
-
-void* SwitchPlugin::getStatePtr(uint8_t val) {
-    ESP_LOGI(P001_TAG, "return state ptr %d (%p) [%d]", val, &state, state);
-    if (val == 0) return &state;
-    return NULL;
 }
 
 void SwitchPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {

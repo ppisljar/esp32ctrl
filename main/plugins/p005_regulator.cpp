@@ -22,6 +22,8 @@ void RegulatorPlugin::task(void * pvParameters)
         float level = cfg["level"] | 0;
         float hysteresis = cfg["hysteresis"] | 0;
 
+        if (interval == 0) interval = 60;
+
         if (device != 255) {
             // get the device, request its stats and get the value
             JsonObject& state = (s->jb).createObject();
@@ -38,6 +40,7 @@ void RegulatorPlugin::task(void * pvParameters)
 
 bool RegulatorPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
+    state_cfg = &((JsonArray &)params["state"]);
 
     xTaskCreatePinnedToCore(this->task, P005_TAG, 4096, this, 5, NULL, 1);
     return true;

@@ -18,7 +18,7 @@
               bool state;
           public:
               DEFINE_PLUGIN(I2CPlugin);
-              
+              void setStatePtr_(uint8_t n, uint8_t *val, bool notify);
               esp_err_t read(uint8_t addr, uint8_t *data_rd, size_t size);
               esp_err_t write(uint8_t addr, uint8_t *data_wr, size_t size);
               void scan();

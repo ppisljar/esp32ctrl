@@ -41,8 +41,10 @@ bool DHTPlugin::init(JsonObject &params) {
 
     te_variable vars_temp[] = {{"x", &temp[0]}};
     te_variable vars_humi[] = {{"x", &temp[1]}};
-    temp_expr = te_compile((*state_cfg)[0]["formula"].as<char*>(), vars_temp, 1, 0);
-    humi_expr = te_compile((*state_cfg)[1]["formula"].as<char*>(), vars_humi, 1, 0);
+    const char *temp_formula = (*state_cfg)[0]["formula"] | "x";
+    const char *humi_formula = (*state_cfg)[1]["formula"] | "x";
+    temp_expr = te_compile(temp_formula, vars_temp, 1, 0);
+    humi_expr = te_compile(humi_formula, vars_humi, 1, 0);
 
     if (gpio != 255) {
         setDHTgpio( gpio );

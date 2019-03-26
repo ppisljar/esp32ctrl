@@ -130,6 +130,8 @@ extern "C" void app_main()
         hue_plugin->init(hue_conf);
     }
 
+    vTaskDelay( 2000 / portTICK_PERIOD_MS);
+
     JsonArray &plugins = cfgObject["plugins"];
     int pi = 0;
     for (auto plugin : plugins){
@@ -140,6 +142,7 @@ extern "C" void app_main()
         active_plugins[pi]->id = pi;
         active_plugins[pi]->init(plugin);
         pi++;
+        vTaskDelay( 1000 / portTICK_PERIOD_MS);
     }
 
     long rule_length;

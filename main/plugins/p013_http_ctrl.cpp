@@ -105,6 +105,7 @@ class HTTP_Notify : public Controller_Notify_Handler {
 
 bool HTTPCtrlPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
+    state_cfg = &((JsonArray &)params["state"]);
 
     http_cfg.url = (*cfg)["uri"].as<char*>();
 

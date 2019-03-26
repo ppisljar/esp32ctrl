@@ -2,6 +2,9 @@
 
 const char *C001_TAG = "I2CPlugin";
 
+PLUGIN_CONFIG(I2CPlugin, port, sda, scl, freq)
+PLUGIN_STATS(I2CPlugin, state, state);
+
 bool I2CPlugin::init(JsonObject &params) {
     cfg = &params;
     if (!params.containsKey("port")) {
@@ -29,44 +32,6 @@ bool I2CPlugin::init(JsonObject &params) {
     i2c_param_config((i2c_port_t)i2c_master_port, &conf);
 
     return i2c_driver_install((i2c_port_t)i2c_master_port, conf.mode, 0, 0, 0);
-}
-
-bool I2CPlugin::setConfig(JsonObject &params) {
-    if (params.containsKey("sda")) {
-        (*cfg)["sda"] = params["sda"];
-    }
-    if (params.containsKey("scl")) {
-        (*cfg)["scl"] = params["scl"];
-    }
-    if (params.containsKey("freq")) {
-        (*cfg)["freq"] = params["freq"];
-    }
-    return true;
-}
-
-bool I2CPlugin::getConfig(JsonObject &params) {
-    params["freq"] = (*cfg)["freq"];
-    params["sda"] = (*cfg)["sda"];
-    params["scl"] = (*cfg)["scl"];
-    return true;
-}
-
-bool I2CPlugin::setState(JsonObject &params) {
-    if (params.containsKey("state")) {
-        state = params["state"];
-    }
-    return true;
-}
-
-bool I2CPlugin::getState(JsonObject &params) {
-    params["state"] = state;
-    return true;
-}
-
-void* I2CPlugin::getStatePtr(uint8_t val) {
-    ESP_LOGD(C001_TAG, "return state ptr %d (%p)", val, &state);
-    if (val == 0) return &state;
-    return NULL;
 }
 
 void I2CPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool notify) {
