@@ -122,7 +122,6 @@ before the last line insert something like `{ name: 'My Plugin Name', value: 103
 TODO:
 
 -- v8:
-- mesh
 - bluetooth ctrl
 - bluetooth device (light, speaker)
 

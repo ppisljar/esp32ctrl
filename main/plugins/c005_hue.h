@@ -5,7 +5,7 @@
 #include "freertos/FreeRTOS.h"
 #include "espalexa.h"
 #include "../lib/file_server.h"
-#include "c003_wifi.h";
+#include "c003_wifi.h"
 
 extern WiFiPlugin *wifi_plugin;
 

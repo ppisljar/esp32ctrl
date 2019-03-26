@@ -33,6 +33,8 @@ static const char *TAG = "MAIN";
 #include "plugins/p012_rotary_encoder.h"
 #include "plugins/p013_http_ctrl.h"
 
+#include "bluetooth.h"
+
 
 // global config object
 Config *cfg;
@@ -58,8 +60,14 @@ Plugin* MQTTPlugin_myProtoype = Plugin::addPrototype(11, new MQTTPlugin);
 Plugin* RotaryEncoderPlugin_myProtoype = Plugin::addPrototype(12, new RotaryEncoderPlugin);
 Plugin* HTTPCtrlPlugin_myProtoype = Plugin::addPrototype(13, new HTTPCtrlPlugin);
 
+BlueTooth* bluetooth;
+
 uint8_t ledPin;
 bool ledInverted;
+
+void btfunc(uint16_t packet_id, void* devices, uint16_t len) {
+    ESP_LOGI(TAG, "bluetooth done");
+}
 
 extern "C" void app_main()
 {
@@ -85,6 +93,13 @@ extern "C" void app_main()
     JsonObject &wifi_config = cfgObject["wifi"];
     wifi_plugin = new WiFiPlugin();
     wifi_plugin->init(wifi_config);
+
+    JsonObject &bluetooth_config = cfgObject["bluetooth"];
+    if (bluetooth_config["enabled"]) {
+        bluetooth = new BlueTooth();
+        bluetooth->init();
+        bluetooth->getDevices(btfunc, 0);
+    }
 
     //JsonObject &io_cfg = cfgObject["io"];
     struct IO_DIGITAL_PINS pins;

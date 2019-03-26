@@ -5,7 +5,7 @@ static const char *TAG = "HTTPCtrlPlugin";
 PLUGIN_CONFIG(HTTPCtrlPlugin, uri, data, method)
 PLUGIN_STATS(HTTPCtrlPlugin, value, value)
 
-bool replace_string_in_place(std::string& subject, const std::string& search,
+bool ht_replace_string_in_place(std::string& subject, const std::string& search,
                           const std::string& replace) {
     size_t pos = 0;
     bool success = false;
@@ -17,17 +17,17 @@ bool replace_string_in_place(std::string& subject, const std::string& search,
     return success;
 }
 
-static void parseStr(std::string& str, Plugin *p, uint8_t var_id, uint8_t val) {
+void ht_parseStr(std::string& str, Plugin *p, uint8_t var_id, uint8_t val) {
     std::string name(p->name);
-    replace_string_in_place(str, "%device_id%", std::to_string(p->id));
-    replace_string_in_place(str, "%device_name%", name);
-    replace_string_in_place(str, "%value_id%", std::to_string(var_id));
-    replace_string_in_place(str, "%value_name%", "test");
-    replace_string_in_place(str, "%idx%", "test");
-    replace_string_in_place(str, "%unit_id%", "test");
-    replace_string_in_place(str, "%unit_name%", "test");
-    replace_string_in_place(str, "%timestamp%", "test");
-    replace_string_in_place(str, "%value%", std::to_string(val));
+    ht_replace_string_in_place(str, "%device_id%", std::to_string(p->id));
+    ht_replace_string_in_place(str, "%device_name%", name);
+    ht_replace_string_in_place(str, "%value_id%", std::to_string(var_id));
+    ht_replace_string_in_place(str, "%value_name%", "test");
+    ht_replace_string_in_place(str, "%idx%", "test");
+    ht_replace_string_in_place(str, "%unit_id%", "test");
+    ht_replace_string_in_place(str, "%unit_name%", "test");
+    ht_replace_string_in_place(str, "%timestamp%", "test");
+    ht_replace_string_in_place(str, "%value%", std::to_string(val));
 }
 
 // TODO: we need a way to register to additional topics (from rules) and have separate handler for those (update should be called only for default topic)
@@ -93,8 +93,8 @@ class HTTP_Notify : public Controller_Notify_Handler {
             std::string uri_str(uri_format);
             std::string data_str(data_format);
             // // we need to have parse function which will parse the topic/data format and do string replacement for vars
-            parseStr(uri_str, x, var_id, val);
-            parseStr(data_str, x, var_id, val);
+            ht_parseStr(uri_str, x, var_id, val);
+            ht_parseStr(data_str, x, var_id, val);
             ESP_LOGI(TAG, "%s\n%s", uri_str.c_str(), data_str.c_str());
 
             p->request(uri_str.c_str(), (esp_http_client_method_t)method, data_str.c_str());

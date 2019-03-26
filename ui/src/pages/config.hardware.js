@@ -75,6 +75,12 @@ const formConfig = {
                 t4_mode: { name: 'T4 mode', type: 'select', options: timerMode },
             }
         },
+        bluetooth: {
+            name: 'Bluetooth Settinggs',
+            configs: {
+                enabled: { name: 'Enabled', type: 'checkbox' },
+            }
+        },
         gpio: {
             name: 'GPIO boot states',
             configs: {
