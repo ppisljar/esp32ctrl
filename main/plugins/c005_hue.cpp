@@ -12,7 +12,11 @@ esp_err_t hueemulator_webhandler(httpd_req_t *req) {
     ESP_LOGI(TAG, "description.xml web handler");
     // auto p = (HueEmulatorPlugin*)req->user_ctx;
     return hue_plugin->alexa->serveDescription(req);
-    return ESP_OK;
+}
+
+esp_err_t hueemulator_apihandler(httpd_req_t *req) {
+    ESP_LOGI(TAG, "alexa API call: %s", req->uri);
+    return hue_plugin->alexa->handleAlexaApiCall(req);
 }
 
 void HueEmulatorPlugin::task(void * pvParameters)
@@ -39,18 +43,14 @@ bool HueEmulatorPlugin::init(JsonObject &params) {
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 
-    //http_quick_register("/description", HTTP_GET, hueemulator_webhandler, nullptr);
+    http_quick_register("/description", HTTP_GET, hueemulator_webhandler, this);
+    http_quick_register("/api/*", HTTP_GET, hueemulator_apihandler, this);
+    http_quick_register("/api/*", HTTP_PUT, hueemulator_apihandler, this);
+
 
     ESP_LOGI(TAG, "init");
     alexa = new Espalexa();
     alexa->begin(wifi_plugin->status.local_ip); // starts the udp server
-    
-
-    std::function<esp_err_t(httpd_req_t *req)> fn = [this](httpd_req_t *req) {
-        ESP_LOGI(TAG, "alexa API call: %s", req->uri);
-        return alexa->handleAlexaApiCall(req);
-    };
-    http_register_404_handler(fn);
 
     // register all triggers
     JsonArray &triggers = (*cfg)["triggers"];

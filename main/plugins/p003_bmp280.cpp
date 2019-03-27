@@ -18,13 +18,18 @@ void BMP280Plugin::task(void * pvParameters)
         int interval = cfg["interval"] | 60;
         if (interval == 0) interval = 60;
 
-//        if (cfg["i2c"] != 255) {
-//            if (bmp280_read_float(&i2c, &s->temperature, &s->pressure, &s->humidity) != ESP_OK)
-//                ESP_LOGI(P003_TAG, "Pressure: %.2f Pa, Temperature: %.2f C", s->pressure, s->temperature);
-//            else
-//                printf(P003_TAG, "Could not read data from sensor");
-//            }
-//        }
+        s->temp[0] = getTemperature();
+            s->temp[1] = getHumidity();
+            
+
+        if (bmp280_read_float(&i2c, &temp[0], &temp[2], &tmp[1]) == ESP_OK) {
+            SET_STATE(s, temperature, 0, true, te_eval(s->temp_expr));
+            SET_STATE(s, humidity, 1, true, te_eval(s->humi_expr));
+            SET_STATE(s, pressure, 2, true, te_eval(s->pres_expr));
+            ESP_LOGI(P003_TAG, "Pressure: %.2f Pa, Temperature: %.2f C", s->pressure, s->temperature);
+        } else
+            ESP_LOGI(P003_TAG, "Could not read data from sensor");
+        }
 
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);
     }
@@ -44,24 +49,21 @@ bool BMP280Plugin::init(JsonObject &params) {
     humi_expr = te_compile(humi_formula, vars_humi, 1, 0);
     pres_expr = te_compile(pres_formula, vars_pres, 1, 0);
 
-//    if (params["i2c"] != 255) {
-//        // todo: which i2c to use
-//
-//        if (bmp280_init_desc(&dev, BMP280_I2C_ADDRESS_0) != ESP_OK)
-//        {
-//            ESP_LOGI(P003_TAG, "Could not init device descriptor\n");
-//            return false;
-//        }
-//
-//        if ((res = bmp280_init(&dev, &params)) != ESP_OK)
-//        {
-//            ESP_LOGI(P003_TAG, "Could not init BMP280, err: %d\n", res);
-//            return false;
-//        }
-//
-//        type = dev.id == BME280_CHIP_ID ? 1 : 2;
-//        ESP_LOGI(P003_TAG, "BMP280: found %s\n", type == 1 ? "BME280" : "BMP280");
-//    }
+
+    if (bmp280_init_desc(&dev, BMP280_I2C_ADDRESS_0) != ESP_OK)
+    {
+        ESP_LOGI(P003_TAG, "Could not init device descriptor\n");
+        return false;
+    }
+
+    if ((res = bmp280_init(&dev, &params)) != ESP_OK)
+    {
+        ESP_LOGI(P003_TAG, "Could not init BMP280, err: %d\n", res);
+        return false;
+    }
+
+    type = dev.id == BME280_CHIP_ID ? 1 : 2;
+    ESP_LOGI(P003_TAG, "BMP280: found %s\n", type == 1 ? "BME280" : "BMP280");
 
     xTaskCreatePinnedToCore(this->task, P003_TAG, 4096, this, 5, NULL, 1);
     return true;

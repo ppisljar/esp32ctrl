@@ -5,18 +5,6 @@ static const char *TAG = "MQTTPlugin";
 PLUGIN_CONFIG(MQTTPlugin, interval, uri, client_id, user, pass, lwt_topic, lwt_msg)
 PLUGIN_STATS(MQTTPlugin, value, value)
 
-bool replace_string_in_place(std::string& subject, const std::string& search,
-                          const std::string& replace) {
-    size_t pos = 0;
-    bool success = false;
-    while((pos = subject.find(search, pos)) != std::string::npos) {
-         subject.replace(pos, search.length(), replace);
-         pos += replace.length();
-         success = true;
-    }
-    return success;
-}
-
 // parses topic and ges out the atual subscribe topic (with wildcards)
 static void parseSubscribeTopicStr(const char *topic_in, struct subscribe_info *info) {
     std::string str_topic(topic_in);
@@ -70,19 +58,6 @@ static void parseSubscribeTopicStr(const char *topic_in, struct subscribe_info *
         }
     }
 
-}
-
-static void parseStr(std::string& str, Plugin *p, uint8_t var_id, uint8_t val) {
-    std::string name(p->name);
-    replace_string_in_place(str, "%device_id%", std::to_string(p->id));
-    replace_string_in_place(str, "%device_name%", name);
-    replace_string_in_place(str, "%value_id%", std::to_string(var_id));
-    replace_string_in_place(str, "%value_name%", "test");
-    replace_string_in_place(str, "%idx%", "test");
-    replace_string_in_place(str, "%unit_id%", "test");
-    replace_string_in_place(str, "%unit_name%", "test");
-    replace_string_in_place(str, "%timestamp%", "test");
-    replace_string_in_place(str, "%value%", std::to_string(val));
 }
 
 // TODO: we need a way to register to additional topics (from rules) and have separate handler for those (update should be called only for default topic)
@@ -141,14 +116,18 @@ class MQTT_Notify : public Controller_Notify_Handler {
         };
         uint8_t operator()(Plugin *x, uint8_t var_id, uint8_t val) {
             ESP_LOGI(TAG, "sending mqtt notification %p %d %d", p, var_id, val);
+            if (!p->connected) {
+                ESP_LOGW(TAG, "mqtt not connected, skipping");
+                return 0;
+            }
             JsonObject &cfg = *(p->cfg);
             const char *topic_format = cfg["publish_topic"];
             const char *data_format = cfg["publish_data"];
             std::string topic_str(topic_format);
             std::string data_str(data_format);
             // // we need to have parse function which will parse the topic/data format and do string replacement for vars
-            parseStr(topic_str, x, var_id, val);
-            parseStr(data_str, x, var_id, val);
+            parseStrForVar(topic_str, x, var_id, val);
+            parseStrForVar(data_str, x, var_id, val);
             ESP_LOGI(TAG, "%s\n%s", topic_str.c_str(), data_str.c_str());
             //ESP_LOGI(TAG, "%s\n%s", topic_format, data_format);
             
@@ -160,9 +139,6 @@ class MQTT_Notify : public Controller_Notify_Handler {
 bool MQTTPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]);
-
-    // if (!(*cfg)["topic_format"]) (*cfg)["topic_format"] = "%s/%s";
-    // if (!(*cfg)["data_format"]) (*cfg)["data_format"] = "{\"val\":%d}";
     
     ESP_LOGI(TAG, "connecting mqtt to %s", (*cfg)["uri"].as<char*>());
     mqtt_cfg.uri = (*cfg)["uri"].as<char*>();

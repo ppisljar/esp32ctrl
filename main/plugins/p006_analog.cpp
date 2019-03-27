@@ -18,7 +18,7 @@ void AnalogPlugin::task(void * pvParameters)
         if (interval == 0) interval = 60;
 
         if (gpio != 255) {
-            SET_STATE(s, value, 9, true, adc1_get_raw((adc1_channel_t)gpio));
+            SET_STATE(s, value, 9, true, io.analogRead(gpio));
         }
 
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);
@@ -32,12 +32,17 @@ bool AnalogPlugin::init(JsonObject &params) {
 
     int gpio = (*cfg)["gpio"] | 255;
     int atten = (*cfg)["type"] | 0;
-    if (adc1_config_width(ADC_WIDTH_BIT_12) != ESP_OK) {
-        ESP_LOGE(P006_TAG, "error initializing adc");
-        return false;
-    }
+    // if (adc1_config_width(ADC_WIDTH_BIT_12) != ESP_OK) {
+    //     ESP_LOGE(P006_TAG, "error initializing adc");
+    //     return false;
+    // }
     if (gpio != 255) {
-        adc1_config_channel_atten((adc1_channel_t)gpio, (adc_atten_t)atten);
+        // todo: we need init on IO pins (setDirection for digital, something for analog)
+        // io.init(gpio, options);
+        if (adc1_config_channel_atten((adc1_channel_t)gpio, (adc_atten_t)atten) != ESP_OK) {
+            ESP_LOGE(P006_TAG, "error initializing adc");
+            return false;
+        }
         xTaskCreatePinnedToCore(this->task, P006_TAG, 4096, this, 5, NULL, 1);
     }
 

@@ -2,20 +2,20 @@ menu "MyESP32 CTRL"
 
     menu "Enabled Controllers"
 
-        config ENABLE_C001_I2c
+        config ENABLE_C001_I2C
             bool "I2C"
             default y
 
-        config ENABLE_C002_SPI
-            bool "SPI"
+        config ENABLE_C002_NTP
+            bool "NTP"
             default y
 
-        config ENABLE_C003_MQTT
-            bool "MQTT"
+        config ENABLE_C004_TIMERS
+            bool "HW TIMERS"
             default y
 
-        config ENABLE_C004_MESH
-            bool "ESP MESH"
+        config ENABLE_C005_HUE
+            bool "HUE EMULATOR"
             default y
     endmenu
 
@@ -36,6 +36,42 @@ menu "MyESP32 CTRL"
 
         config ENABLE_P004_DS18x20
             bool "DS18x20"
+            default y
+
+        config ENABLE_P005_REGULATOR
+            bool "REGULATOR"
+            default y
+
+        config ENABLE_P006_ANALOG
+            bool "ANALOG"
+            default y
+
+        config ENABLE_P007_ADS1115
+            bool "ADS1115 IO Extender"
+            default y
+
+        config ENABLE_P008_MCP23017
+            bool "MCP23017 IO Extender"
+            default y
+
+        config ENABLE_P009_PCF8574
+            bool "PCF8574 IO Extender"
+            default y
+
+        config ENABLE_P010_PCA9685
+            bool "PCA9685 IO Extender"
+            default y
+
+        config ENABLE_P011_MQTT
+            bool "MQTT Controller"
+            default y
+
+        config ENABLE_P012_ROTARY
+            bool "ROTARY ENCODER"
+            default y
+
+        config ENABLE_P013_HTTP
+            bool "HTTP Controller"
             default y
     endmenu
 

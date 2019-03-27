@@ -130,6 +130,7 @@ class Plugin
             setStatePtr_(var, val, notify);
         };
 
+        static bool hasType(int type);
         static Plugin* getPluginInstance(int type);
         static Plugin* addPrototype(int type, Plugin* p);
         static std::map<int, Plugin*> protoTable;

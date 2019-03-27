@@ -9,6 +9,10 @@ std::map<int, Plugin*> Plugin::protoTable; // here we put it on sys
 // scott myers: effective modern c++
 // move operator
 
+bool Plugin::hasType(int type) {
+    return protoTable.count(type) == 1;
+}
+
 Plugin* Plugin::getPluginInstance(int type)
 {
     ESP_LOGD("PLUGIN", "loading plugin instance");

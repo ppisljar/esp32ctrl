@@ -19,4 +19,6 @@ class HueEmulatorPlugin: public Plugin {
         static void task(void *pvParameters);
 };
 
+esp_err_t hueemulator_webhandler(httpd_req_t *req);
+
 #endif

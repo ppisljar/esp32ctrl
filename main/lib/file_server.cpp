@@ -1034,12 +1034,11 @@ void http_quick_register(const char * uri, httpd_method_t method,  esp_err_t han
     httpd_register_uri_handler(server, &uri_handler);
 }
 
-extern esp_err_t hueemulator_webhandler(httpd_req_t *req);
-
+static struct file_server_data *server_data = NULL;
 /* Function to start the file server */
 esp_err_t start_file_server(const char *base_path)
 {
-    static struct file_server_data *server_data = NULL;
+    
     ESP_LOGI(TAG, "starting");
     /* Validate file storage base path */
     if (!base_path || strcmp(base_path, "/spiffs") != 0) {
@@ -1067,6 +1066,7 @@ esp_err_t start_file_server(const char *base_path)
      * allow the same handler to respond to multiple different
      * target URIs which match the wildcard scheme */
     config.uri_match_fn = httpd_uri_match_wildcard;
+    config.global_user_ctx = server_data;
     config.max_uri_handlers = 20;
 
     ESP_LOGD(TAG, "Starting HTTP Server");
@@ -1081,8 +1081,6 @@ esp_err_t start_file_server(const char *base_path)
     // upload
     // delete
     // rename
-
-    http_quick_register("/description.xml", HTTP_GET, hueemulator_webhandler, nullptr);
 
     //http_quick_register("/config/*", HTTP_GET, plugins_delete_handler, server_data);
     //http_quick_register("/config/*", HTTP_POST, plugins_delete_handler, server_data);
@@ -1101,34 +1099,13 @@ esp_err_t start_file_server(const char *base_path)
     http_quick_register("/filelist", HTTP_GET, http_resp_dir_html, server_data);
     http_quick_register("/reboot", HTTP_GET, reboot_handler, server_data);
 
+    http_quick_register("/upload/*", HTTP_POST, upload_post_handler, server_data);
+    http_quick_register("/delete/*", HTTP_POST, delete_post_handler, server_data);
 
-    http_quick_register("/api/*", HTTP_PUT, handler_404, server_data);
-    /* URI handler for getting uploaded files */
-    httpd_uri_t file_download = {
-        .uri       = "/*",  // Match all URIs of type /path/to/file (except index.html)
-        .method    = HTTP_GET,
-        .handler   = handler_404,
-        .user_ctx  = server_data    // Pass server data as context
-    };
-    httpd_register_uri_handler(server, &file_download);
-
-    /* URI handler for uploading files to server */
-    httpd_uri_t file_upload = {
-        .uri       = "/upload/*",   // Match all URIs of type /upload/path/to/file
-        .method    = HTTP_POST,
-        .handler   = upload_post_handler,
-        .user_ctx  = server_data    // Pass server data as context
-    };
-    httpd_register_uri_handler(server, &file_upload);
-
-    /* URI handler for deleting files from server */
-    httpd_uri_t file_delete = {
-        .uri       = "/delete/*",   // Match all URIs of type /delete/path/to/file
-        .method    = HTTP_POST,
-        .handler   = delete_post_handler,
-        .user_ctx  = server_data    // Pass server data as context
-    };
-    httpd_register_uri_handler(server, &file_delete);
 
     return ESP_OK;
+}
+
+void http_server_ready() {
+    http_quick_register("/*", HTTP_GET, handler_404, server_data);
 }

@@ -46,19 +46,45 @@ HueEmulatorPlugin *hue_plugin;
 
 IO io;
 
+#ifdef CONFIG_ENABLE_P001_SWITCH 
 Plugin* SwitchPlugin_myProtoype = Plugin::addPrototype(1, new SwitchPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P002_DHT 
 Plugin* DHTPlugin_myProtoype = Plugin::addPrototype(2, new DHTPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P003_BMP 
 Plugin* BMP280Plugin_myProtoype = Plugin::addPrototype(3, new BMP280Plugin);
+#endif
+#ifdef CONFIG_ENABLE_P004_DS18x20
 Plugin* DS18x20Plugin_myProtoype = Plugin::addPrototype(4, new DS18x20Plugin);
+#endif
+#ifdef CONFIG_ENABLE_P005_REGULATOR
 Plugin* RegulatorPlugin_myProtoype = Plugin::addPrototype(5, new RegulatorPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P006_ANALOG 
 Plugin* AnalogPlugin_myProtoype = Plugin::addPrototype(6, new AnalogPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P007_ADS1115 
 Plugin* ADS111xPlugin_myProtoype = Plugin::addPrototype(7, new ADS111xPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P008_MCP23017
 Plugin* MCP23017Plugin_myProtoype = Plugin::addPrototype(8, new MCP23017Plugin);
+#endif
+#ifdef CONFIG_ENABLE_P009_PCF8574
 Plugin* PCF8574Plugin_myProtoype = Plugin::addPrototype(9, new PCF8574Plugin);
+#endif
+#ifdef CONFIG_ENABLE_P010_PCA9685
 Plugin* PCA9685Plugin_myProtoype = Plugin::addPrototype(10, new PCA9685Plugin);
+#endif
+#ifdef CONFIG_ENABLE_P011_MQTT
 Plugin* MQTTPlugin_myProtoype = Plugin::addPrototype(11, new MQTTPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P012_ROTARY 
 Plugin* RotaryEncoderPlugin_myProtoype = Plugin::addPrototype(12, new RotaryEncoderPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P013_HTTP 
 Plugin* HTTPCtrlPlugin_myProtoype = Plugin::addPrototype(13, new HTTPCtrlPlugin);
+#endif
 
 BlueTooth* bluetooth;
 
@@ -128,6 +154,7 @@ extern "C" void app_main()
         JsonObject &hue_conf = cfgObject["alexa"];
         hue_plugin = new HueEmulatorPlugin();
         hue_plugin->init(hue_conf);
+        http_quick_register("/description.xml", HTTP_GET, hueemulator_webhandler, hue_plugin);
     }
 
     vTaskDelay( 2000 / portTICK_PERIOD_MS);
@@ -137,6 +164,10 @@ extern "C" void app_main()
     for (auto plugin : plugins){
         if (!plugin["enabled"]) continue;
         ESP_LOGI(TAG, "initializing plugin '%s' type: %i", plugin["name"].as<char*>(), (int)plugin["type"]);
+        if (!Plugin::hasType((int)plugin["type"])) {
+            ESP_LOGI(TAG, "invalid plugin type, skipping ...");
+            continue;
+        }
         active_plugins[pi] = Plugin::getPluginInstance((int)plugin["type"]);
         active_plugins[pi]->name = plugin["name"].as<char*>();
         active_plugins[pi]->id = pi;
@@ -152,6 +183,7 @@ extern "C" void app_main()
         parse_rules(rules, rule_length);
     }
 
+    http_server_ready();
     init_logging();
 
     i2c_plugin->scan();

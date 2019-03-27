@@ -1,6 +1,7 @@
 #ifndef ESP_PLUGIN_013_H
 #define ESP_PLUGIN_013_H
 
+#include "utils.h"
 #include "plugin.h"
 #include "../lib/controller.h"
 #include "freertos/FreeRTOS.h"
