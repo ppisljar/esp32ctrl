@@ -1,5 +1,6 @@
 
 #include "rule_engine.h"
+#include "../plugins/c004_timers.h";
 #include <map>
 
 #define byte uint8_t
@@ -13,8 +14,12 @@ std::map<uint16_t, void*> rule_data_ptrs;
 //byte event_triggers[8]; // 256 possible events (custom)
 uint16_t timers[16];
 byte timer_triggers[2];
+byte *rule_engine_hwtimers[4] = {};
+byte *rule_engine_hwinterrupts[16] = {};
+byte *rule_engine_alexa_triggers[10] = {};
 
 extern Plugin *active_plugins[10];
+extern TimersPlugin *timers_plugin;
 
 ESP_EVENT_DEFINE_BASE(RULE_EVENTS)
 esp_event_loop_handle_t rule_event_loop;
@@ -29,7 +34,7 @@ static void user_event_handler(void* handler_args, esp_event_base_t base, int32_
     // The event-specific data (event_data) is a pointer to a deep copy of the original data, and is managed automatically.
     uint32_t event_id = ((uint32_t) event_data);
     ESP_LOGI(TAG_RE, "user event triggered: %p : %i [%p]", event_data, event_id, event_list[event_id]);
-    run_rule(event_list[event_id], 255);
+    run_rule(event_list[event_id], nullptr, 0, 255);
 }
 
 void init() {
@@ -47,8 +52,8 @@ void init() {
 }
 
 
-static std::map<uint8_t, rule_command_handler_t> custom_commands;
-void register_command(uint8_t cmd_id, rule_command_handler_t handler) {
+static std::map<uint8_t, std::function<uint8_t(uint8_t*)>> custom_commands;
+void register_command(uint8_t cmd_id, std::function<uint8_t(uint8_t*)> handler) {
     custom_commands.emplace(cmd_id, handler);
 }
 
@@ -56,7 +61,7 @@ uint8_t find_command(uint8_t cmd_id, uint8_t *start) {
     auto cmd = custom_commands.find(cmd_id);
     if (cmd != custom_commands.end()) {
         ESP_LOGI(TAG_RE, "found custom command %i at %p", cmd_id, cmd->second);
-        return (*cmd->second)(start);
+        return cmd->second(start);
     }
     return 0;
 }
@@ -126,12 +131,33 @@ int parse_rules(byte *rules, long len) {
     int events_found = 0;
     for (byte i = 0; i < len; i++) {
         if (rules[i] == 0xff && rules[i+1] == 0xfe && rules[i+2] == 0x00 && rules[i+3] == 0xff) {
-            if (rules[i+4] == 1) {
-                ESP_LOGI(TAG_RE, "found an event on address: %p", (void*)(rules + i + 4 + 2));
-                event_list[events_found++] = rules + i + 4 + 2;
-            } else {
-                ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
-                rule_list[rules_found++] = rules + i + 4;
+            switch (rules[i+4]) {
+                case TRIG_EVENT:
+                    ESP_LOGI(TAG_RE, "found an event on address: %p", (void*)(rules + i + 4 + 2));
+                    event_list[events_found++] = rules + i + 6;
+                    break;
+                case TRIG_VAR:
+                    ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
+                    rule_list[rules_found++] = rules + i + 4;
+                    break;
+                case TRIG_TIMER:
+                    ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
+                    rule_list[rules_found++] = rules + i + 6;
+                    break;
+                case TRIG_HWTIMER:
+                    ESP_LOGI(TAG_RE, "found hw timer on address: %p", (void*)(rules + i + 4));
+                    rule_engine_hwtimers[rules[i + 6]] = rules + i + 6;
+                    break;
+                case TRIG_HWINTER:
+                    ESP_LOGI(TAG_RE, "found hw trigger on address: %p", (void*)(rules + i + 4));
+                    rule_engine_hwinterrupts[rules[i + 6]] = rules + i + 6;
+                    // todo: enable interrupt on selected pin
+                    timers_plugin->enableHwInterrupt(rules[i+6]);
+                    break;
+                case TRIG_ALEXA:
+                    ESP_LOGI(TAG_RE, "found alexa on address: %p", (void*)(rules + i + 4));
+                    rule_engine_alexa_triggers[rules[i + 6]] = rules + i + 6;
+                    break;
             }
         }
     }
@@ -140,8 +166,11 @@ int parse_rules(byte *rules, long len) {
 
 int averagerun = 1000;
 int lastrun = 0;
-uint8_t run_rule(byte* start, uint8_t len = 255) {
+uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t len = 255) {
     byte* cmd = start;
+    byte* state_val = start_val;
+    uint8_t state_val_length = start_val_length;
+
     Plugin *p;
     byte *var;
     while(cmd[0] != CMD_ENDON && ((cmd - start) < len)) {
@@ -167,8 +196,19 @@ uint8_t run_rule(byte* start, uint8_t len = 255) {
                 TRIGGER_TIMER(cmd[1], cmd[2]*100);
                 cmd += 3;
                 break;
+            case CMD_GET:
+                // CMD_GET DEVICE_ID VAR_ID LENGTH
+                ESP_LOGI(TAG_RE, "cmd get p:%d v:%d l:%d", cmd[1], cmd[2], cmd[3]);
+                p = active_plugins[cmd[1]];
+                if (p != nullptr) {
+                    state_val = (uint8_t*)p->getStatePtr(cmd[2]);
+                    state_val_length = cmd[3];
+                }
+                cmd += 3;
+                break;
             // sets state on device
             case CMD_SET:
+                // CMD_SET DEVICE_ID VAR_ID LENGTH VALUE
                 ESP_LOGI(TAG_RE, "cmd set %d %d %d", cmd[1], cmd[2], cmd[4]);
                 p = active_plugins[cmd[1]];
                 ESP_LOGI(TAG_RE, "cmd set %p %p", p, cmd+4);
@@ -179,7 +219,11 @@ uint8_t run_rule(byte* start, uint8_t len = 255) {
                 // 1. it can be in the rules, will make it slower
                 // 2. we can allow setting variable name by index
                 if (p != nullptr) {
-                    p->setStatePtr(cmd[2], cmd+4);
+                    if (cmd[3] == 255) {
+                        p->setStatePtr(cmd[2], state_val);
+                    } else {
+                        p->setStatePtr(cmd[2], cmd+4);
+                    }
                 }
 
                 // we need to get value
@@ -210,6 +254,12 @@ uint8_t run_rule(byte* start, uint8_t len = 255) {
                 ESP_LOGI(TAG_RE, "cmd endif");
                 cmd++;
                 break;
+            case CMD_HW_TIMER_EN:
+
+                break;
+            case CMD_HW_INTERRUPT_EN:
+                break;
+           
             // plugin provided commands
             default:
                 ESP_LOGI(TAG_RE, "cmd: %i", cmd[0]);
@@ -275,7 +325,7 @@ void run_rules() {
         if (match) {
             ESP_LOGI(TAG_RE, "match! executing rule [%x %x %x %x]", cmd[0], cmd[1], cmd[2], cmd[3]);
             // for each command
-            cmd += run_rule(cmd);
+            cmd += run_rule(cmd, nullptr, 0);
         }
     }
 

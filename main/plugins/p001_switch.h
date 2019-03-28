@@ -1,8 +1,7 @@
 #ifndef ESP_PLUGIN_001_H
 #define ESP_PLUGIN_001_H
 
-#include "plugin.h"
-#include "../lib/controller.h"
+#include "plugin_defs.h"
 
 class SwitchPlugin: public Plugin {
     private:

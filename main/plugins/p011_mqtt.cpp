@@ -169,6 +169,17 @@ bool MQTTPlugin::init(JsonObject &params) {
     ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
     //subscribe(info.topic, [this]);
 
+    // register rule engine custom command (mqtt publish)
+    // 0x55 TOPIC_LEN TOPIC DATA_LEN DATA
+    register_command(55, [this](uint8_t* start) {
+        uint8_t topic_len = start[1];
+        uint8_t* topic = start+2;
+        uint8_t data_len = start[topic_len + 2];
+        uint8_t* data = topic + topic_len + 1;
+        publish((char*)topic, (char*)data);
+        return topic_len + data_len + 2;
+    });
+
     return true;
 }
 
@@ -253,6 +264,10 @@ void MQTTPlugin::handler(char* topic, int topic_len, char* msg) {
     ESP_LOGD(TAG, "updating device");
     update(device_id, value_id, value);
 
+}
+
+void MQTTPlugin::publish(char *topic, char* data) {
+    esp_mqtt_client_publish(client, topic, data, 0, 0, 0);
 }
 
 void MQTTPlugin::subscribe(char *topic, std::function<void(char*,char*)> handler) {

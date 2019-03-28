@@ -1,10 +1,7 @@
 #ifndef ESP_PLUGIN_009_H
 #define ESP_PLUGIN_009_H
 
-#include "plugin.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
+#include "plugin_defs.h"
 #include "pcf8574.h"
 
 class PCF8574Plugin: public Plugin {

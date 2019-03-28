@@ -2,8 +2,8 @@
 #define ESP_LIB_CONTROLLER_H
 
 #include "ArduinoJson.h"
-#include "../plugins/plugin.h"
 
+class Plugin;
 
 class Controller_Notify_Handler {
   public:

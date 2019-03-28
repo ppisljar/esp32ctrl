@@ -1,12 +1,9 @@
 #ifndef ESP_PLUGIN_002_H
 #define ESP_PLUGIN_002_H
 
-#include "plugin.h"
-#include "../lib/controller.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
+#include "plugin_defs.h"
+#include "tinyexpr.h"
 #include "dht.h"
-#include "esp_log.h"
 
 class DHTPlugin: public Plugin {
     private:

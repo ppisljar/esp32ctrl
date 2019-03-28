@@ -1,5 +1,6 @@
 #include "controller.h"
 #include "config.h"
+#include "../plugins/plugin.h"
 
 extern Config *cfg;
 extern Plugin *active_plugins[10];

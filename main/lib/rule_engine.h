@@ -1,22 +1,28 @@
 #ifndef ESP_LIB_RULE_ENGINE_H
 #define ESP_LIB_RULE_ENGINE_H
 
-#include "../plugins/plugin.h"
 #include "esp_event.h"
 #include "esp_event_loop.h"
 #include "esp_timer.h"
 #include "esp_event_base.h"
+#include <functional>
+
+class Plugin;
+
+extern unsigned char *rule_engine_alexa_triggers[10];
+extern unsigned char *rule_engine_hwtimers[4];
+extern unsigned char *rule_engine_hwinterrupts[16];
 
 int parse_rules(unsigned char *rules, long len);
-uint8_t run_rule(unsigned char* start, uint8_t len);
+uint8_t run_rule(unsigned char* start, unsigned char* start_val, uint8_t start_val_length, uint8_t len);
 void run_rules();
+
+void register_command(uint8_t cmd_id, std::function<uint8_t(uint8_t*)> handler);
 
 ESP_EVENT_DECLARE_BASE(RULE_EVENTS)
 enum {
     RULE_USER_EVENT
 };
-
-typedef uint8_t(*rule_command_handler_t)(uint8_t *start); 
 
 #ifndef rule_event_loop
 extern esp_event_loop_handle_t rule_event_loop;
@@ -52,5 +58,13 @@ extern esp_event_loop_handle_t rule_event_loop;
 #define CMD_ELSE    0xfd
 #define CMD_ENDIF   0xfe
 #define CMD_ENDON   0xff
+
+#define TRIG_VAR    0x00
+#define TRIG_EVENT  0x01
+#define TRIG_TIMER  0x02
+#define TRIG_SYS    0x03
+#define TRIG_HWTIMER    0x04
+#define TRIG_HWINTER    0x05
+#define TRIG_ALEXA      0x06
 
 #endif

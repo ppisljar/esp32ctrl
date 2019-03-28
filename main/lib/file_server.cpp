@@ -1011,7 +1011,7 @@ static esp_err_t cmd_handler(httpd_req_t *req)
     int len = req->content_len;
     httpd_req_recv(req, buf, MIN(len, 255));
 
-    run_rule((unsigned char*)buf, len);
+    run_rule((unsigned char*)buf, nullptr, 0, len);
 
     json_init();
     json_open(req);

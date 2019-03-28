@@ -18,6 +18,7 @@ static const char *TAG = "MAIN";
 #include "plugins/c001_i2c.h"
 #include "plugins/c002_ntp.h"
 #include "plugins/c003_wifi.h"
+#include "plugins/c004_timers.h"
 #include "plugins/c005_hue.h"
 #include "plugins/p001_switch.h"
 #include "plugins/p002_dht.h"
@@ -42,6 +43,7 @@ Plugin *active_plugins[10];
 I2CPlugin *i2c_plugin;
 NTPPlugin *ntp_plugin;
 WiFiPlugin *wifi_plugin;
+TimersPlugin *timers_plugin;
 HueEmulatorPlugin *hue_plugin;
 
 IO io;
@@ -120,12 +122,16 @@ extern "C" void app_main()
     wifi_plugin = new WiFiPlugin();
     wifi_plugin->init(wifi_config);
 
-    JsonObject &bluetooth_config = cfgObject["bluetooth"];
-    if (bluetooth_config["enabled"]) {
-        bluetooth = new BlueTooth();
-        bluetooth->init();
-        bluetooth->getDevices(btfunc, 0);
-    }
+    JsonObject &timer_config = cfgObject["hardware"];
+    timers_plugin = new TimersPlugin();
+    timers_plugin->init(timer_config);
+
+    JsonObject &bluetooth_config = cfgObject["hardware"]["bluetooth"];
+    // if (bluetooth_config["enabled"]) {
+    //     bluetooth = new BlueTooth();
+    //     bluetooth->init();
+    //     bluetooth->getDevices(btfunc, 0);
+    // }
 
     //JsonObject &io_cfg = cfgObject["io"];
     struct IO_DIGITAL_PINS pins;

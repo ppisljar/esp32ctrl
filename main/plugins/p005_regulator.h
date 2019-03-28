@@ -1,9 +1,7 @@
 #ifndef ESP_PLUGIN_005_H
 #define ESP_PLUGIN_005_H
 
-#include "plugin.h"
-#include "../lib/controller.h"
-#include "esp_log.h"
+#include "plugin_defs.h"
 
 class RegulatorPlugin: public Plugin {
     private:

@@ -54,13 +54,15 @@ bool HueEmulatorPlugin::init(JsonObject &params) {
 
     // register all triggers
     JsonArray &triggers = (*cfg)["triggers"];
+    int p = 0;
     for (auto trigger : triggers){
         std::string name(trigger["name"].as<char*>());
         uint8_t type = trigger["type"] | 0;
         ESP_LOGI(TAG, "adding device %s", name.c_str());
-        alexa->addDevice(name, [](void *device, uint8_t val) {
-            ESP_LOGI(TAG, "YEY");
+        alexa->addDevice(name, [p](void *device, uint8_t val) {
+            run_rule(rule_engine_alexa_triggers[p], &val, 1, 255);
         }, (EspalexaDeviceType)type, 0);
+        p++;
     }
 
     xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, NULL, 1);

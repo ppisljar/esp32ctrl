@@ -1,9 +1,7 @@
 #ifndef ESP_PLUGIN_004_H
 #define ESP_PLUGIN_004_H
 
-#include "plugin.h"
-#include "../lib/controller.h"
-#include "esp_log.h"
+#include "plugin_defs.h"
 #include "ds18x20.h"
 
 class DS18x20Plugin: public Plugin {

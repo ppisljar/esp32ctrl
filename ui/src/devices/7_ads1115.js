@@ -54,5 +54,4 @@ export const ads1115 = {
             gain: { name: 'Gain', type: 'select', options: adsGain },
         }
     },
-    vars: 0
 }

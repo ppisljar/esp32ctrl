@@ -1,11 +1,7 @@
 #ifndef ESP_PLUGIN_007_H
 #define ESP_PLUGIN_007_H
 
-#include "plugin.h"
-#include "../lib/controller.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
+#include "plugin_defs.h"
 #include "ADS1115.h"
 
 class ADS111xPlugin: public Plugin {

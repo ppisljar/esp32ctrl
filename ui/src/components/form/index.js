@@ -142,7 +142,7 @@ export class Form extends Component {
             case 'button':
                 const clickEvent = () => {
                     if (!config.click) return;
-                    config.click(this.props.selected);
+                    config.click(this.props.selected, this, config);
                 }
                 return (
                     <button type="button" onClick={clickEvent}>GET IT</button>
@@ -161,7 +161,11 @@ export class Form extends Component {
                     const val = varName.startsWith('ROOT') ? settings.get(varName.replace('ROOT.', '')) : get(values, varName, null);
 
                     if (conf.if) {
-                        if (!get(settings.settings, conf.if, false)) return(null);
+                        const val = get(settings.settings, conf.if, false);
+                        if (conf.ifval === undefined && !val) {
+                            return (null);
+                        }
+                        if (conf.ifval != val) return (null);
                     }
                     if (conf.type === 'custom') {
                         const CustomComponent = conf.component;

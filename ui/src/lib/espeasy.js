@@ -1,5 +1,6 @@
 import miniToastr from 'mini-toastr';
 import { loader } from './loader';
+import { getNodes } from './node_definitions';
 
 export const getJsonStat = async (url = '') => {
     return await fetch(`${url}/plugin_state/`).then(response => response.json())
@@ -11,9 +12,13 @@ export const loadDevices = async (url) => {
 
 export const getConfigNodes = async (devices) => {
     const vars = [];
-    const nodes = devices.map((device, i) => {
-        const taskValues = device.settings ? device.settings.values || [] : [];
+    const deviceNodes = devices.map((device, i) => {
+        const taskValues = device.state ? device.state.values || [] : [];
         taskValues.map((value, j) => vars.push({ value: `${i}-${j}`, name: `${device.name}#${value.name}` }));
+        // todo: remove
+        const taskValues1 = device.settings ? device.settings.values || [] : [];
+        taskValues1.map((value, j) => vars.push({ value: `${i}-${j}`, name: `${device.name}#${value.name}` }));
+        if (!vars.length) return [];
         const result = [{
             group: 'TRIGGERS',
             type: device.name || `${i}-${device.type}`,
@@ -44,165 +49,12 @@ export const getConfigNodes = async (devices) => {
             }
         }];
 
-        let fnNames, fnName, name;
-        // switch (device.Type) {
-        //     // todo: need access to GPIO number
-        //     // case 'Switch input - Switch':
-        //     //     result.push({
-        //     //         group: 'ACTIONS',
-        //     //         type: `${device.TaskName} - switch`,
-        //     //         inputs: [1],
-        //     //         outputs: [1],
-        //     //         config: [{
-        //     //             name: 'value',
-        //     //             type: 'number',
-        //     //         }],
-        //     //         toString: function () { return `${device.TaskName}.level = ${this.config[0].value}`; },
-        //     //         toDsl: function () { return [`config,task,${device.TaskName},setlevel,${this.config[0].value}`]; }
-        //     //     });
-        //     //     break;
-        //     case 'Regulator - Level Control':
-        //         result.push({
-        //             group: 'ACTIONS',
-        //             type: `${device.TaskName} - setlevel`,
-        //             inputs: [1],
-        //             outputs: [1],
-        //             config: [{
-        //                 name: 'value',
-        //                 type: 'number',
-        //             }],
-        //             toString: function () { return `${device.TaskName}.level = ${this.config[0].value}`; },
-        //             toDsl: function () { return [`config,task,${device.TaskName},setlevel,${this.config[0].value}`]; }
-        //         });
-        //         break;
-        //     case 'Extra IO - PCA9685':
-        //     case 'Switch input - PCF8574':
-        //     case 'Switch input - MCP23017':
-        //         fnNames = {
-        //             'Extra IO - PCA9685': 'PCF',
-        //             'Switch input - PCF8574': 'PCF',
-        //             'Switch input - MCP23017': 'MCP',
-        //         };
-        //         fnName = fnNames[device.Type];
-        //         result.push({
-        //             group: 'ACTIONS',
-        //             type: `${device.TaskName} - GPIO`,
-        //             inputs: [1],
-        //             outputs: [1],
-        //             config: [{
-        //                 name: 'pin',
-        //                 type: 'select',
-        //                 values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-        //             }, {
-        //                 name: 'value',
-        //                 type: 'select',
-        //                 values: [0, 1],
-        //             }],
-        //             toString: function () { return `${device.TaskName}.pin${this.config[0].value} = ${this.config[1].value}`; },
-        //             toDsl: function () { return [`${fnName}GPIO,${this.config[0].value},${this.config[1].value}`]; }
-        //         });
-        //         result.push({
-        //             group: 'ACTIONS',
-        //             type: `${device.TaskName} - Pulse`,
-        //             inputs: [1],
-        //             outputs: [1],
-        //             config: [{
-        //                 name: 'pin',
-        //                 type: 'select',
-        //                 values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-        //             }, {
-        //                 name: 'value',
-        //                 type: 'select',
-        //                 values: [0, 1],
-        //             },{
-        //                 name: 'unit',
-        //                 type: 'select',
-        //                 values: ['ms', 's'],
-        //             },{
-        //                 name: 'duration',
-        //                 type: 'number',
-        //             }],
-        //             toString: function () { return `${device.TaskName}.pin${this.config[0].value} = ${this.config[1].value} for ${this.config[3].value}${this.config[2].value}`; },
-        //             toDsl: function () { 
-        //                 if (this.config[2].value === 's') {
-        //                     return [`${fnName}LongPulse,${this.config[0].value},${this.config[1].value},${this.config[2].value}`]; 
-        //                 } else {
-        //                     return [`${fnName}Pulse,${this.config[0].value},${this.config[1].value},${this.config[2].value}`]; 
-        //                 }
-        //             }
-        //         });
-        //         break;
-        //     case 'Extra IO - ProMini Extender':
-        //         result.push({
-        //             group: 'ACTIONS',
-        //             type: `${device.TaskName} - GPIO`,
-        //             inputs: [1],
-        //             outputs: [1],
-        //             config: [{
-        //                 name: 'pin',
-        //                 type: 'select',
-        //                 values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
-        //             }, {
-        //                 name: 'value',
-        //                 type: 'select',
-        //                 values: [0, 1],
-        //             }],
-        //             toString: function () { return `${device.TaskName}.pin${this.config[0].value} = ${this.config[1].value}`; },
-        //             toDsl: function () { return [`EXTGPIO,${this.config[0].value},${this.config[1].value}`]; }
-        //         });
-        //         break;
-        //     case 'Display - OLED SSD1306':
-        //     case 'Display - LCD2004':
-        //         fnNames = {
-        //             'Display - OLED SSD1306': 'OLED',
-        //             'Display - LCD2004': 'LCD',
-        //         };
-        //         fnName = fnNames[device.Type];
-        //         result.push({
-        //             group: 'ACTIONS',
-        //             type: `${device.TaskName} - Write`,
-        //             inputs: [1],
-        //             outputs: [1],
-        //             config: [{
-        //                 name: 'row',
-        //                 type: 'select',
-        //                 values: [1, 2, 3, 4],
-        //             }, {
-        //                 name: 'column',
-        //                 type: 'select',
-        //                 values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
-        //             }, {
-        //                 name: 'text',
-        //                 type: 'text',
-        //             }],
-        //             toString: function () { return `${device.TaskName}.text = ${this.config[2].value}`; },
-        //             toDsl: function () { return [`${fnName},${this.config[0].value},${this.config[1].value},${this.config[2].value}`]; }
-        //         });
-        //         break;
-        //     case 'Generic - Dummy Device':
-        //         result.push({
-        //             group: 'ACTIONS',
-        //             type: `${device.TaskName} - Write`,
-        //             inputs: [1],
-        //             outputs: [1],
-        //             config: [{
-        //                 name: 'variable',
-        //                 type: 'select',
-        //                 values: taskValues.map(value => value.Name),
-        //             }, {
-        //                 name: 'value',
-        //                 type: 'text',
-        //             }],
-        //             toString: function () { return `${device.TaskName}.${this.config[0].value} = ${this.config[1].value}`; },
-        //             toDsl: function () { return [`TaskValueSet,${device.TaskNumber},${this.config[0].values.findIndex(this.config[0].value)},${this.config[1].value}`]; }
-        //         });
-        //         break;
-        // }
-
         return result;
     }).flat();
 
-    return { nodes, vars };
+    const mainNodes = getNodes(deviceNodes, vars);
+
+    return [...mainNodes, ...deviceNodes];
 }
 
 export const getVariables = async () => {

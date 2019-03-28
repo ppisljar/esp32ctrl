@@ -52,11 +52,11 @@ bool HTTPCtrlPlugin::init(JsonObject &params) {
 
     return true;
 }
-extern WiFiPlugin *wifi_plugin;
+//extern WiFiPlugin *wifi_plugin;
 
 void HTTPCtrlPlugin::request(const char *uri, esp_http_client_method_t method, const char* data) {
-    if (!wifi_plugin->status.connected) return;
-    
+    //if (!wifi_plugin->status.connected) return;
+
     esp_http_client_set_url(client, uri);
     esp_http_client_set_method(client, method);
     esp_err_t err = esp_http_client_perform(client);

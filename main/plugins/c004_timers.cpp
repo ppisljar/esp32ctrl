@@ -12,13 +12,17 @@ static const char *TAG = "TimersPlugin";
 PLUGIN_CONFIG(TimersPlugin, t1_enabled, t2_enabled, t3_enabled, t4_enabled)
 PLUGIN_STATS(TimersPlugin, state, state)
 
-
+xQueueHandle evt_queue;
 
 /* hw interrupt ISR */
 static void IRAM_ATTR gpio_isr_handler(void* arg)
 {
     uint32_t gpio_num = (uint32_t) arg;
-    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+    timer_event_t evt;
+    evt.id = gpio_num;
+    evt.type = 1;
+    evt.value = 0;
+    xQueueSendFromISR(evt_queue, &evt, NULL);
 }
 
 /*
@@ -44,9 +48,9 @@ void IRAM_ATTR timer_group0_isr(void *para)
     /* Prepare basic event data
        that will be then sent back to the main program task */
     timer_event_t evt;
-    evt.timer_group = 0;
-    evt.timer_idx = timer_idx;
-    evt.timer_counter_value = timer_counter_value;
+    evt.id = timer_idx;
+    evt.type = 0;
+    evt.value = timer_counter_value;
 
     /* Clear the interrupt
        and update the alarm time for the timer with without reload */
@@ -63,7 +67,7 @@ void IRAM_ATTR timer_group0_isr(void *para)
     TIMERG0.hw_timer[timer_idx].config.alarm_en = TIMER_ALARM_EN;
 
     /* Now just send the event data back to the main program task */
-    xQueueSendFromISR(timer_queue, &evt, NULL);
+    xQueueSendFromISR(evt_queue, &evt, NULL);
 }
 
 void IRAM_ATTR timer_group1_isr(void *para)
@@ -81,9 +85,9 @@ void IRAM_ATTR timer_group1_isr(void *para)
     /* Prepare basic event data
        that will be then sent back to the main program task */
     timer_event_t evt;
-    evt.timer_group = 1;
-    evt.timer_idx = timer_idx;
-    evt.timer_counter_value = timer_counter_value;
+    evt.id = 2 + timer_idx;
+    evt.type = 0;
+    evt.value = timer_counter_value;
 
     /* Clear the interrupt
        and update the alarm time for the timer with without reload */
@@ -100,7 +104,27 @@ void IRAM_ATTR timer_group1_isr(void *para)
     TIMERG1.hw_timer[timer_idx].config.alarm_en = TIMER_ALARM_EN;
 
     /* Now just send the event data back to the main program task */
-    xQueueSendFromISR(timer_queue, &evt, NULL);
+    xQueueSendFromISR(evt_queue, &evt, NULL);
+}
+
+static void timer_example_evt_task(void *arg)
+{
+    while (1) {
+        timer_event_t evt;
+        xQueueReceive(evt_queue, &evt, portMAX_DELAY);
+
+        unsigned char *start = nullptr;
+        if (evt.type == 0) start = rule_engine_hwtimers[evt.id];
+        if (evt.type == 1) start = rule_engine_hwinterrupts[evt.id];
+        if (start != nullptr) {
+            run_rule(start, nullptr, 0, 255);
+        }
+    }
+}
+
+void TimersPlugin::enableHwInterrupt(uint8_t pin) {
+    gpio_set_intr_type((gpio_num_t)pin, GPIO_INTR_ANYEDGE);
+    gpio_isr_handler_add((gpio_num_t)pin, gpio_isr_handler, (void*)pin);
 }
 
 bool TimersPlugin::init(JsonObject &params) {
@@ -110,14 +134,13 @@ bool TimersPlugin::init(JsonObject &params) {
     uint8_t mode;
     uint8_t auto_reload = 1;
 
-    gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-    timer_queue = xQueueCreate(10, sizeof(timer_event_t));
+    evt_queue = xQueueCreate(10, sizeof(timer_event_t));
 
 
     // GROUP0 TIMER0 (timer 1)
-    if (params["t1_enabled"]) {
-        divider = params["t1_divider"] | 800;
-        mode = params["t1_mode"] | 0;
+    if (params["timer"]["t1_enabled"]) {
+        divider = params["timer"]["t1_divider"] | 800;
+        mode = params["timer"]["t1_mode"] | 0;
         auto_reload = 1;
         /* Select and initialize basic parameters of the timer */
         timer_config_t config;
@@ -140,9 +163,9 @@ bool TimersPlugin::init(JsonObject &params) {
     }
 
     // GROUP0 TIMER1 (timer 2)
-    if (params["t2_enabled"]) {
-        divider = params["t2_divider"] | 800;
-        mode = params["t2_mode"] | 0;
+    if (params["timer"]["t2_enabled"]) {
+        divider = params["timer"]["t2_divider"] | 800;
+        mode = params["timer"]["t2_mode"] | 0;
         auto_reload = 1;
         /* Select and initialize basic parameters of the timer */
         timer_config_t config2;
@@ -165,9 +188,9 @@ bool TimersPlugin::init(JsonObject &params) {
     }
 
     // GROUP1 TIMER0 (timer 3)
-    if (params["t3_enabled"]) {
-        divider = params["t1_divider"] | 800;
-        mode = params["t1_mode"] | 0;
+    if (params["timer"]["t3_enabled"]) {
+        divider = params["timer"]["t3_divider"] | 800;
+        mode = params["timer"]["t3_mode"] | 0;
         auto_reload = 1;
         /* Select and initialize basic parameters of the timer */
         timer_config_t config3;
@@ -190,9 +213,9 @@ bool TimersPlugin::init(JsonObject &params) {
     }
 
     // GROUP1 TIMER1 (timer 4)
-    if (params["t4_enabled"]) {
-        divider = params["t1_divider"] | 800;
-        mode = params["t1_mode"] | 0;
+    if (params["timer"]["t4_enabled"]) {
+        divider = params["timer"]["t4_divider"] | 800;
+        mode = params["timer"]["t4_mode"] | 0;
         auto_reload = 1;
         /* Select and initialize basic parameters of the timer */
         timer_config_t config4;
@@ -215,7 +238,8 @@ bool TimersPlugin::init(JsonObject &params) {
     }
 
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
-    
+
+    xTaskCreatePinnedToCore(timer_example_evt_task, "timer_evt_task", 2048, this, 5, NULL, 1);
 
     return true;
 }

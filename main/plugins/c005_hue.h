@@ -6,6 +6,7 @@
 #include "espalexa.h"
 #include "../lib/file_server.h"
 #include "c003_wifi.h"
+#include "../lib/rule_engine.h"
 
 extern WiFiPlugin *wifi_plugin;
 

@@ -1,12 +1,8 @@
 #ifndef ESP_PLUGIN_011_H
 #define ESP_PLUGIN_011_H
 
-#include "utils.h"
-#include "plugin.h"
-#include "../lib/controller.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
+
+#include "plugin_defs.h"
 #include "mqtt_client.h"
 #include <functional>
 #include <sstream>
@@ -33,6 +29,7 @@ class MQTTPlugin: public Plugin {
 
         DEFINE_PLUGIN(MQTTPlugin);
 
+        void publish(char *topic, char* data);
         void subscribe(char *topic, std::function<void(char*,char*)> handler);
         void handler(char*, int, char*);
 };

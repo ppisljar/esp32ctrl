@@ -1,16 +1,9 @@
 #ifndef ESP_PLUGIN_013_H
 #define ESP_PLUGIN_013_H
 
-#include "utils.h"
-#include "plugin.h"
-#include "../lib/controller.h"
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "esp_log.h"
+#include "plugin_defs.h"
 #include "esp_http_client.h"
 #include <functional>
-#include <sstream>
-#include <bits/stdc++.h> 
 
 class HTTPCtrlPlugin: public Plugin {
     private:

@@ -16,5 +16,4 @@ export const mcp23017 = {
         }
     },
     data: true,
-    vars: 1
 }

@@ -1,8 +1,7 @@
 #ifndef ESP_PLUGIN_003_H
 #define ESP_PLUGIN_003_H
 
-#include "plugin.h"
-#include "esp_log.h"
+#include "plugin_defs.h"
 #include <bmp280.h>
 
 class BMP280Plugin: public Plugin {
