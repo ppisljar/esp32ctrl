@@ -35,7 +35,7 @@
 #define __FOREACH_MACRO_RECURSION_ARG_N(_1, _2, _3, _4, _5, _6, _7, _8, N, ...) N
 #define __FOREACH_MACRO_RECURSION_RSEQ_N() 8, 7, 6, 5, 4, 3, 2, 1, 0
 
-#define __FOREACH_MACRO_RECURSION(N, what, x, ...) __CONCATENATE(__FOREACH_MACRO_RECURSION_, N)(what, N, x, __VA_ARGS__)
+#define __FOREACH_MACRO_RECURSION(N, what, x, ...) __CONCATENATE(__FOREACH_MACRO_RECURSION_, N)(what, 0, x, __VA_ARGS__)
 #define FOREACH_MACRO(what, x, ...) __FOREACH_MACRO_RECURSION(__FOREACH_MACRO_RECURSION_NARG(x, __VA_ARGS__), what, x, __VA_ARGS__)
 
 #define PP_NARG(...) PP_NARG_(__VA_ARGS__,PP_RSEQ_N())

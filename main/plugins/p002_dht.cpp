@@ -35,7 +35,7 @@ void DHTPlugin::task(void * pvParameters)
 
 bool DHTPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
-    state_cfg = &((JsonArray &)params["state"]);
+    state_cfg = &((JsonArray &)params["state"]["values"]);
     
     int gpio = (*cfg)["gpio"] | 255;
 

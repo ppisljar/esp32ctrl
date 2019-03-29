@@ -48,7 +48,7 @@ class IO_PINS {
         if (ledPin) allPins.find(ap => ap.value == ledPin).disabled = "LED";
 
         const i2c = settings.get('hardware.i2c');
-        if (i2c["enabled"]) {
+        if (i2c && i2c["enabled"]) {
             allPins.find(ap => ap.value == i2c["scl"]).disabled = "I2C";
             allPins.find(ap => ap.value == i2c["sda"]).disabled = "I2C";
         }

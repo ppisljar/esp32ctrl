@@ -55,12 +55,14 @@ bool WiFiPlugin::init(JsonObject &params) {
     uint8_t mode = params["mode"] | 1;
     char *ssid = (char*)params["ssid"].as<char*>();
     char *pass = (char*)params["pass"].as<char*>();
-    ESP_LOGI(TAG, "starting wifi with %s:%s", ssid, pass);
+
+    if (ssid == nullptr || pass == nullptr) mode = 0;
+    else ESP_LOGI(TAG, "starting wifi with %s:%s", ssid, pass);
 
     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, this));
 
     // set static ip ?
-    if (params["static_ip"]["enabled"]) {
+    if (params.containsKey("static_ip") && params["static_ip"]["enabled"]) {
         ESP_LOGI(TAG, "setting static IP");
         tcpip_adapter_ip_info_t ip_info;
         ip_addr_t addr;
@@ -82,13 +84,13 @@ bool WiFiPlugin::init(JsonObject &params) {
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 
     if (mode == 0) { // AP
-        strcpy((char*)wifi_config.ap.ssid, ssid);
-        strcpy((char*)wifi_config.ap.password, pass);
-        wifi_config.ap.ssid_len = strlen(ssid);
+        strcpy((char*)wifi_config.ap.ssid, ssid == nullptr ? "ESP32Ctrl" : ssid);
+        strcpy((char*)wifi_config.ap.password, pass == nullptr ? "" : pass);
+        wifi_config.ap.ssid_len = strlen((char*)wifi_config.ap.ssid);
         wifi_config.ap.max_connection = 5;
         wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
         
-        if (strlen(pass) == 0) {
+        if (strlen((char*)wifi_config.ap.password) == 0) {
             wifi_config.ap.authmode = WIFI_AUTH_OPEN;
         }
 

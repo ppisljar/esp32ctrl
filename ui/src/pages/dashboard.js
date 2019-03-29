@@ -11,6 +11,7 @@ export class DashboardPage extends Component {
         }
 
         this.renderSwitch = (device, deviceState) => {
+            const state = deviceState[device.state.values[0].name];
             return (
                 <div className='device'>
                     <div class="icon">
@@ -18,7 +19,7 @@ export class DashboardPage extends Component {
                     </div>
                     <div class="body">
                         <div class='info'>
-                            {device.name}<span><button>{deviceState.state}</button></span>
+                            {device.name}<span><button>{state ? 'ON' : 'OFF'}</button></span>
                         </div>
                     </div>
                 </div>
@@ -36,8 +37,8 @@ export class DashboardPage extends Component {
                             {device.name}
                             <span>
                                 
-                            {device.settings && device.settings.values.map((value, i) => {
-                                return (<div>{value.name}: {i == 0 ? deviceState.temperature : deviceState.humidity} </div>);
+                            {device.state && device.state.values.map((value, i) => {
+                                return (<div>{value.name}: {deviceState[value.name]} </div>);
                             })}
                             </span>
                         </div>

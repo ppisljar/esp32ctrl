@@ -397,7 +397,8 @@ const getCfgUI = (cfg, chart) => {
         const val = opt.value != null ? opt.value : opt;
         const name = opt.name != null ? opt.name : opt;
         const selected = val == cfg.value ? 'selected' : '';
-        return `<option value="${val}" ${selected}>${name}</option>`;
+        const disabled = opt.disabld ? 'disabled' : '';
+        return `<option value="${val}" ${selected} ${disabled}>${name}${opt.disabled ? ` [${opt.disabled}]` : ''}</option>`;
     }
 
     switch (cfg.type) {

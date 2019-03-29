@@ -222,7 +222,7 @@ void requestAuthentication(httpd_req_t *req) {
 bool isAuthenticated(httpd_req_t *req, bool force = true) {
     ESP_LOGD(TAG, "checking if its authenticted");
     JsonObject& params = cfg->getConfig();
-    if (params["security"]["ip_block"]["enabled"]) {
+    if (params.containsKey("security") && params["security"]["ip_block"]["enabled"]) {
         uint32_t startIp = params["security"]["ip_block"]["start"];
         uint32_t endIp = params["security"]["ip_block"]["end"];
 
@@ -241,11 +241,11 @@ bool isAuthenticated(httpd_req_t *req, bool force = true) {
         }
     }
     
-    ESP_LOGD(TAG, "need to check user and pass");
+    ESP_LOGI(TAG, "need to check user and pass");
     bool authenticated = authenticate(req);
     if (!authenticated && force)
     {
-      ESP_LOGD(TAG, "requesting auth");
+      ESP_LOGI(TAG, "requesting auth");
       requestAuthentication(req);
       return false;
     }
@@ -407,13 +407,14 @@ static esp_err_t download_get_handler(httpd_req_t *req)
 {
     //if (!isAuthenticated(req)) return ESP_OK;
 
-    char filepath[FILE_PATH_MAX];
+    char filepath[FILE_PATH_MAX] = {};
     // Check if the target is a directory
     if (req->uri[strlen(req->uri) - 1] == '/') {
         // In so, send an html with directory listing
         http_resp_dir_html(req);
     } else {
         // Else send the file
+        ESP_LOGI(TAG, "whats going on %s", filepath);
         http_resp_file(req, filepath);
     }
     return ESP_OK;
@@ -948,6 +949,21 @@ static esp_err_t logs_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t reset_handler(httpd_req_t *req)
+{
+    if (!isAuthenticated(req, true)) return ESP_OK;
+
+    unlink("/spiffs/config.json");
+    
+    httpd_resp_set_status(req, "200 OK");
+    httpd_resp_sendstr(req, "OK");
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+
+    esp_restart();
+
+    return ESP_OK;
+}
+
 int8_t level;
 int8_t lastLevel;
 static void json_init() {
@@ -1098,6 +1114,7 @@ esp_err_t start_file_server(const char *base_path)
 
     http_quick_register("/filelist", HTTP_GET, http_resp_dir_html, server_data);
     http_quick_register("/reboot", HTTP_GET, reboot_handler, server_data);
+    http_quick_register("/reset", HTTP_GET, reset_handler, server_data);
 
     http_quick_register("/upload/*", HTTP_POST, upload_post_handler, server_data);
     http_quick_register("/delete/*", HTTP_POST, delete_post_handler, server_data);

@@ -192,7 +192,7 @@ extern "C" void app_main()
     http_server_ready();
     init_logging();
 
-    i2c_plugin->scan();
+    //i2c_plugin->scan();
 
     for(;;) {
         // if (resetPin < 32 && gpio_get_level((gpio_num_t)resetPin) == 0) {

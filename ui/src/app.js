@@ -3,7 +3,7 @@ import miniToastr from 'mini-toastr';
 import { pins } from './lib/pins';
 import { Menu } from './components/menu';
 import { Page } from './components/page';
-import { loadConfig } from './lib/config';
+import { loadConfig, loadRules } from './lib/config';
 import { settings } from './lib/settings';
 import { loader } from './lib/loader';
 import { loadPlugins } from './lib/plugins';
@@ -79,6 +79,7 @@ class App extends Component {
 
 const load = async () => {
     await loadConfig();
+    await loadRules();
     await loadPlugins();
     render(<App />, document.body);
 }

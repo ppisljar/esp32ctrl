@@ -1,4 +1,5 @@
 import { settings } from './settings';
+import { pins } from './pins';
 
 export const getNodes = (devices, vars) => {
     const nodes = [
@@ -78,7 +79,9 @@ export const getNodes = (devices, vars) => {
             config: [{
                 name: 'timer',
                 type: 'select',
-                values: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+                values: () => {
+                    return pins();
+                },
                 value: 0,
             }],
             indent: true,
@@ -92,7 +95,9 @@ export const getNodes = (devices, vars) => {
             config: [{
                 name: 'trigger',
                 type: 'select',
-                values: settings.get('alexa.triggers').map((t, i) => ({ name: t.name, value: i })),
+                values: function () {
+                    return settings.get('alexa.triggers', []).map((t, i) => ({ name: t.name, value: i }));
+                },
             }],
             indent: true,
             toString: function () { 

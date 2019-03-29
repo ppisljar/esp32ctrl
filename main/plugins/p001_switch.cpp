@@ -18,6 +18,8 @@ void SwitchPlugin::task(void * pvParameters)
         int gpio = cfg["gpio"] | 255;
         bool invert = cfg["invert"] | false;
 
+        if (interval == 0) interval = 60;
+
         if (gpio != 255) {
             uint8_t val = io.digitalRead((gpio_num_t)gpio);
             SET_STATE(s, state, 0, true, invert ? (val > 0 ? 0 : 1) : val);
@@ -30,7 +32,7 @@ void SwitchPlugin::task(void * pvParameters)
 
 bool SwitchPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
-    state_cfg = &((JsonArray &)params["state"]);
+    state_cfg = &((JsonArray &)params["state"]["values"]);
 
     ESP_LOGI(P001_TAG, "init gpio:%d interval:%d", (*cfg)["gpio"].as<int>(), (*cfg)["interval"].as<int>());
 
