@@ -65,9 +65,14 @@ export const getNodes = (devices, vars) => {
             config: [{
                 name: 'timer',
                 type: 'select',
-                values: [0, 1, 2, 3],
+                values: function () {
+                    return settings.get('hardware.timer', []).map((t, i) => ({ name: t.name, value: i, enabled: t.enabled })).filter(t => t.enabled);
+                },
                 value: 0,
             }],
+            if: function () {
+                return this.config[0].values().length > 0;
+            },
             indent: true,
             toString: function () { return `on hw_timer ${this.config[0].value}`; },
             toDsl: function () { return [`\xFF\xFE\x00\xFF\x04${String.fromCharCode(this.config[0].value)}`]; }
@@ -80,10 +85,13 @@ export const getNodes = (devices, vars) => {
                 name: 'timer',
                 type: 'select',
                 values: () => {
-                    return pins();
+                    return window.io_pins.getPins('interrupt');
                 },
                 value: 0,
             }],
+            if: function () {
+                return this.config[0].values().length > 0;
+            },
             indent: true,
             toString: function () { return `on hw_interrupt ${this.config[0].value}`; },
             toDsl: function () { return [`\xFF\xFE\x00\xFF\x05${String.fromCharCode(this.config[0].value)}`]; }
@@ -99,9 +107,13 @@ export const getNodes = (devices, vars) => {
                     return settings.get('alexa.triggers', []).map((t, i) => ({ name: t.name, value: i }));
                 },
             }],
+            if: () => {
+                return settings.get('alexa.triggers', []).length > 0;
+            },
             indent: true,
-            toString: function () { 
-                const val = this.config[0].values.find(v => v.value == this.config[0].value) || { name: '' };
+            toString: function () {
+                const vals = this.config[0].values(); 
+                const val = vals.find(v => v.value == this.config[0].value) || { name: '' };
                 return `on alexa '${val.name}'`; 
             },
             toDsl: function () { return [`\xFF\xFE\x00\xFF\x06${String.fromCharCode(this.config[0].value)}`]; }

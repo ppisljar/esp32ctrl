@@ -152,9 +152,10 @@ export class Form extends Component {
 
     renderConfigGroup(id, configs, values) {
         const configArray = Array.isArray(configs) ? configs : [configs];
+        const classes = `pure-control-group ${configArray.length === 3 ? 'group-3': ''}`
 
         return (
-            <div class="pure-control-group">
+            <div className={classes}>
                 {configArray.map((conf, i) => {
                     const varId = configArray.length > 1 ? `${id}.${i}` : id;
                     const varName = conf.var ? conf.var : varId;

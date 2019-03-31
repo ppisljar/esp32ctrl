@@ -6,6 +6,12 @@ import { ICON_CLASS } from 'mini-toastr';
 
 const user = "admin";
 
+const firstFreeKey = (array, key = 'id') => {
+    let i = 0;
+    while(array.find(e => e[key] == i)) i++;
+    return i;
+}  
+
 export class DevicesPage extends Component {
     constructor(props) {
         super(props);
@@ -20,7 +26,7 @@ export class DevicesPage extends Component {
 
         this.addDevice = () => {
             const plugins = settings.settings.plugins;
-            plugins.push({ type: 0, name: 'new device', enabled: false, params: {}});
+            plugins.push({ id: firstFreeKey(plugins), idx: firstFreeKey(plugins, 'idx'), type: 0, name: 'new device', enabled: false, params: {}});
             window.location.hash = `#devices/edit/${plugins.length - 1}`;
         }
 

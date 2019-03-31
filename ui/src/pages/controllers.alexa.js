@@ -26,7 +26,7 @@ const setDefaultConfig = (type, config) => {
     });
 }
 
-const getFormConfig = (config) => {
+const getFormConfig = (config, form) => {
     const triggers = {};
     
     config.triggers.forEach((trigger, i) => {
@@ -41,6 +41,12 @@ const getFormConfig = (config) => {
             type: 'select',
             options: [{ name: 'switch', value: 0 }, { name: 'dimmer', value: 1 }, { name: 'color', value: 2 }, { name: 'color2', value: 3 }, { name: 'color3', value: 4 }],
             var: `triggers[${i}].type`,
+        }, {
+            type: 'button',
+            click: () => {
+                config.triggers.splice(i, 1);
+                form.forceUpdate();
+            }
         }];
     });
     
@@ -57,6 +63,11 @@ const getFormConfig = (config) => {
     }
 }
 
+const firstFreeKey = ($array) => {
+  let i = 0;
+  while($array.find(e => e.idx == i)) i++;
+  return i;
+}
 
 // todo: changing protocol needs to update:
 // -- back to default (correct default)
@@ -75,6 +86,7 @@ export class ControllerAlexaPage extends Component {
             this.config.triggers.push({
                 name: 'New Trigger',
                 type: 0,
+                idx: firstFreeKey(this.config.triggers),
             });
             this.forceUpdate();
         }
@@ -82,7 +94,7 @@ export class ControllerAlexaPage extends Component {
 
     render(props) {
         
-        const formConfig = getFormConfig(this.config);
+        const formConfig = getFormConfig(this.config, this);
         
         return (
             <div>

@@ -7,11 +7,12 @@ import { set } from '../lib/helpers';
 const baseFields = { 
     enabled: { name: 'Enabled', type: 'checkbox', var: 'enabled' },
     name: { name: 'Name', type: 'string', var: 'name' },
+    idx: { name: 'Idx', type: 'string', var: 'idx' },
     icon: { name: 'Icon', type: 'string', var: 'icon' },
     lock: { name: 'Lock', type: 'checkbox', var: 'lock', adminOnly: true },
 };
 
-const getFormConfig = (type) => {
+const getFormConfig = (type, config) => {
     const device = devices.find(d => d.value === parseInt(type));
     if (!device) return null;
 
@@ -38,7 +39,7 @@ const getFormConfig = (type) => {
                     
                 }
             },
-            ...device.fields,
+            ...device.fields.getFields ? device.fields.getFields(config) : device.fields,
             data: dataAcquisitionForm,
             values: {
                 name: 'Values',
@@ -59,8 +60,10 @@ const getFormConfig = (type) => {
 
 const setDefaultConfig = (type, config) => {
     const device = devices.find(d => d.value === parseInt(type));
-    Object.keys(device.fields).forEach((groupKey) => {
-        const group = device.fields[groupKey];
+    const fields = device.fields.getFields ? device.fields.getFields(config) : device.fields;
+
+    Object.keys(fields).forEach((groupKey) => {
+        const group = fields[groupKey];
         if (!group.configs) return;
         Object.keys(group.configs).forEach((configKey) => {
             const cfg = group.configs[configKey];
@@ -95,7 +98,7 @@ export class DevicesEditPage extends Component {
     }
 
     render(props) {
-        const formConfig = getFormConfig(this.state.type);
+        const formConfig = getFormConfig(this.state.type, this.config);
         if (!formConfig) {
             alert('something went wrong, cant edit device');
             window.location.href='#devices';

@@ -521,3 +521,7 @@ fieldset > label {
     opacity: 0;
     height: 100vh;
 }
+
+.group-3 label {
+    width: 5em !important;
+}

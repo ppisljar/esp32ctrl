@@ -64,7 +64,13 @@ class IO_PINS {
         }, []);
     }
 
+    getInterruptPins() {
+        const hwpins = settings.get('hardware.gpio');
+        return this.digitalPins.filter((p) => hwpins[p.value] && hwpins[p.value].interrupt && hwpins[p.value].mode == 3);
+    }
+
     getPins(capabilities) {
+        if (capabilities === 'interrupt') return this.getInterruptPins();
         const plugins = settings.get('plugins');
         const startPins = copy(this.digitalPins);
         let lastNr = startPins[startPins.length-1].value;

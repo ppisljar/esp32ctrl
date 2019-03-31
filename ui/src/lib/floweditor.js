@@ -32,6 +32,7 @@ const loadChart = (config, chart, from) => {
         let node = chart.renderedNodes.find(n => n.position.x === config.c[0] && n.position.y === config.c[1]);
         if (!node) {
             const configNode = chart.nodes.find(n => config.t == n.type);
+            if (!configNode) return;
             node = new NodeUI(chart, configNode, { x: config.c[0], y: config.c[1] });
             node.config.map((cfg, i) => {
                 cfg.value = config.v[i];
@@ -478,6 +479,7 @@ export class FlowEditor {
         this.element = element;
 
         nodes.map(nodeConfig => {
+            if (nodeConfig.if !== undefined && !nodeConfig.if()) return;
             const node = new Node(nodeConfig);
             this.nodes.push(node);
         });
