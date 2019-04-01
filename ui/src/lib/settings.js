@@ -44,6 +44,15 @@ class Settings {
         if (this.diff().length) this.changed = true;
     }
 
+    getRules() {
+        return this.rules;
+    }
+
+    setRules(rules) {
+        this.storedRules = JSON.parse(JSON.stringify(rules));
+        this.rulesChanged = false;
+    }
+
     /**
      * returns diff between applied and current version
      */

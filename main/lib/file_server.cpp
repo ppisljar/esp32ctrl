@@ -10,6 +10,7 @@
 #include "file_server.h"
 
 #include "config.h"
+#include "controller.h"
 #include "../plugins/plugin.h"
 #include "rule_engine.h"
 #include "logging.h"
@@ -778,6 +779,11 @@ static esp_err_t plugins_post_handler(httpd_req_t *req)
     }
     // todo: check if plugin exists
     int plugin_id = atoi(filename);
+    if (plugin_id < 0) plugin_id = findDeviceIdByName((char*)filename);
+    if (plugin_id < 0) {
+        httpd_resp_sendstr(req, "Invalid file name!");
+        return ESP_OK;
+    }
     char buf[512];
     int remaining = req->content_len;
     httpd_req_recv(req, buf, MIN(remaining, 512));
@@ -845,6 +851,87 @@ static esp_err_t plugins_state_handler(httpd_req_t *req)
     len = plugins.printTo(buf, 512);
     httpd_resp_send_chunk(req, buf, len);
     httpd_resp_sendstr_chunk(req, NULL);
+
+    // try to get specific registered plugin
+    return ESP_OK;
+}
+
+static esp_err_t plugin_state_post_handler(httpd_req_t *req) {
+    if (!isAuthenticated(req, false)) return ESP_OK;
+
+    const char *filename = req->uri + sizeof("/plugin_state/") - 1;
+
+    if (strlen(filename) == 0 || filename[strlen(filename) - 1] == '/') {
+        httpd_resp_sendstr(req, "No device id specified");
+        return ESP_OK;
+    }
+
+    int deviceId = atoi(filename);
+    if (deviceId == -1) deviceId = findDeviceIdByName((char*)filename);
+    if (deviceId == -1) {
+        httpd_resp_sendstr(req, "Invalid device id");
+        return ESP_OK;
+    }
+
+    char buf[512];
+    int remaining = req->content_len;
+    httpd_req_recv(req, buf, MIN(remaining, 512));
+    jb.clear();
+    JsonObject& params = jb.parseObject(buf);
+    active_plugins[deviceId]->setState(params);
+
+    httpd_resp_sendstr(req, "OK");
+    // try to get specific registered plugin
+    return ESP_OK;
+}
+
+static esp_err_t plugin_handler(httpd_req_t *req) {
+    if (!isAuthenticated(req, false)) return ESP_OK;
+
+    const char *device = req->uri + sizeof("/plugin/") - 1;
+    char *val = strchr(device, '/');
+    if (val == nullptr) {
+        httpd_resp_sendstr(req, "Invalid request");
+        return ESP_OK;
+    }
+    val[0] = 0;
+    val++;
+    char *value = strchr(val, '/');
+    if (value == nullptr) {
+        httpd_resp_sendstr(req, "Invalid request");
+        return ESP_OK;
+    }
+    value[0] = 0;
+    value++;
+    bool set = strlen(value) > 0;
+
+    int deviceId = atoi(device);
+    if (deviceId == -1) deviceId = findDeviceIdByName((char*)device);
+    if (deviceId == -1 || active_plugins[deviceId] == nullptr) {
+        httpd_resp_sendstr(req, "Invalid device id");
+        return ESP_OK;
+    }
+
+    int valueId = atoi(val);
+    if (valueId == -1) deviceId = findVarIdByName(active_plugins[deviceId], (char*)val);
+    if (valueId == -1) {
+        httpd_resp_sendstr(req, "Invalid value id");
+        return ESP_OK;
+    }
+
+    if (set) {
+        int valueByte = atoi(value);
+        if (valueByte < 0) {
+            httpd_resp_sendstr(req, "Invalid value");
+            return ESP_OK;
+        }
+        active_plugins[deviceId]->setStatePtr((uint8_t)valueId, (uint8_t*)&valueByte, true);
+    } else {
+        int valueByte = *((uint8_t*)active_plugins[deviceId]->getStatePtr((uint8_t)valueId));
+        char valueStr[10] = {};
+        itoa(valueByte, valueStr, 10);
+        httpd_resp_sendstr(req, valueStr);
+    }
 
     // try to get specific registered plugin
     return ESP_OK;
@@ -1106,6 +1193,8 @@ esp_err_t start_file_server(const char *base_path)
     http_quick_register("/plugins/*", HTTP_POST, plugins_post_handler, server_data);
     //http_quick_register("/plugins/*", HTTP_DELETE, plugins_delete_handler, server_data);
     http_quick_register("/plugin_state/*", HTTP_GET, plugins_state_handler, server_data);
+    http_quick_register("/plugin_state/*", HTTP_POST, plugin_state_post_handler, server_data);
+    http_quick_register("/plugin/*", HTTP_GET, plugin_handler, server_data);
 
     http_quick_register("/event/*", HTTP_GET, event_handler, server_data);
     http_quick_register("/cmd/*", HTTP_POST, cmd_handler, server_data);

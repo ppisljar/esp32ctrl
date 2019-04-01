@@ -8,9 +8,42 @@ const user = "admin";
 
 const firstFreeKey = (array, key = 'id') => {
     let i = 0;
-    while(array.find(e => e[key] == i)) i++;
+    while(array.find(e => e && e[key] == i)) i++;
     return i;
 }  
+
+const ruleUsesDevice = (rule, deviceId) => {
+    return (rule.t === 'if/else' && rule.v[0].split('-')[0] == deviceId) ||
+    (rule.t === 'set state' && rule.v[0].split('-')[0] == deviceId) ||
+    (rule.t === 'get state' && rule.v[0].split('-')[0] == deviceId);
+}
+
+const findRulesUsingDevice = (rules, deviceId, arr = []) => {
+    rules.forEach(rule => {
+        if (ruleUsesDevice(rule, deviceId)){
+            arr.push(rule);
+        }
+        rule.o.forEach(o => {
+            //o.forEach(outRule => {
+                findRulesUsingDevice(o, deviceId, arr);
+            //});
+        });
+    });
+    return arr;
+}
+
+const deleteRulesUsingDevice = (rules, deviceId) => {
+    for( var i = rules.length-1; i>=0; i--){
+        if (ruleUsesDevice(rules[i], deviceId)) rules.splice(i, 1);
+    }
+    rules.forEach((rule, i) => {
+        rule.o.forEach(o => {
+            //o.forEach(outRule => {
+                deleteRulesUsingDevice(o, deviceId);
+            //});
+        });
+    });
+}
 
 export class DevicesPage extends Component {
     constructor(props) {
@@ -26,15 +59,26 @@ export class DevicesPage extends Component {
 
         this.addDevice = () => {
             const plugins = settings.settings.plugins;
-            plugins.push({ id: firstFreeKey(plugins), idx: firstFreeKey(plugins, 'idx'), type: 0, name: 'new device', enabled: false, params: {}});
-            window.location.hash = `#devices/edit/${plugins.length - 1}`;
+            const empty = conf.state.values.findIndex(e => e === null);
+            const newPlugin = { id: firstFreeKey(plugins), idx: firstFreeKey(plugins, 'idx'), type: 0, name: 'new device', enabled: false, params: {}};
+            if (empty !== -1) plugins[empty] = newPlugin;
+            else plugins.push(newPlugin);
+            window.location.hash = `#devices/edit/${empty === -1 ? plugins.length - 1 : empty}`;
         }
 
-        const removeItem = (items, i) => items.slice(0, i-1).concat(items.slice(i, items.length));
-
         this.deleteDevice = (i) => {
-            settings.settings.plugins = removeItem(settings.settings.plugins, i); 
-            this.forceUpdate();
+            const elementsUsingDevice = findRulesUsingDevice(settings.rules, i);
+            let shouldDelete = false;
+            if (elementsUsingDevice.length) {
+                shouldDelete = confirm("The device you are trying to delete is used in Automation. Deleting it will remove all automation nodes refering to it.\nAre you sure you want to continue ?");
+            } else {
+                shouldDelete = confirm("Are you sure you want to delete the plugin ?");
+            }
+            if (shouldDelete) {
+                deleteRulesUsingDevice(settings.rules, i);
+                settings.settings.plugins[i] = null;
+                this.forceUpdate();
+            }
         }
     }
     render(props) {
@@ -44,6 +88,7 @@ export class DevicesPage extends Component {
             <div>
                 <div><button type="button" onClick={this.addDevice}>add device</button></div>
             {tasks.map((task, i) => {
+                if (task === null) return (null);
                 if (settings.userName !== 'admin' && task.lock) return (null);
                 const editUrl = `#devices/edit/${i}`;
                 const device = devices.find(d => d.value === task.type);
@@ -66,7 +111,7 @@ export class DevicesPage extends Component {
                                 {i+1}: <input type="checkbox" defaultChecked={task.enabled} data-prop={enabledProp} onChange={this.handleEnableToggle}></input>
                                 &nbsp;&nbsp;{task.name} [{deviceType}]
                                 <a href={editUrl}>edit</a>
-                                <a onClick={() => {this.deleteDevice(i+1);}}>delete</a>
+                                <a onClick={() => {this.deleteDevice(i);}}>delete</a>
                             </div>
                             <div class="vars">
                             {vals.map(v => {

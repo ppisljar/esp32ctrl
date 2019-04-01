@@ -7,6 +7,7 @@ export class RulesEditorPage extends Component {
     constructor(props) {
         super(props);
         this.devices = settings.get('plugins');
+        this.rules = settings.rules;
     }
 
     render(props) {
@@ -21,14 +22,13 @@ export class RulesEditorPage extends Component {
             
             this.chart = new FlowEditor(this.element, nodes, { 
                 onSave: (config, rules) => {
+                    settings.rules = config;
                     storeRuleConfig(config);
                     storeRule(rules);
                 }
             });
     
-            loadRuleConfig().then(config => {
-                this.chart.loadConfig(config);
-            });
+            this.chart.loadConfig(this.rules);
         });
     }
 }

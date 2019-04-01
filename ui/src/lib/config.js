@@ -20,6 +20,6 @@ export const loadRules = async () => {
     const events = await fetch('/events.json').then(r => r.json());
     const pins = [];    // report on used pins
     settings.events = events;
-    settings.r1 = r1;
+    settings.rules = r1;
     settings.r1pins = pins;
 }

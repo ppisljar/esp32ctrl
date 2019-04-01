@@ -166,8 +166,9 @@ extern "C" void app_main()
     vTaskDelay( 2000 / portTICK_PERIOD_MS);
 
     JsonArray &plugins = cfgObject["plugins"];
-    int pi = 0;
+    int pi = -1;
     for (auto plugin : plugins){
+        pi++;
         if (!plugin["enabled"]) continue;
         ESP_LOGI(TAG, "initializing plugin '%s' type: %i", plugin["name"].as<char*>(), (int)plugin["type"]);
         if (!Plugin::hasType((int)plugin["type"])) {
@@ -178,7 +179,6 @@ extern "C" void app_main()
         active_plugins[pi]->name = plugin["name"].as<char*>();
         active_plugins[pi]->id = pi;
         active_plugins[pi]->init(plugin);
-        pi++;
         vTaskDelay( 1000 / portTICK_PERIOD_MS);
     }
 
