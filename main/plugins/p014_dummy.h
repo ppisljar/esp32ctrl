@@ -12,7 +12,7 @@ struct dummy_vals_t {
 class DummyPlugin: public Plugin {
     private:
         int value = 0;
-        dummy_vals_t values[10] = {};
+        dummy_vals_t **values;
     public:
 
         DEFINE_PLUGIN(DummyPlugin);

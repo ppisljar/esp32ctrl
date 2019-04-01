@@ -145,7 +145,7 @@ export class Form extends Component {
                     config.click(this.props.selected, this, config);
                 }
                 return (
-                    <button type="button" onClick={clickEvent}>GET IT</button>
+                    <button type="button" onClick={clickEvent}>{config.value}</button>
                 );
         }
     }

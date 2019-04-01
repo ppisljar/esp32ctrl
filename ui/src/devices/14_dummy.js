@@ -1,20 +1,34 @@
 import {Device} from './_defs';
 
-const getValueProps = (vals) => {
-    const result = {};
-    vals.forEach((val, i) => {
-        result['value_' + i] = [
-            { name: `Var ${i} name`, type: 'string', var: `state.values[${i}].name` },
-            { name: 'Type', type: 'select', options: [0, 1, 2, 3], var: `state.values[${i}].type` },
-        ];
-    });
-    return result;
-}
+const valueTypes = [
+    { name: 'Bit', value: 0 },
+    { name: 'Byte', value: 1 },
+    { name: 'Decimal', value: 2 },
+    { name: 'String', value: 3 },
+]
 
 class Dummy extends Device {
     constructor() {
         super();
         this.vals = 0;
+    }
+
+    getValueProps = (vals) => {
+        const result = {};
+        vals.forEach((val, i) => {
+            if (!val) return;
+            result['value_' + i] = [
+                { name: `Var ${i} name`, type: 'string', var: `state.values[${i}].name` },
+                { name: 'Type', type: 'select', options: valueTypes, var: `state.values[${i}].type` },
+                { type: 'button', value: 'X', click: (event, form) => {
+                    const conf = form.props.selected;
+                    conf.state.values[i] = null;
+                    form.props.config.groups.params = this.getFields(conf).params;
+                    form.forceUpdate();
+                }}
+            ];
+        });
+        return result;
     }
 
     getFields = (conf) => {
@@ -23,9 +37,12 @@ class Dummy extends Device {
             params: {
                 name: 'Config',
                 configs: {
-                    ...getValueProps(values),
-                    add: { title: 'Add Variable', type: 'button', click: (a,form,config) => {
-                        conf.state.values.push({ name: 'Dummy', type: 0, value: 0 });
+                    ...this.getValueProps(values),
+                    add: { value: 'Add Variable', type: 'button', click: (event, form) => {
+                        const empty = conf.state.values.findIndex(e => e === null);
+                        const defaultVarConf = { name: 'Dummy', type: 0, value: 0 };
+                        if (empty !== -1) conf.state.values[empty] = defaultVarConf;
+                        else conf.state.values.push(defaultVarConf);
                         form.props.config.groups.params = this.getFields(conf).params;
                         form.forceUpdate();
                     }}
