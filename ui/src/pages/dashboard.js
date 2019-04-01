@@ -6,7 +6,7 @@ export class DashboardPage extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            devices: settings.get('plugins').filter(p => p.enabled),
+            devices: settings.get('plugins').filter(p => p && p.enabled),
             deviceState: [],
         }
 
