@@ -30,7 +30,7 @@ void RegulatorPlugin::task(void * pvParameters)
             active_plugins[device]->getState(state);
             float currentValue = state[cfg["value"].as<char*>()];
             SET_STATE(s, output, 0, true, currentValue > (level + hysteresis));
-            ESP_LOGI(P005_TAG, "current output %i", s->output);
+            ESP_LOGI(P005_TAG, "current output %i (%f > %f + %f)", s->output, currentValue, level, hysteresis);
         }
 
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);

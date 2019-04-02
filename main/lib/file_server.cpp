@@ -103,16 +103,16 @@ bool authenticate(httpd_req_t *req){
   char password[32];
   strlcpy(password, params["security"]["pass"] | "", 32);
   if(httpd_req_get_hdr_value_len(req, "Authorization")) {
-    char authReq[255];
+    char authReq[300];
     char _username[17];
     char _realm[17];
     char _nonce[33];
     char _opaque[33];
-    char _uri[33];
+    char _uri[64];
     char _response[33];
 
     ESP_LOGD(TAG, "checking authorization");
-    httpd_req_get_hdr_value_str(req, "Authorization", authReq, 255);
+    httpd_req_get_hdr_value_str(req, "Authorization", authReq, 300);
     if(startsWith("Digest", authReq)) {
       ESP_LOGD(TAG, "%s", authReq);
 
@@ -192,11 +192,10 @@ bool authenticate(httpd_req_t *req){
       ESP_LOGD(TAG, "The Proper response [%s] =%s:%s", _in, _responsecheck, _response);
       if(strcmp(_response, _responsecheck) == 0){
         authReq[0] = 0;
-        ESP_LOGI(TAG, "logged in with %s", _username);
+        ESP_LOGD(TAG, "logged in with %s", _username);
         if (strcmp(_username, USER_ADMIN) == 0) httpd_resp_set_hdr(req, "User", USER_ADMIN);
-        if (strcmp(_username, USER_USER) == 0) httpd_resp_set_hdr(req, "User", USER_USER);
-        
-        httpd_resp_set_hdr(req, "Test", _username);
+        else if (strcmp(_username, USER_USER) == 0) httpd_resp_set_hdr(req, "User", USER_USER);
+        else httpd_resp_set_hdr(req, "User", USER_VIEW);
         return true;
       }
     }
@@ -217,7 +216,6 @@ void requestAuthentication(httpd_req_t *req) {
     httpd_resp_set_status(req, "401 Unauthorized");
     httpd_resp_set_type(req, HTTPD_TYPE_TEXT);
     httpd_resp_send(req, "Please Authenticate", 20);
-    //free(digest_header);
 }
 
 bool isAuthenticated(httpd_req_t *req, bool force = true) {
@@ -242,7 +240,7 @@ bool isAuthenticated(httpd_req_t *req, bool force = true) {
         }
     }
     
-    ESP_LOGI(TAG, "need to check user and pass");
+    ESP_LOGD(TAG, "need to check user and pass on %s", req->uri);
     bool authenticated = authenticate(req);
     if (!authenticated && force)
     {
@@ -889,21 +887,14 @@ static esp_err_t plugin_handler(httpd_req_t *req) {
     if (!isAuthenticated(req, false)) return ESP_OK;
 
     const char *device = req->uri + sizeof("/plugin/") - 1;
-    char *val = strchr(device, '/');
-    if (val == nullptr) {
-        httpd_resp_sendstr(req, "Invalid request");
+
+    char *action = strchr(device, '/');
+    if (action == nullptr) {
+        httpd_resp_sendstr(req, "invalid request (no device)");
         return ESP_OK;
     }
-    val[0] = 0;
-    val++;
-    char *value = strchr(val, '/');
-    if (value == nullptr) {
-        httpd_resp_sendstr(req, "Invalid request");
-        return ESP_OK;
-    }
-    value[0] = 0;
-    value++;
-    bool set = strlen(value) > 0;
+    action[0] = 0;
+    action++;
 
     int deviceId = atoi(device);
     if (deviceId == -1) deviceId = findDeviceIdByName((char*)device);
@@ -912,28 +903,66 @@ static esp_err_t plugin_handler(httpd_req_t *req) {
         return ESP_OK;
     }
 
-    int valueId = atoi(val);
-    if (valueId == -1) deviceId = findVarIdByName(active_plugins[deviceId], (char*)val);
-    if (valueId == -1) {
-        httpd_resp_sendstr(req, "Invalid value id");
+    char *val = strchr(action, '/');
+    if (val == nullptr) {
+        httpd_resp_sendstr(req, "Invalid request (no action)");
         return ESP_OK;
     }
+    val[0] = 0;
+    val++;
 
-    if (set) {
-        int valueByte = atoi(value);
-        if (valueByte < 0) {
-            httpd_resp_sendstr(req, "Invalid value");
+    char *value = strchr(val, '/');
+    if (value == nullptr) {
+        httpd_resp_sendstr(req, "Invalid request (no value id)");
+        return ESP_OK;
+    }
+    
+    value[0] = 0;
+    value++;
+    bool set = strlen(value) > 0;
+
+    if (strcmp(action, "state") == 0) {
+        int valueId = atoi(val);
+        if (valueId == -1) deviceId = findVarIdByName(active_plugins[deviceId], (char*)val);
+        if (valueId == -1) {
+            httpd_resp_sendstr(req, "Invalid value id)");
             return ESP_OK;
         }
-        active_plugins[deviceId]->setStatePtr((uint8_t)valueId, (uint8_t*)&valueByte, true);
-    } else {
-        int valueByte = *((uint8_t*)active_plugins[deviceId]->getStatePtr((uint8_t)valueId));
-        char valueStr[10] = {};
-        itoa(valueByte, valueStr, 10);
-        httpd_resp_sendstr(req, valueStr);
+
+        if (set) {
+            int valueByte = atoi(value);
+            if (valueByte < 0) {
+                httpd_resp_sendstr(req, "Invalid value");
+                return ESP_OK;
+            }
+            ESP_LOGD("FFFF", "setting state of %d:%d to %d", deviceId, valueId, valueByte);
+            active_plugins[deviceId]->setStatePtr_((uint8_t)valueId, (uint8_t*)&valueByte, true);
+        } else {
+            ESP_LOGD("FFFF", "getting state of %d:%d", deviceId, valueId);
+            int valueByte = *((uint8_t*)active_plugins[deviceId]->getStatePtr((uint8_t)valueId));
+            char valueStr[10] = {};
+            itoa(valueByte, valueStr, 10);
+            httpd_resp_sendstr(req, valueStr);
+        }
+    } else if (strcmp(action, "config") == 0) {
+        ESP_LOGD("FFFF", "config action %s %s %s", device, val, value);
+        if (set) {
+            jb.clear();
+            JsonObject& updateCfg = jb.createObject();
+            updateCfg[val] = value;
+            active_plugins[deviceId]->setConfig(updateCfg);
+        } else {
+            JsonObject& var = (cfg->getConfig())["plugins"][deviceId][(const char*)val];
+            char buf[256];
+
+            int len = var.printTo(buf, 256);
+            httpd_resp_send_chunk(req, buf, len);
+            httpd_resp_sendstr_chunk(req, NULL);
+        }
     }
 
     // try to get specific registered plugin
+    httpd_resp_sendstr(req, "OK");
     return ESP_OK;
 }
 

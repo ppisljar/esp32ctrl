@@ -13,6 +13,7 @@ export const loadDevices = async (url) => {
 export const getConfigNodes = async (devices) => {
     const vars = [];
     const deviceNodes = devices.map((device, i) => {
+        if (!device) return [];
         const taskValues = device.state ? device.state.values || [] : [];
         taskValues.map((value, j) => vars.push({ value: `${i}-${j}`, name: `${device.name}#${value.name}` }));
         // todo: remove

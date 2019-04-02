@@ -1,14 +1,14 @@
 import { settings } from '../lib/settings';
 
 export const getTasks = () => {
-    return settings.get('plugins').map((task, i) => ({ value: i, name: task.name }));
+    return settings.get('plugins').filter(p => p).map((p, i) => ({ value: p.id, name: p.name }));
 };
 
 export const getTaskValues = (config) => {
     const selectedTask = config.params.device;
-    const values = settings.get(`plugins[${selectedTask}].settings.values`);
-    if (!values) return [];
-    return values.filter(val => val).map((val, i) => ({ value: i, name: val.name }));
+    const task = settings.get('plugins').find(p => p.id === selectedTask);
+    if (!task || !task.state || !task.state.values) return [];
+    return task.state.values.filter(val => val).map((val, i) => ({ value: i, name: val.name }));
 };
 
 export class Device {

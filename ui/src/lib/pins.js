@@ -53,7 +53,7 @@ class IO_PINS {
             allPins.find(ap => ap.value == i2c["sda"]).disabled = "I2C";
         }
         const plugins = settings.get('plugins');
-        plugins.forEach(cur => {
+        plugins.filter(p => p).forEach(cur => {
             const plugin = devices.find(d => d.value === cur.type).fields;
             if (plugin.getDeviceUsedPins) {
                 const pins = plugin.getDeviceUsedPins(cur);
@@ -75,6 +75,7 @@ class IO_PINS {
         const startPins = copy(this.digitalPins);
         let lastNr = startPins[startPins.length-1].value;
         const pins = plugins.reduce((acc, cur, i) => {
+            if (!cur) return acc;
             const plugin = devices.find(d => d.value === cur.type).fields;
             if (plugin.getDevicePins) {
                 const pins = plugin.getDevicePins(cur, i);

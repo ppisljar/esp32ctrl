@@ -12,6 +12,11 @@ export class DashboardPage extends Component {
 
         this.renderSwitch = (device, deviceState) => {
             const state = deviceState[device.state.values[0].name];
+            const buttonClick = async () => {
+                await fetch(`/plugin/${device.id}/state/0/${state ? 0 : 1}`);
+                // deviceState[device.state.values[0].name] = !state;
+                // this.forceUpdate(); 
+            }
             return (
                 <div className='device'>
                     <div class="icon">
@@ -19,7 +24,7 @@ export class DashboardPage extends Component {
                     </div>
                     <div class="body">
                         <div class='info'>
-                            {device.name}<span><button>{state ? 'ON' : 'OFF'}</button></span>
+                            {device.name}<span><button onClick={buttonClick}>{state ? 'ON' : 'OFF'}</button></span>
                         </div>
                     </div>
                 </div>
@@ -48,6 +53,12 @@ export class DashboardPage extends Component {
         };
 
         this.renderRegulator = (device, deviceState) => {
+            const rangeChange = async (e) => {
+                const plugins = settings.get('plugins');
+                plugins.find(p => p.id == device.id).params.level = e.currentTarget.value;
+                await fetch(`/plugin/${device.id}/config/level/${e.currentTarget.value}`);
+            };
+
             return (
             <div className='device'>
                 <div class="icon">
@@ -55,7 +66,7 @@ export class DashboardPage extends Component {
                 </div>
                 <div class="body">
                     <div class='info'>
-                    {device.name}<span><input width='200px' type='range' value={device.params.level} /></span>
+                    {device.name}<span><input width='200px' type='range' value={device.params.level} onChange={rangeChange}/></span>
                     </div>
                 </div>
             </div>);

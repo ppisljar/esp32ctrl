@@ -59,7 +59,7 @@ export class DevicesPage extends Component {
 
         this.addDevice = () => {
             const plugins = settings.settings.plugins;
-            const empty = conf.state.values.findIndex(e => e === null);
+            const empty = plugins.findIndex(e => e === null);
             const newPlugin = { id: firstFreeKey(plugins), idx: firstFreeKey(plugins, 'idx'), type: 0, name: 'new device', enabled: false, params: {}};
             if (empty !== -1) plugins[empty] = newPlugin;
             else plugins.push(newPlugin);

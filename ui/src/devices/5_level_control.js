@@ -11,8 +11,8 @@ export const levelControl = {
             value: { name: 'Check Value', type: 'select', options: getTaskValues },
             level: { name: 'Set Level', type: 'number' },
             hysteresis: { name: 'Hysteresis', type: 'number' },
+            interval: { name: 'Interval', type: 'number' },
         }
     },
-    data: true,
     vals: 1,
 }
