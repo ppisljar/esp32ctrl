@@ -22,7 +22,7 @@ export class RulesEditorPage extends Component {
             
             this.chart = new FlowEditor(this.element, nodes, { 
                 onSave: (config, rules) => {
-                    settings.rules = config;
+                    settings.rules = JSON.parse(config);
                     storeRuleConfig(config);
                     storeRule(rules);
                 }

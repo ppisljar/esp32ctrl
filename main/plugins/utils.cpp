@@ -23,3 +23,23 @@ void parseStrForVar(std::string& str, Plugin *p, uint8_t var_id, uint8_t val) {
     replace_string_in_place(str, "%timestamp%", "test");
     replace_string_in_place(str, "%value%", std::to_string(val));
 }
+
+void makeHttpRequest(char *url, esp_http_client_method_t method) {
+    esp_http_client_config_t config = {
+        .url = url
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    esp_http_client_set_method(client, method);
+
+    esp_err_t err = esp_http_client_perform(client);
+
+    if (err == ESP_OK) {
+        ESP_LOGI("HttpRequest", "Status = %d, content_length = %d",
+            esp_http_client_get_status_code(client),
+            esp_http_client_get_content_length(client));
+    } else {
+        ESP_LOGW("HttpRequest", "request failed");
+    }
+    esp_http_client_cleanup(client);
+}

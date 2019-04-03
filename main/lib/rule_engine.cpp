@@ -1,6 +1,7 @@
 
 #include "rule_engine.h"
-#include "../plugins/c004_timers.h";
+#include "../plugins/c004_timers.h"
+#include "../plugins/utils.h"
 #include <map>
 
 #define byte uint8_t
@@ -260,7 +261,16 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 break;
             case CMD_HW_INTERRUPT_EN:
                 break;
-           
+
+            case CMD_HTTP: {
+                cmd++;
+                std::string url((const char*)cmd);
+                cmd += url.length() + 1;
+                replace_string_in_place(url, "%state%", std::to_string(*state_val));
+                ESP_LOGI(TAG_RE, "cmd http req to %s", url.c_str());
+                makeHttpRequest((char*)url.c_str());
+                break;
+            }
             // plugin provided commands
             default:
                 ESP_LOGI(TAG_RE, "cmd: %i", cmd[0]);

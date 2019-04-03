@@ -291,21 +291,14 @@ export const getNodes = (devices, vars) => {
             inputs: [1],
             outputs: [1],
             config: [{
-                name: 'host',
-                type: 'text',
-            }, {
-                name: 'port',
-                type: 'number',
-                value: 80
-            }, {
                 name: 'url',
                 type: 'text',
             }],
             toString: function() {
-                return `HTTP ${this.config[2].value}`;
+                return `HTTP ${this.config[0].value}`;
             },
             toDsl: function() {
-                return [`SentToHTTP ${this.config[0].value},${this.config[1].value},${this.config[2].value}\n`];
+                return [`\xEF${this.config[0].value}\x00`];
             }
         }
     ];
