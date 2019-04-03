@@ -75,7 +75,7 @@ bool compare(byte** ptr, byte *val, byte *old) {
     for (byte i = 0; i < cmd[1]; i++) {
         switch (cmd[0]) {
             case 0: // every change
-                ESP_LOGI(TAG_RE, "compare val(%p):%d old(%p):%d", val, val[i], old, old[i]);
+                ESP_LOGD(TAG_RE, "compare val(%p):%d old(%p):%d", val, val[i], old, old[i]);
                 if (val[i] == old[i]) match = false;
                 break;
             case 1: // equals
@@ -89,7 +89,7 @@ bool compare(byte** ptr, byte *val, byte *old) {
             case 6: // <>
                 break;
         }
-        old[i] = 1; // todo: val[i];
+        old[i] = val[i]; // todo: val[i];
     }
     *ptr+= cmd[1] + 2;
     return match;
@@ -135,15 +135,15 @@ int parse_rules(byte *rules, long len) {
             switch (rules[i+4]) {
                 case TRIG_EVENT:
                     ESP_LOGI(TAG_RE, "found an event on address: %p", (void*)(rules + i + 4 + 2));
-                    event_list[events_found++] = rules + i + 6;
+                    event_list[events_found++] = rules + i + 5; // type needs to be included
                     break;
                 case TRIG_VAR:
                     ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 5));
-                    rule_list[rules_found++] = rules + i + 5;
+                    rule_list[rules_found++] = rules + i + 4; // type needs to be included
                     break;
                 case TRIG_TIMER:
                     ESP_LOGI(TAG_RE, "found a timer trigger %d, on address: %p", rules[i+5], (void*)(rules + i + 6));
-                    rule_list[rules_found++] = rules + i + 6;
+                    rule_list[rules_found++] = rules + i + 5; // type needs to be included
                     break;
                 case TRIG_HWTIMER:
                     ESP_LOGI(TAG_RE, "found hw timer %d on address: %p", rules[i+5], (void*)(rules + i + 6));
@@ -266,7 +266,9 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 cmd++;
                 std::string url((const char*)cmd);
                 cmd += url.length() + 1;
-                replace_string_in_place(url, "%state%", std::to_string(*state_val));
+                if (state_val != nullptr) {
+                    replace_string_in_place(url, "%state%", std::to_string(*state_val));
+                }
                 ESP_LOGI(TAG_RE, "cmd http req to %s", url.c_str());
                 makeHttpRequest((char*)url.c_str());
                 break;
@@ -300,11 +302,15 @@ void run_rules() {
         Plugin *p;
         byte *var;
         bool match = false;
+        unsigned char *start_val = nullptr;
+        uint8_t start_val_len = 0;
 
         switch (cmd[0]) { // trigger type (0: var, 1: event, 2: timer, 3: system
             // device variable
             case 0:
+                ESP_LOGD(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
                 p = active_plugins[cmd[1]];
+                if (p == nullptr) continue;
                 var = (byte*)p->getStatePtr(cmd[2]);
 
                 oldId = *cmd;
@@ -315,14 +321,11 @@ void run_rules() {
                 old = (byte*)rule_data_ptrs[oldId];
                 cmd += 3;
                 match = compare(&cmd, var, old);
+                if (match) {
+                    start_val = var;
+                    start_val_len = 1;
+                }
                 break;
-            // event
-            // case 1:
-            //     match = IS_EVENT_TRIGGERED(cmd[1]);
-            //     if (match) CLEAR_EVENT(cmd[1]);
-            //     cmd += 2;
-            //     break;
-            // timer
             case 2:
                 ESP_LOGD(TAG_RE, "checking timer %d time: %d", cmd[1], timers[cmd[1]]);
                 match = IS_TIMER_TRIGGERED(cmd[1]);
@@ -336,7 +339,7 @@ void run_rules() {
         if (match) {
             ESP_LOGI(TAG_RE, "match! executing rule [%x %x %x %x]", cmd[0], cmd[1], cmd[2], cmd[3]);
             // for each command
-            cmd += run_rule(cmd, nullptr, 0);
+            cmd += run_rule(cmd, start_val, start_val_len);
         }
     }
 

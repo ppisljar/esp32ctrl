@@ -9,7 +9,7 @@ export const getJsonStat = async (url = '') => {
 export const loadDevices = async (url) => {
     return getJsonStat(url); //.then(response => response.Sensors);
 }
-
+// check if we correctly set ids here!!!! <--------------------------
 export const getConfigNodes = async (devices) => {
     const vars = [];
     const deviceNodes = devices.map((device, i) => {
@@ -46,7 +46,7 @@ export const getConfigNodes = async (devices) => {
             },
             toDsl: function () { 
                 const comparison = this.config[1].value === '' ? `\x00\x01` : `${String.fromCharCode(this.config[1].value)}\x01${String.fromCharCode(this.config[2].value)}`;
-                return [`\xFF\xFE\x00\xFF\x00${String.fromCharCode(i)}${String.fromCharCode(this.config[0].value)}${comparison}%%output%%\xFF`]; 
+                return [`\xFF\xFE\x00\xFF\x00${String.fromCharCode(device.id)}${String.fromCharCode(this.config[0].value)}${comparison}%%output%%\xFF`]; 
             }
         }];
 
