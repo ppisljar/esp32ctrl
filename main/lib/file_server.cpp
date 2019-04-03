@@ -235,7 +235,7 @@ bool isAuthenticated(httpd_req_t *req, bool force = true) {
 
         uint32_t clientIp = destAddr.sin6_addr.un.u32_addr[3];
         if (clientIp < startIp || clientIp > endIp) {
-            ESP_LOGD(TAG, "IP not allowed %d", clientIp);
+            ESP_LOGW(TAG, "IP not allowed %d", clientIp);
             return false;
         }
     }

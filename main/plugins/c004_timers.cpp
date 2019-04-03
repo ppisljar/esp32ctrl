@@ -36,6 +36,7 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
 void IRAM_ATTR timer_group0_isr(void *para)
 {
     int timer_idx = (int) para;
+    ESP_LOGI("HWTIMER", "OK");
 
     /* Retrieve the interrupt status and the counter value
        from the timer that reported the interrupt */

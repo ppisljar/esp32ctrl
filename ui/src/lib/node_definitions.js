@@ -66,7 +66,7 @@ export const getNodes = (devices, vars) => {
                 name: 'timer',
                 type: 'select',
                 values: function () {
-                    return settings.get('hardware.timer', []).map((t, i) => ({ name: t.name, value: i, enabled: t.enabled })).filter(t => t.enabled);
+                    return settings.get('hardware.timer', []).map((t, i) => ({ name: `timer_${i}`, value: i, enabled: t.enabled })).filter(t => t.enabled);
                 },
                 value: 0,
             }],
@@ -256,16 +256,48 @@ export const getNodes = (devices, vars) => {
             config: [{
                 name: 'timer',
                 type: 'select',
-                values: [1, 2, 3, 4],
+                values: function () {
+                    return settings.get('hardware.timer', []).map((t, i) => ({ name: `timer_${i}`, value: i, enabled: t.enabled })).filter(t => t.enabled);
+                },
             }, {
                 name: 'value',
-                type: 'number'
+                type: 'text'
             }],
             toString: function() {
                 return `hw_timer${this.config[0].value} = ${this.config[1].value}`;
             },
             toDsl: function() {
-                return [`\xE2${String.fromCharCode(this.config[0].value)}${String.fromCharCode(this.config[1].value)}`];
+                const timer = settings.get(`hardware.timer.${this.config[0].value}`);
+                const freq = BigInt(80000 / timer.divider);
+                const unit = this.config[1].value.substr(-1);
+                let time = BigInt(this.config[1].value.substr(0, this.config[1].value.length - 1));
+                switch (unit) {
+                    //case 'u': break;
+                    case 's': time *= BigInt(1000); break;
+                    case 'm': time *= BigInt(1000*60); break;
+                    case 'h': time *= BigInt(1000*60*60); break;
+                    case 'd': time *= BigInt(1000*60*60*24); break;
+                }
+                const value = freq * time;
+                function toByteArray(x, n) {
+                    var hexString = x.toString(16);
+                    if(hexString.length % 2 > 0) hexString = "0" + hexString;
+                    var byteArray = [];
+                    for(var i = 0; i < hexString.length; i += 2) {
+                        byteArray.push(parseInt(hexString.slice(i, i + 2), 16));
+                    }
+                    while (byteArray.length < n) byteArray = [0, ...byteArray];
+                    return byteArray;
+                }
+                const getString = (bytes) => {
+                    let res = '';
+                    for (let i = bytes.length - 1; i >= 0; i--) {
+                        res += String.fromCharCode(bytes[i]);
+                    }
+                    return res;
+                };
+
+                return [`\xE2${String.fromCharCode(this.config[0].value)}${getString(toByteArray(value,8))}`];
             }
         }, {
             group: 'ACTIONS',
