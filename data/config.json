@@ -1,1 +1,0 @@
-{"wifi":{"ssid":"Teltonika_Router","pass":"secpass123"},"plugins":[{"type":1,"enabled":1,"name":"test","params":{"interval": 60,"gpio": 15}}]}
