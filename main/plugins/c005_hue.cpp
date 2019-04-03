@@ -61,6 +61,7 @@ bool HueEmulatorPlugin::init(JsonObject &params) {
         uint8_t type = trigger["type"] | 0;
         ESP_LOGI(TAG, "adding device %s", name.c_str());
         alexa->addDevice(name, [p](void *device, uint8_t val) {
+            ESP_LOGI(TAG, "executing alexa callback for %d, %p, %p, %d", p, rule_engine_alexa_triggers[p], device, val);
             if (rule_engine_alexa_triggers[p] == nullptr) return;
             run_rule(rule_engine_alexa_triggers[p], &val, 1, 255);
         }, (EspalexaDeviceType)type, 0);

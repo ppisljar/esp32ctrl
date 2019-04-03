@@ -76,9 +76,27 @@ export class DevicesPage extends Component {
             }
             if (shouldDelete) {
                 deleteRulesUsingDevice(settings.rules, i);
-                settings.settings.plugins[i] = null;
+                settings.settings.plugins.splice(i, 1);
                 this.forceUpdate();
             }
+        }
+
+        this.moveDevice = (i, direction = 'up') => {
+            const plugins = settings.settings.plugins;
+            const p1 = plugins[i];
+            if (direction === 'up') {
+                if (i - 1 < 0) return;
+                const p2 = plugins[i - 1];
+                plugins[i - 1] = p1;
+                plugins[i] = p2;
+            } else {
+                if (i + 1 > plugins.length) return;
+                const p2 = plugins[i + 1];
+                plugins[i + 1] = p1;
+                plugins[i] = p2;
+            }
+            this.forceUpdate();
+
         }
     }
     render(props) {
@@ -112,6 +130,8 @@ export class DevicesPage extends Component {
                                 &nbsp;&nbsp;{task.name} [{deviceType}]
                                 <a href={editUrl}>edit</a>
                                 <a onClick={() => {this.deleteDevice(i);}}>delete</a>
+                                <a onClick={() => {this.moveDevice(i, 'up');}}>up</a>
+                                <a onClick={() => {this.moveDevice(i, 'down');}}>down</a>
                             </div>
                             <div class="vars">
                             {vals.map(v => {

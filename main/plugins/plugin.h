@@ -120,7 +120,6 @@ class Plugin
         virtual void* getStatePtr(uint8_t var) = 0;
         virtual void setStatePtr_(uint8_t var, uint8_t* val, bool notify) {};
         void setStatePtr(uint8_t var, uint8_t* val, bool notify = true) {
-            ESP_LOGI("PLUGIN", "SET STATE PTR");
             setStatePtr_(var, val, notify);
         };
 

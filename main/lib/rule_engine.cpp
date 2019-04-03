@@ -137,26 +137,26 @@ int parse_rules(byte *rules, long len) {
                     event_list[events_found++] = rules + i + 6;
                     break;
                 case TRIG_VAR:
-                    ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
-                    rule_list[rules_found++] = rules + i + 4;
+                    ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 5));
+                    rule_list[rules_found++] = rules + i + 5;
                     break;
                 case TRIG_TIMER:
-                    ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
+                    ESP_LOGI(TAG_RE, "found a timer trigger %d, on address: %p", rules[i+5], (void*)(rules + i + 6));
                     rule_list[rules_found++] = rules + i + 6;
                     break;
                 case TRIG_HWTIMER:
-                    ESP_LOGI(TAG_RE, "found hw timer on address: %p", (void*)(rules + i + 4));
-                    rule_engine_hwtimers[rules[i + 6]] = rules + i + 6;
+                    ESP_LOGI(TAG_RE, "found hw timer %d on address: %p", rules[i+5], (void*)(rules + i + 6));
+                    rule_engine_hwtimers[rules[i + 5]] = rules + i + 6;
                     break;
                 case TRIG_HWINTER:
-                    ESP_LOGI(TAG_RE, "found hw trigger on address: %p", (void*)(rules + i + 4));
-                    rule_engine_hwinterrupts[rules[i + 6]] = rules + i + 6;
+                    ESP_LOGI(TAG_RE, "found hw trigger %d on address: %p", rules[i+5], (void*)(rules + i + 6));
+                    rule_engine_hwinterrupts[rules[i + 5]] = rules + i + 6;
                     // todo: enable interrupt on selected pin
-                    timers_plugin->enableHwInterrupt(rules[i+6]);
+                    timers_plugin->enableHwInterrupt(rules[i + 5]);
                     break;
                 case TRIG_ALEXA:
-                    ESP_LOGI(TAG_RE, "found alexa on address: %p", (void*)(rules + i + 4));
-                    rule_engine_alexa_triggers[rules[i + 6]] = rules + i + 6;
+                    ESP_LOGI(TAG_RE, "found alexa %d on address: %p", rules[i + 5], (void*)(rules + i + 6));
+                    rule_engine_alexa_triggers[rules[i + 5]] = rules + i + 6;
                     break;
             }
         }
@@ -209,9 +209,9 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
             // sets state on device
             case CMD_SET:
                 // CMD_SET DEVICE_ID VAR_ID LENGTH VALUE
-                ESP_LOGI(TAG_RE, "cmd set %d %d %d", cmd[1], cmd[2], cmd[4]);
+                ESP_LOGI(TAG_RE, "cmd set %d:%d to %d %d", cmd[1], cmd[2], cmd[3], cmd[4]);
                 p = active_plugins[cmd[1]];
-                ESP_LOGI(TAG_RE, "cmd set %p %p", p, cmd+4);
+                ESP_LOGD(TAG_RE, "cmd set %p %p", p, cmd+4);
                 // TODO: check if plugin exists ..
                 // fuckup: disabling a plugin will require to recompile all rules
 
@@ -219,7 +219,8 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 // 1. it can be in the rules, will make it slower
                 // 2. we can allow setting variable name by index
                 if (p != nullptr) {
-                    if (cmd[3] == 255) {
+                    if (cmd[4] == 255) {
+                        ESP_LOGI(TAG_RE, "cmd set %d:%d to %d", cmd[1], cmd[2], *state_val);
                         p->setStatePtr(cmd[2], state_val);
                     } else {
                         p->setStatePtr(cmd[2], cmd+4);

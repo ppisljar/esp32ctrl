@@ -304,6 +304,7 @@ fieldset > label {
 .device .info a,
 .device .info span {
     float: right;
+    padding: 5px;
 }
 
 

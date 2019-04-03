@@ -294,7 +294,7 @@ public:
       ESP_LOGI("ALEXA","devType");
       body = "";
       httpSend(r, 200, "application/json", "[{\"success\":{\"username\":\"2WLEDHardQrI3WHYTHoMcXHgEspsM8ZZRpSKtBQr\"}}]");
-      return true;
+      return ESP_OK;
     }
 
     if (req.find("state") != std::string::npos) //client wants to control light
@@ -310,7 +310,7 @@ public:
         devices[devId-1]->setValue(0);
         devices[devId-1]->setPropertyChanged(EspalexaDeviceProperty::off);
         devices[devId-1]->doCallback();
-        return true;
+        return ESP_OK;
       }
       
       if (body.find("true") != std::string::npos) //ON command
@@ -351,7 +351,7 @@ public:
       
       devices[devId-1]->doCallback();
       
-      return true;
+      return ESP_OK;
     }
     
     int pos = req.find("lights");
@@ -382,12 +382,12 @@ public:
         httpSend(r, 200, "application/json", (char*)deviceJsonString(devId).c_str());
       }
       
-      return true;
+      return ESP_OK;
     }
 
     //we dont care about other api commands at this time and send empty JSON
     httpSend(r, 200, "application/json", "{}");
-    return true;
+    return ESP_OK;
   }
   
   //set whether Alexa can discover any devices

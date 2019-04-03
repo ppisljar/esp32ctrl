@@ -24,7 +24,7 @@ export class DashboardPage extends Component {
                     </div>
                     <div class="body">
                         <div class='info'>
-                            {device.name}<span><button onClick={buttonClick}>{state ? 'ON' : 'OFF'}</button></span>
+                            {device.name}<span><button onClick={buttonClick}>{!state ? 'ON' : 'OFF'}</button></span>
                         </div>
                     </div>
                 </div>
@@ -89,7 +89,7 @@ export class DashboardPage extends Component {
         return (
             <div>
                 {this.state.devices.map((device, i) => {
-                    return this.renderDevice(device, this.state.deviceState[i] || {});
+                    return this.renderDevice(device, this.state.deviceState[device.id] || {});
                 })}
             </div>
         );

@@ -15,10 +15,10 @@ export const getConfigNodes = async (devices) => {
     const deviceNodes = devices.map((device, i) => {
         if (!device) return [];
         const taskValues = device.state ? device.state.values || [] : [];
-        taskValues.map((value, j) => vars.push({ value: `${i}-${j}`, name: `${device.name}#${value.name}` }));
+        taskValues.map((value, j) => vars.push({ value: `${device.id}-${j}`, name: `${device.name}#${value.name}` }));
         // todo: remove
         const taskValues1 = device.settings ? device.settings.values || [] : [];
-        taskValues1.map((value, j) => vars.push({ value: `${i}-${j}`, name: `${device.name}#${value.name}` }));
+        taskValues1.map((value, j) => vars.push({ value: `${device.id}-${j}`, name: `${device.name}#${value.name}` }));
         if (!vars.length) return [];
         const result = [{
             group: 'TRIGGERS',
