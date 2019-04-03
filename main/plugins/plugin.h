@@ -57,7 +57,7 @@
          19,18,17,16,15,14,13,12,11,10, \
          9,8,7,6,5,4,3,2,1,0
 
-#define PLUGIN___CONFIG_1(VAR, I) if (params.containsKey(#VAR)) { (*cfg)[#VAR] = params[#VAR]; }
+#define PLUGIN___CONFIG_1(VAR, I) if (params.containsKey(#VAR)) { ESP_LOGI("CFG", "setting var %s", #VAR); (*cfg)[#VAR] = params[#VAR]; }
 #define PLUGIN___CONFIG_2(VAR, I) params[#VAR] = (*cfg)[#VAR];
 
 #define PLUGIN_CONFIG(TYPE, ...) \

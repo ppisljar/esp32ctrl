@@ -945,7 +945,7 @@ static esp_err_t plugin_handler(httpd_req_t *req) {
             httpd_resp_sendstr(req, valueStr);
         }
     } else if (strcmp(action, "config") == 0) {
-        ESP_LOGD("FFFF", "config action %s %s %s", device, val, value);
+        ESP_LOGI("FFFF", "config action %s %s %s", device, val, value);
         if (set) {
             jb.clear();
             JsonObject& updateCfg = jb.createObject();
@@ -1199,7 +1199,7 @@ esp_err_t start_file_server(const char *base_path)
      * target URIs which match the wildcard scheme */
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.global_user_ctx = server_data;
-    config.max_uri_handlers = 20;
+    config.max_uri_handlers = 25;
 
     ESP_LOGD(TAG, "Starting HTTP Server");
     if (httpd_start(&server, &config) != ESP_OK) {

@@ -65,7 +65,7 @@ class IO_PINS {
     }
 
     getInterruptPins() {
-        const hwpins = settings.get('hardware.gpio');
+        const hwpins = settings.get('hardware.gpio') || [];
         return this.digitalPins.filter((p) => hwpins[p.value] && hwpins[p.value].interrupt && hwpins[p.value].mode == 3);
     }
 

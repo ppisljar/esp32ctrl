@@ -160,7 +160,6 @@ extern "C" void app_main()
         JsonObject &hue_conf = cfgObject["alexa"];
         hue_plugin = new HueEmulatorPlugin();
         hue_plugin->init(hue_conf);
-        http_quick_register("/description.xml", HTTP_GET, hueemulator_webhandler, hue_plugin);
     }
 
     vTaskDelay( 2000 / portTICK_PERIOD_MS);

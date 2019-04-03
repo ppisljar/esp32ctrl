@@ -24,7 +24,7 @@ void HueEmulatorPlugin::task(void * pvParameters)
     HueEmulatorPlugin* s = (HueEmulatorPlugin*)pvParameters;
     JsonObject &cfg = *(s->cfg);
 
-    ESP_LOGI(TAG, "main task: %i:%i", (unsigned)s, unsigned(s->cfg));
+    ESP_LOGD(TAG, "main task: %i:%i", (unsigned)s, unsigned(s->cfg));
     for( ;; )
     {
         s->alexa->loop();
@@ -43,8 +43,9 @@ bool HueEmulatorPlugin::init(JsonObject &params) {
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
 
-    http_quick_register("/description", HTTP_GET, hueemulator_webhandler, this);
+    http_quick_register("/description.xml", HTTP_GET, hueemulator_webhandler, this);
     http_quick_register("/api/*", HTTP_GET, hueemulator_apihandler, this);
+    http_quick_register("/api/*", HTTP_POST, hueemulator_apihandler, this);
     http_quick_register("/api/*", HTTP_PUT, hueemulator_apihandler, this);
 
 
@@ -60,6 +61,7 @@ bool HueEmulatorPlugin::init(JsonObject &params) {
         uint8_t type = trigger["type"] | 0;
         ESP_LOGI(TAG, "adding device %s", name.c_str());
         alexa->addDevice(name, [p](void *device, uint8_t val) {
+            if (rule_engine_alexa_triggers[p] == nullptr) return;
             run_rule(rule_engine_alexa_triggers[p], &val, 1, 255);
         }, (EspalexaDeviceType)type, 0);
         p++;
