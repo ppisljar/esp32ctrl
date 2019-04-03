@@ -135,7 +135,7 @@ export const storeRuleConfig = async (config) => {
 }
 
 export const loadRuleConfig = async () => {
-    return await fetch('/r1.txt').then(response => response.json());
+    return await fetch('/r1.txt').then(response => response.json()).catch(r => []);
 }
 
 export const storeRule = async (data) => {
@@ -145,7 +145,7 @@ export const storeRule = async (data) => {
 }
 
 export const getEvents = async (data) => {
-    return fetch ('/events.json').then(r => r.json());
+    return fetch ('/events.json').then(r => r.json()).catch(r => []);
 }
 
 export default {

@@ -1,6 +1,6 @@
 set(COMPONENT_SRCDIRS .)
 set(COMPONENT_ADD_INCLUDEDIRS .)
 
-set(COMPONENT_REQUIRES i2cdev log)
+set(COMPONENT_REQUIRES I2Cdev log)
 
 register_component()

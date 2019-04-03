@@ -444,7 +444,7 @@ esp_err_t I2Cdev::read(uint8_t dev, uint8_t *out_data, size_t out_size, uint8_t 
     i2c_master_read(cmd, in_data, in_size, I2C_MASTER_LAST_NACK);
     i2c_master_stop(cmd);
 
-    esp_err_t res = i2c_master_cmd_begin(I2C_NUM, cmd, CONFIG_I2CDEV_TIMEOUT / portTICK_RATE_MS);
+    esp_err_t res = i2c_master_cmd_begin(I2C_NUM, cmd, I2CDEV_DEFAULT_READ_TIMEOUT / portTICK_RATE_MS);
     if (res != ESP_OK)
         ESP_LOGE(TAG, "Could not read from device [0x%02x at %d]: %d", dev, I2C_NUM, res);
 
@@ -467,7 +467,7 @@ esp_err_t I2Cdev::write(uint8_t dev, uint8_t *out_reg, size_t out_reg_size, uint
         i2c_master_write(cmd, out_reg, out_reg_size, true);
     i2c_master_write(cmd, out_data, out_size, true);
     i2c_master_stop(cmd);
-    esp_err_t res = i2c_master_cmd_begin(I2C_NUM, cmd, CONFIG_I2CDEV_TIMEOUT / portTICK_RATE_MS);
+    esp_err_t res = i2c_master_cmd_begin(I2C_NUM, cmd, I2CDEV_DEFAULT_READ_TIMEOUT / portTICK_RATE_MS);
     if (res != ESP_OK)
         ESP_LOGE(TAG, "Could not write to device [0x%02x at %d]: %d", dev, I2C_NUM, res);
     i2c_cmd_link_delete(cmd);

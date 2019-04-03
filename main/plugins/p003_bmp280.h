@@ -14,6 +14,9 @@ class BMP280Plugin: public Plugin {
     public:
         DEFINE_PLUGIN(BMP280Plugin);
 
+        bmp280_t dev = {};
+        bmp280_params_t devparams = {};
+
         te_expr *temp_expr;
         te_expr *humi_expr;
         te_expr *pres_expr;

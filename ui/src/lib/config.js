@@ -16,8 +16,8 @@ export const saveConfig = () => {
 }
 
 export const loadRules = async () => {
-    const r1 =await fetch('/r1.txt').then(r=>r.json());
-    const events = await fetch('/events.json').then(r => r.json());
+    const r1 =await fetch('/r1.txt').then(r=>r.json()).catch(r => []);
+    const events = await fetch('/events.json').then(r => r.json()).catch(r => []);
     const pins = [];    // report on used pins
     settings.events = events;
     settings.rules = r1;

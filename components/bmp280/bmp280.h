@@ -15,7 +15,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <esp_err.h>
-#include <i2cdev.h>
+#include <I2Cdev.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -112,7 +112,7 @@ typedef struct {
     int16_t  dig_H5;
     int8_t   dig_H6;
 
-    i2c_dev_t  i2c_dev;  /* I2C dev setting. */
+    uint8_t addr;  /* I2C dev setting. */
     uint8_t  id;        /* Chip ID */
 } bmp280_t;
 
