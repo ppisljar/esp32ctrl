@@ -295,6 +295,7 @@ fieldset > label {
     padding-right: 20px;
     font-size: 48px;
     text-align: center;
+    min-width: 80px;
 }
 
 .device .body {

@@ -259,7 +259,7 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 // hw_timer timer_idx timer_value
             case CMD_HW_TIMER_EN:
                 cmd++;
-                ESP_LOGI(TAG_RE, "starting hw timer %d %llu", cmd[2], *(uint64_t*)(cmd+1));
+                ESP_LOGI(TAG_RE, "starting hw timer %d %llu", cmd[0], *(uint64_t*)(cmd+1));
                 timer_set_alarm_value(cmd[0] > 1 ? TIMER_GROUP_1 : TIMER_GROUP_0, (timer_idx_t)(cmd[0]%2), *(uint64_t*)(cmd+1));
                 timer_start(cmd[0] > 1 ? TIMER_GROUP_1 : TIMER_GROUP_0, (timer_idx_t)(cmd[0]%2));
                 cmd += 9;

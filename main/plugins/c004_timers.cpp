@@ -36,7 +36,6 @@ static void IRAM_ATTR gpio_isr_handler(void* arg)
 void IRAM_ATTR timer_group0_isr(void *para)
 {
     int timer_idx = (int) para;
-    ESP_LOGI("HWTIMER", "OK");
 
     /* Retrieve the interrupt status and the counter value
        from the timer that reported the interrupt */
@@ -132,17 +131,16 @@ bool TimersPlugin::init(JsonObject &params) {
     cfg = &params;   
 
     uint16_t divider;
-    uint8_t mode;
+    uint8_t mode = 1;
     uint8_t auto_reload = 1;
 
     evt_queue = xQueueCreate(10, sizeof(timer_event_t));
 
 
     // GROUP0 TIMER0 (timer 1)
-    if (params["timer"]["t1_enabled"]) {
-        divider = params["timer"]["t1_divider"] | 800;
-        mode = params["timer"]["t1_mode"] | 0;
-        auto_reload = 1;
+    if (params["timer"][0]["enabled"]) {
+        ESP_LOGI(TAG, "enabling timer 0");
+        divider = params["timer"][0]["divider"] | 800;
         /* Select and initialize basic parameters of the timer */
         timer_config_t config;
         config.divider = divider;
@@ -164,10 +162,9 @@ bool TimersPlugin::init(JsonObject &params) {
     }
 
     // GROUP0 TIMER1 (timer 2)
-    if (params["timer"]["t2_enabled"]) {
-        divider = params["timer"]["t2_divider"] | 800;
-        mode = params["timer"]["t2_mode"] | 0;
-        auto_reload = 1;
+    if (params["timer"][1]["enabled"]) {
+        ESP_LOGI(TAG, "enabling timer 1");
+        divider = params["timer"][1]["divider"] | 800;
         /* Select and initialize basic parameters of the timer */
         timer_config_t config2;
         config2.divider = divider;
@@ -189,10 +186,9 @@ bool TimersPlugin::init(JsonObject &params) {
     }
 
     // GROUP1 TIMER0 (timer 3)
-    if (params["timer"]["t3_enabled"]) {
-        divider = params["timer"]["t3_divider"] | 800;
-        mode = params["timer"]["t3_mode"] | 0;
-        auto_reload = 1;
+    if (params["timer"][2]["enabled"]) {
+        ESP_LOGI(TAG, "enabling timer 2");
+        divider = params["timer"][2]["divider"] | 800;
         /* Select and initialize basic parameters of the timer */
         timer_config_t config3;
         config3.divider = divider;
@@ -214,10 +210,9 @@ bool TimersPlugin::init(JsonObject &params) {
     }
 
     // GROUP1 TIMER1 (timer 4)
-    if (params["timer"]["t4_enabled"]) {
-        divider = params["timer"]["t4_divider"] | 800;
-        mode = params["timer"]["t4_mode"] | 0;
-        auto_reload = 1;
+    if (params["timer"][3]["enabled"]) {
+        ESP_LOGI(TAG, "enabling timer 3");
+        divider = params["timer"][3]["divider"] | 800;
         /* Select and initialize basic parameters of the timer */
         timer_config_t config4;
         config4.divider = divider;
