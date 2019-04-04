@@ -18,7 +18,10 @@ import {
     RulesEditorPage, 
     SetupPage,
     SysVarsPage,
-    ControllerAlexaPage
+    ControllerAlexaPage,
+    ControllerAlertsPage,
+    AlertsPage,
+    AlertsEditPage,
 } from '../pages';
 
 import { deleteFile } from './espeasy';
@@ -52,7 +55,8 @@ const menus = [
     { title: 'Devices', href: 'devices', component: DevicesPage, children: [] },
     //{ title: 'Controllers', href: 'controllers', component: ControllersPage, children: [] },
     { title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [] },
-    { title: 'Alexa', href: 'controllers', component: ControllerAlexaPage, children: [] },
+    { title: 'Alexa', href: 'alexa', component: ControllerAlexaPage, children: [] },
+    { title: 'Alerts', href: 'alerts', component: AlertsPage, children: [] },
     { title: 'Config', adminOnly: true, href: 'config', component: ConfigPage, children: [
         { title: 'Hardware', href: 'config/hardware', component: ConfigHardwarePage },
         { title: 'Advanced', href: 'config/advanced', component: ConfigAdvancedPage },
@@ -72,6 +76,7 @@ const menus = [
 const routes = [
     { title: 'Edit Controller', href:'controllers/edit', component: ControllerEditPage },
     { title: 'Edit Device', href:'devices/edit', component: DevicesEditPage },
+    { title: 'Edit Alert', href:'alerts/edit', component: AlertsEditPage },
     { title: 'Save to Flash', href:'tools/diff', component: DiffPage },
     { title: 'Setup', href: 'config/setup', component: SetupPage }
 ];

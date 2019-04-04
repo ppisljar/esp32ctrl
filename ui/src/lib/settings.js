@@ -22,9 +22,9 @@ class Settings {
         this.userName = userName;
     }
 
-    get(prop = -1, defs = null) {
+    get(prop = -1, d = null) {
         if (prop === -1) return this.settings;
-        return get(this.settings, prop, defs);
+        return get(this.settings, prop, d);
     }
 
     /**
