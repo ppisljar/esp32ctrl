@@ -3,6 +3,7 @@ export * from './devices';
 export * from './config';
 export * from './config.advanced';
 export * from './config.hardware';
+export * from './config.plugins';
 export * from './reboot';
 export * from './load';
 export * from './update';

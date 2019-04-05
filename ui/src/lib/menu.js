@@ -22,6 +22,7 @@ import {
     ControllerAlertsPage,
     AlertsPage,
     AlertsEditPage,
+    ConfigPluginsPage,
 } from '../pages';
 
 import { deleteFile } from './espeasy';
@@ -63,6 +64,7 @@ const menus = [
     { title: 'Config', adminOnly: true, href: 'config', component: ConfigPage, children: [
         { title: 'Hardware', pagetitle: 'Hardware', href: 'config/hardware', component: ConfigHardwarePage },
         { title: 'Advanced', href: 'config/advanced', component: ConfigAdvancedPage },
+        { title: 'Plugins', href: 'config/plugins', component: ConfigPluginsPage },
         { title: 'Save', href: 'config/save', action: saveConfig },
         { title: 'Load', href: 'config/load', component: LoadPage },
         { title: 'Reboot', href: 'config/reboot', component: RebootPage },

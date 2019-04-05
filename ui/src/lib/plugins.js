@@ -3,9 +3,6 @@ import espeasy from './espeasy';
 import { loader } from './loader';
 import { menu } from './menu';
 
-const PLUGINS = [
-    '/dash.js.gz'
-];
 
 const dynamicallyLoadScript = (url) => {
     return new Promise(resolve => {
@@ -30,7 +27,7 @@ const getPluginAPI = () => {
 window.getPluginAPI = getPluginAPI;
 
 export const loadPlugins = async () => {
-    return Promise.all(PLUGINS.map(async plugin => {
-        return dynamicallyLoadScript(plugin);
+    return Promise.all(settings.get('plugins_ui', []).filter(p => p.enabled).map(async plugin => {
+        return dynamicallyLoadScript(plugin.url);
     }));
 }
