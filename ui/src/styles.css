@@ -555,3 +555,49 @@ tooltip {
 .tooltip:hover tooltip {
     visibility: visible;
 }
+
+
+
+.iconpicker-preview {
+    display: inline-block;
+}
+
+.modal-card-body {
+    height: 300px;
+    overflow-y: scroll;
+}
+
+.tabs {
+    -webkit-overflow-scrolling: touch;
+    align-items: stretch;
+    display: flex;
+    font-size: 1rem;
+    justify-content: space-between;
+    overflow: hidden;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.tabs ul {
+    align-items: center;
+    border-bottom-color: #dbdbdb;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    display: flex;
+    flex-grow: 1;
+    flex-shrink: 0;
+    justify-content: flex-start;
+    margin: 0;
+    padding: 0;
+}
+
+.tabs li {
+    display: block;
+}
+
+.iconpicker-modal .iconpicker-sets {
+    flex-shrink: 0;
+    background-color: #f5f5f5;
+    font-size: .8em;
+    margin: 0;
+}

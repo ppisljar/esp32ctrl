@@ -75,7 +75,7 @@ export class Form extends Component {
         switch (config.type) {
             case 'string':
                 return (
-                    <input id={id} type="text" value={value} onChange={this.onChange(id, varName, config)} />
+                    <input id={id} type="text" value={value} onChange={this.onChange(id, varName, config)} {...config.extra}/>
                 );
             case 'number':
                 return (
