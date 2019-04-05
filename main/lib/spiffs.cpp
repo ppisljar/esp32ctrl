@@ -35,32 +35,47 @@ esp_err_t spiffs_init(void)
     return ESP_OK;
 }
 
-esp_err_t sdcard_init(void) {
-    ESP_LOGI(TAG, "Initializing SD card using SDMMC peripheral");
-    sdmmc_host_t host = SDMMC_HOST_DEFAULT();
+#define PIN_NUM_MISO 2
+#define PIN_NUM_MOSI 15
+#define PIN_NUM_CLK  14
+#define PIN_NUM_CS   13
 
-    // This initializes the slot without card detect (CD) and write protect (WP) signals.
-    // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
-    sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
+esp_err_t sdcard_init(JsonObject& spiConfig) {
+    // if (!spi) {
+    //     ESP_LOGI(TAG, "Initializing SD card using SDMMC peripheral");
+    //     sdmmc_host_t host = SDMMC_HOST_DEFAULT();
 
-    // To use 1-line SD mode, uncomment the following line:
-    // slot_config.width = 1;
+    //     // This initializes the slot without card detect (CD) and write protect (WP) signals.
+    //     // Modify slot_config.gpio_cd and slot_config.gpio_wp if your board has these signals.
+    //     sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
 
-    // GPIOs 15, 2, 4, 12, 13 should have external 10k pull-ups.
-    // Internal pull-ups are not sufficient. However, enabling internal pull-ups
-    // does make a difference some boards, so we do that here.
-    gpio_set_pull_mode((gpio_num_t)15, GPIO_PULLUP_ONLY);   // CMD, needed in 4- and 1- line modes
-    gpio_set_pull_mode((gpio_num_t)2, GPIO_PULLUP_ONLY);    // D0, needed in 4- and 1-line modes
-    gpio_set_pull_mode((gpio_num_t)4, GPIO_PULLUP_ONLY);    // D1, needed in 4-line mode only
-    gpio_set_pull_mode((gpio_num_t)12, GPIO_PULLUP_ONLY);   // D2, needed in 4-line mode only
-    gpio_set_pull_mode((gpio_num_t)13, GPIO_PULLUP_ONLY);   // D3, needed in 4- and 1-line modes
+    //     // To use 1-line SD mode, uncomment the following line:
+    //     // slot_config.width = 1;
 
+    //     // GPIOs 15, 2, 4, 12, 13 should have external 10k pull-ups.
+    //     // Internal pull-ups are not sufficient. However, enabling internal pull-ups
+    //     // does make a difference some boards, so we do that here.
+    //     gpio_set_pull_mode((gpio_num_t)15, GPIO_PULLUP_ONLY);   // CMD, needed in 4- and 1- line modes
+    //     gpio_set_pull_mode((gpio_num_t)2, GPIO_PULLUP_ONLY);    // D0, needed in 4- and 1-line modes
+    //     gpio_set_pull_mode((gpio_num_t)4, GPIO_PULLUP_ONLY);    // D1, needed in 4-line mode only
+    //     gpio_set_pull_mode((gpio_num_t)12, GPIO_PULLUP_ONLY);   // D2, needed in 4-line mode only
+    //     gpio_set_pull_mode((gpio_num_t)13, GPIO_PULLUP_ONLY);   // D3, needed in 4- and 1-line modes
+    // } else {
+        ESP_LOGI(TAG, "Initializing SD card using SPI peripheral");
+
+        sdmmc_host_t host = SDSPI_HOST_DEFAULT();
+        sdspi_slot_config_t slot_config = SDSPI_SLOT_CONFIG_DEFAULT();
+        slot_config.gpio_miso = (gpio_num_t)spiConfig["miso"];
+        slot_config.gpio_mosi = (gpio_num_t)spiConfig["mosi"];
+        slot_config.gpio_sck  = (gpio_num_t)spiConfig["sclk"];
+        slot_config.gpio_cs   = (gpio_num_t)spiConfig["cs"];
+    // }
     // Options for mounting the filesystem.
     // If format_if_mount_failed is set to true, SD card will be partitioned and
     // formatted in case when mounting fails.
     esp_vfs_fat_sdmmc_mount_config_t mount_config = {
         .format_if_mount_failed = true,
-        .max_files = 50,
+        .max_files = 5,
         .allocation_unit_size = 16 * 1024
     };
 

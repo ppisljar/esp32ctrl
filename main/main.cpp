@@ -121,9 +121,12 @@ extern "C" void app_main()
     ledPin = cfgObject["hardware"]["led"]["gpio"] | 255;
     ledInverted = cfgObject["hardware"]["led"]["inverted"] | false;
 
-    if (cfgObject["hardware"]["sdcard"]["enabled"]) {
-        if (sdcard_init() == ESP_OK) {
-            global_state.sdcard_connected = true;
+    if (cfgObject["hardware"]["spi"]["enabled"]) {
+        JsonObject &spi_config = cfgObject["hardware"]["spi"];
+        if (cfgObject["hardware"]["sdcard"]["enabled"]) {
+            if (sdcard_init(spi_config) == ESP_OK) {
+                global_state.sdcard_connected = true;
+            }
         }
     }
 

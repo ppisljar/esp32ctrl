@@ -41,12 +41,6 @@ const formConfig = {
                 pin: { name: 'GPIO <-- Switch', type: 'select', options: pins },
             }
         },
-        sdcard: {
-            name: 'SD Card Settings',
-            configs: {
-                enabled: { name: 'Enabled', type: 'checkbox' },
-            }
-        },
         i2c: {
             name: 'I2C Settings',
             configs: {
@@ -63,7 +57,14 @@ const formConfig = {
                 sclk: { name: 'GPIO - SCLK', type: 'select', options: pins },
                 mosi: { name: 'GPIO - MOSI', type: 'select', options: pins },
                 miso: { name: 'GPIO - MISO', type: 'select', options: pins },
-                ss: { name: 'GPIO - SS', type: 'select', options: pins },
+                cs: { name: 'GPIO - CS', type: 'select', options: pins },
+            }
+        },
+        sdcard: {
+            name: 'SD Card Settings',
+            help: 'Requires SPI enabled',
+            configs: {
+                enabled: { name: 'Enabled', type: 'checkbox' },
             }
         },
         timer: {
@@ -119,7 +120,25 @@ export class ConfigHardwarePage extends Component {
         let config = settings.get('hardware');
         if (!config) {
             config = {}
-            settings.set('hardware', {});
+            settings.set('hardware', {
+                i2c: {
+                    enabled: false,
+                },
+                timer: [
+                    { enabled: false, divider: 800 },
+                    { enabled: false, divider: 800 },
+                    { enabled: false, divider: 800 },
+                    { enabled: false, divider: 800 },
+                ],
+                spi: {
+                    enabled: false,
+                    sclk: 14,
+                    mosi: 15,
+                    miso: 2,
+                    cs: 13,
+                },
+                sdcard: { enabled: false }
+            });
         }
         formConfig.onSave = (values) => {
             settings.set('hardware', values);

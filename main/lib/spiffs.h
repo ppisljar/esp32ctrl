@@ -11,7 +11,7 @@
 
 /* Function to initialize SPIFFS */
 esp_err_t spiffs_init();
-esp_err_t sdcard_init();
+esp_err_t sdcard_init(bool spi);
 char* read_file(char * filename, long *len);
 char* read_file(char * filename);
 esp_err_t write_file(char *filepath, char * data, uint16_t length);
