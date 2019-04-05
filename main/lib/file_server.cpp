@@ -8,7 +8,7 @@
 */
 
 #include "file_server.h"
-
+#include "global_state.h"
 #include "config.h"
 #include "controller.h"
 #include "../plugins/plugin.h"
@@ -268,7 +268,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
     }
 
     /* Concatenate the requested directory path */
-    strcat(fullpath, "/"/*req->uri*/);
+    strcat(fullpath, req->uri);
     dir = opendir(fullpath);
     const size_t entrypath_offset = strlen(fullpath);
 
@@ -282,6 +282,11 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
     httpd_resp_sendstr_chunk(req, "[");
 
     bool first = true;
+    if (strcmp(req->uri, "/") == 0 && global_state.sdcard_connected) {
+        first = false;
+        httpd_resp_sendstr_chunk(req, "{ \"file\":\"sdcard/\", \"name\": \"sdcard/\", \"type\": \"directory\", \"size\": 0 }" );
+    }
+
     /* Iterate over all files / folders and fetch their names and sizes */
     while ((entry = readdir(dir)) != NULL) {
         entrytype = (entry->d_type == DT_DIR ? "directory" : "file");

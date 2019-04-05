@@ -65,10 +65,10 @@ esp_err_t sdcard_init(JsonObject& spiConfig) {
 
         sdmmc_host_t host = SDSPI_HOST_DEFAULT();
         sdspi_slot_config_t slot_config = SDSPI_SLOT_CONFIG_DEFAULT();
-        slot_config.gpio_miso = (gpio_num_t)spiConfig["miso"];
-        slot_config.gpio_mosi = (gpio_num_t)spiConfig["mosi"];
-        slot_config.gpio_sck  = (gpio_num_t)spiConfig["sclk"];
-        slot_config.gpio_cs   = (gpio_num_t)spiConfig["cs"];
+        slot_config.gpio_miso = (gpio_num_t)spiConfig["miso"].as<uint8_t>();
+        slot_config.gpio_mosi = (gpio_num_t)spiConfig["mosi"].as<uint8_t>();
+        slot_config.gpio_sck  = (gpio_num_t)spiConfig["sclk"].as<uint8_t>();
+        slot_config.gpio_cs   = (gpio_num_t)spiConfig["cs"].as<uint8_t>();
     // }
     // Options for mounting the filesystem.
     // If format_if_mount_failed is set to true, SD card will be partitioned and

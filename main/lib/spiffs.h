@@ -8,10 +8,11 @@
 #include "esp_spiffs.h"
 #include "esp_err.h"
 #include "esp_log.h"
+#include "ArduinoJson.h"
 
 /* Function to initialize SPIFFS */
 esp_err_t spiffs_init();
-esp_err_t sdcard_init(bool spi);
+esp_err_t sdcard_init(JsonObject& spi);
 char* read_file(char * filename, long *len);
 char* read_file(char * filename);
 esp_err_t write_file(char *filepath, char * data, uint16_t length);
