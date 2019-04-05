@@ -43,7 +43,10 @@ class Menus {
         this.addRoute = (route) => {
             this.routes.push(route);
             if (route.children) {
-                route.children.forEach(child => this.routes.push(child));
+                route.children.forEach(child => {
+                    child.parent = route;
+                    this.routes.push(child);
+                });
             }
         }
     }
@@ -58,7 +61,7 @@ const menus = [
     { title: 'Alexa', href: 'alexa', component: ControllerAlexaPage, children: [] },
     { title: 'Alerts', href: 'alerts', component: AlertsPage, children: [] },
     { title: 'Config', adminOnly: true, href: 'config', component: ConfigPage, children: [
-        { title: 'Hardware', href: 'config/hardware', component: ConfigHardwarePage },
+        { title: 'Hardware', pagetitle: 'Hardware', href: 'config/hardware', component: ConfigHardwarePage },
         { title: 'Advanced', href: 'config/advanced', component: ConfigAdvancedPage },
         { title: 'Save', href: 'config/save', action: saveConfig },
         { title: 'Load', href: 'config/load', component: LoadPage },

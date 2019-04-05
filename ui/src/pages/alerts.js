@@ -30,7 +30,7 @@ export class AlertsPage extends Component {
         }
 
         this.addAlert = () => {
-            const newAlert = { id: firstFreeKey(this.state.config.alerts), priority: 255, name: 'new alert', enabled: false, params: {}, triggers: []};
+            const newAlert = { id: firstFreeKey(this.state.config.alerts), severity: 10, name: 'new alert', enabled: false, triggers: []};
             this.state.config.alerts.push(newAlert);
             window.location.hash = `#alerts/edit/${this.state.config.alerts.length - 1}`;
         }

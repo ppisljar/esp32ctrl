@@ -48,7 +48,6 @@ const getFormConfig = (type, config) => {
                         acc[`value${i}`] = [
                             { name: `Name ${i+1}`, var: `state.values[${i}].name`, type: 'string' }, 
                             { name: `Formula ${i+1}`, var: `state.values[${i}].formula`, type: 'string' },
-                            { name: `Decimals ${i+1}`, var: `state.values[${i}].decimals`, type: 'number' }
                         ];
                         return acc;
                     }, {})

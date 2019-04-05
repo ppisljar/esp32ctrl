@@ -18,18 +18,6 @@ const pinState = [
     { name: 'Input', value: 3 },
 ];
 
-export const getTasks = () => {
-    return settings.get('plugins').filter(p => p).map((p, i) => ({ value: p.id, name: p.name }));
-};
-
-export const getTaskValues = (config) => {
-    const selectedTask = config.params.device;
-    const task = settings.get('plugins').find(p => p.id === selectedTask);
-    if (!task || !task.state || !task.state.values) return [];
-    return task.state.values.filter(val => val).map((val, i) => ({ value: i, name: val.name }));
-};
-
-
 class IO_PINS {
     constructor() {
         this.digitalPins = [{ name: '-- select --', value: 255, capabilities: ['digital_in', 'analog_in', 'digital_out', 'analog_out'], configs: {}}];

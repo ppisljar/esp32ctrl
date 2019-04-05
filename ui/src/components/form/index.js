@@ -173,8 +173,8 @@ export class Form extends Component {
                         return (<CustomComponent conf={conf} values={values} />);
                     }
                     return [
-                        (<label for={varId}>{conf.name}</label>),
-                        this.renderConfig(varId, conf, val, varName)
+                        (<label for={varId}>{conf.name} {conf.help ? (<span class='fa fa-info-circle'></span>) : ''}</label>),
+                        this.renderConfig(varId, conf, val, varName),
                     ];
                 })}
             </div>
@@ -186,7 +186,7 @@ export class Form extends Component {
         const keys = getKeys(group.configs);
         return (
             <fieldset name={id}>
-                <label>{group.name}</label>
+                <label>{group.name} {group.help ? (<span class='tooltip fa fa-info-circle'><tooltip>{group.help}</tooltip></span>) : ''}</label>
                 {keys.map(key => {
                     const conf = group.configs[key];
                     if (conf.adminOnly && settings.userName !== 'admin') return (null);

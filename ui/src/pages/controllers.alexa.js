@@ -43,6 +43,7 @@ const getFormConfig = (config, form) => {
             var: `triggers[${i}].type`,
         }, {
             type: 'button',
+            value: 'remove',
             click: () => {
                 config.triggers.splice(i, 1);
                 form.forceUpdate();

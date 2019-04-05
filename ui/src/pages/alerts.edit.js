@@ -1,13 +1,14 @@
 import { h, Component } from 'preact';
 import { Form } from '../components/form';
 import { settings } from '../lib/settings';
-import { getTasks, getTaskValues } from '../lib/pins';
+import { getTasks, getTaskValues } from '../lib/utils';
 
 const baseFields = { 
     enabled: { name: 'Enabled', type: 'checkbox', var: 'enabled' },
     name: { name: 'Name', type: 'string', var: 'name' },
     description: { name: 'Description', type: 'string', var: 'description' },
     icon: { name: 'Icon', type: 'string', var: 'icon' },
+    icon: { name: 'Severity', type: 'number', min: 1, max: 10, var: 'severity' },
 };
 
 const compareOptions = [
@@ -15,15 +16,15 @@ const compareOptions = [
     { name: '>', value: 1 },
     { name: '<', value: 2 },
     { name: '<>', value: 3 },
-]
+];
 
 const getFormConfig = (config, form) => {
     const triggers = {};
     config.triggers.forEach((trigger, i) => {
         triggers[`${i}_check`] = [
-            { name: 'Check Device', type: 'select', value: trigger.device_id, options: getTasks, var: `triggers[${i}].device_id` },
-            //{ name: 'Check Value', type: 'select', options: getTaskValues, var: `alerts[${i}].value_id` },
-            { type: 'button', click: () => {
+            { name: 'Check Device', type: 'select', value: trigger.device, options: getTasks, var: `triggers[${i}].device` },
+            { name: 'Check Value', type: 'select', value: trigger.value_id, options: getTaskValues(`triggers[${i}].device`), var: `alerts[${i}].value_id` },
+            { type: 'button', value: 'remove', click: () => {
                 config.triggers.splice(i, 1);
                 form.forceUpdate();
             }},
@@ -31,6 +32,7 @@ const getFormConfig = (config, form) => {
         triggers[`${i}_compare`] = [
             { name: 'Comparison', type: 'select', value: trigger.compare, options: compareOptions, var: `triggers[${i}].compare` },
             { name: 'Value', type: 'string', value: trigger.value, var: `triggers[${i}].value` },
+            {},
         ];
     });
 
@@ -47,7 +49,7 @@ const getFormConfig = (config, form) => {
                 name: 'Conditions',
                 configs: {
                     ...triggers,
-                    add: { type: 'button', click: () => {
+                    add: { type: 'button', value: 'add condition', click: () => {
                         form.addTrigger();
                     }},
                 }

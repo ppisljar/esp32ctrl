@@ -261,7 +261,8 @@ export const getNodes = (devices, vars) => {
                 },
             }, {
                 name: 'value',
-                type: 'text'
+                type: 'text',
+                help: 'units: d (day), h (hour), m (minute), s (second), u (milisecond)\nFor example: 4s will wait for 4 seconds.',
             }],
             toString: function() {
                 return `hw_timer${this.config[0].value} = ${this.config[1].value}`;

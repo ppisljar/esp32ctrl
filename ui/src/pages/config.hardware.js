@@ -22,7 +22,9 @@ const freq = [
 const timerMode = [
     { name: 'count up', value: 0 },
     { name: 'count down', value: 1 },
-]
+];
+
+const dividerHelp = 'Divider for 80MHz clock. This will affect minimum and maximum value you can set your timer to.';
 
 const formConfig = {
     groups: {
@@ -60,24 +62,25 @@ const formConfig = {
         },
         timer: {
             name: 'Hardware Timer config',
+            help: dividerHelp,
             configs: {
                 t1: [
-                    { name: 'T1', type: 'checkbox', var: 'timer[0].enabled' },
+                    { name: 'T0', type: 'checkbox', var: 'timer[0].enabled' },
                     { name: 'divider', type: 'number', min: 2, max: 65535, var: 'timer[0].divider' },
                     { name: 'mode', type: 'select', options: timerMode, var: 'timer[0].mode' }
                 ], 
                 t2: [
-                    { name: 'T2', type: 'checkbox', var: 'timer[1].enabled' },
+                    { name: 'T1', type: 'checkbox', var: 'timer[1].enabled' },
                     { name: 'divider', type: 'number', min: 2, max: 65535, var: 'timer[1].divider' },
                     { name: 'mode', type: 'select', options: timerMode, var: 'timer[1].mode' }
                 ],
                 t3: [
-                    { name: 'T3', type: 'checkbox', var: 'timer[2].enabled' },
+                    { name: 'T2', type: 'checkbox', var: 'timer[2].enabled' },
                     { name: 'divider', type: 'number', min: 2, max: 65535, var: 'timer[2].divider' },
                     { name: 'mode', type: 'select', options: timerMode, var: 'timer[2].mode' }
                 ],
                 t4: [
-                    { name: 'T4', type: 'checkbox', var: 'timer[3].enabled' },
+                    { name: 'T3', type: 'checkbox', var: 'timer[3].enabled' },
                     { name: 'divider', type: 'number', min: 2, max: 65535, var: 'timer[3].divider' },
                     { name: 'mode', type: 'select', options: timerMode, var: 'timer[3].mode' }
                 ]

@@ -394,6 +394,8 @@ class NodeUI extends Node {
 const getCfgUI = (cfg, chart) => {
     const template = document.createElement('template');
 
+    const help = cfg.help ? `<span class='tooltip fa fa-info-circle'><tooltip>${cfg.help}</tooltip></span>` : '';
+
     const getSelectOptions = opt => {
         const val = opt.value != null ? opt.value : opt;
         const name = opt.name != null ? opt.name : opt;
@@ -404,14 +406,14 @@ const getCfgUI = (cfg, chart) => {
 
     switch (cfg.type) {
         case 'text':
-            template.innerHTML = `<div class="pure-control-group"><label>${cfg.name}</label><input type='text' name='${cfg.name}' value='${cfg.value}' /></div>`;
+            template.innerHTML = `<div class="pure-control-group"><label>${cfg.name}</label><input type='text' name='${cfg.name}' value='${cfg.value}' />${help}</div>`;
             break;
         case 'number':
-            template.innerHTML = `<div class="pure-control-group"><label>${cfg.name}</label><input type='number' name='${cfg.name}' value='${cfg.value}' /></div>`;
+            template.innerHTML = `<div class="pure-control-group"><label>${cfg.name}</label><input type='number' name='${cfg.name}' value='${cfg.value}' />${help}</div>`;
             break;
         case 'select':
             const values = typeof cfg.values == 'function' ? cfg.values(chart) : cfg.values;
-            template.innerHTML = `<div class="pure-control-group"><label>${cfg.name}</label><select name='${cfg.name}'>${values.map(val => (getSelectOptions(val)))}</select></div>`;
+            template.innerHTML = `<div class="pure-control-group"><label>${cfg.name}</label><select name='${cfg.name}'>${values.map(val => (getSelectOptions(val)))}</select>${help}</div>`;
             break;
         case 'textselect':
             template.innerHTML = `<div class="pure-control-group"><label>${cfg.name}</label><div style="position:relative;display:inline-block;height:30px;">
