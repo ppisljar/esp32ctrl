@@ -41,6 +41,12 @@ const formConfig = {
                 pin: { name: 'GPIO <-- Switch', type: 'select', options: pins },
             }
         },
+        sdcard: {
+            name: 'SD Card Settings',
+            configs: {
+                enabled: { name: 'Enabled', type: 'checkbox' },
+            }
+        },
         i2c: {
             name: 'I2C Settings',
             configs: {

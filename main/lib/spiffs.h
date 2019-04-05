@@ -1,15 +1,20 @@
 #ifndef ESP_LIB_SPIFFS_H
 #define ESP_LIB_SPIFFS_H
 
+#include "esp_vfs_fat.h"
+#include "driver/sdmmc_host.h"
+#include "driver/sdspi_host.h"
+#include "sdmmc_cmd.h"
 #include "esp_spiffs.h"
 #include "esp_err.h"
 #include "esp_log.h"
 
 /* Function to initialize SPIFFS */
 esp_err_t spiffs_init();
-char* spiffs_read_file(char * filename, long *len);
-char* spiffs_read_file(char * filename);
-esp_err_t spiffs_write_file(char *filepath, char * data, uint16_t length);
+esp_err_t sdcard_init();
+char* read_file(char * filename, long *len);
+char* read_file(char * filename);
+esp_err_t write_file(char *filepath, char * data, uint16_t length);
 
 // static esp_err_t spiffs_delete_file() {
 

@@ -14,6 +14,7 @@ static const char *TAG = "MAIN";
 #include "lib/rule_engine.h"
 #include "lib/logging.h"
 #include "lib/io.h"
+#include "lib/global_state.h"
 #include "plugins/plugin.h"
 #include "plugins/c001_i2c.h"
 #include "plugins/c002_ntp.h"
@@ -93,6 +94,8 @@ BlueTooth* bluetooth;
 uint8_t ledPin;
 bool ledInverted;
 
+struct global_state_t global_state;
+
 void btfunc(uint16_t packet_id, void* devices, uint16_t len) {
     ESP_LOGI(TAG, "bluetooth done");
 }
@@ -117,6 +120,12 @@ extern "C" void app_main()
     uint8_t resetPin = cfgObject["hardware"]["reset"]["pin"] | 255;
     ledPin = cfgObject["hardware"]["led"]["gpio"] | 255;
     ledInverted = cfgObject["hardware"]["led"]["inverted"] | false;
+
+    if (cfgObject["hardware"]["sdcard"]["enabled"]) {
+        if (sdcard_init() == ESP_OK) {
+            global_state.sdcard_connected = true;
+        }
+    }
 
     JsonObject &wifi_config = cfgObject["wifi"];
     wifi_plugin = new WiFiPlugin();
@@ -181,7 +190,7 @@ extern "C" void app_main()
     }
 
     long rule_length;
-    uint8_t *rules = (uint8_t*)spiffs_read_file("/spiffs/rules.dat", &rule_length);
+    uint8_t *rules = (uint8_t*)read_file("/spiffs/rules.dat", &rule_length);
     if (rules != NULL && rule_length > 0) {
         ESP_LOGI(TAG, "parsing rule file of size: %ld", rule_length);
         parse_rules(rules, rule_length);

@@ -262,9 +262,10 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
     DIR *dir = NULL;
     struct dirent *entry;
     struct stat entry_stat;
-
-    /* Retrieve the base path of file storage to construct the full path */
-    strcpy(fullpath, ((struct file_server_data *)req->user_ctx)->base_path);
+    if (!strncmp(req->uri, "/sdcard", 7) == 0) {
+        /* Retrieve the base path of file storage to construct the full path */
+        strcpy(fullpath, ((struct file_server_data *)req->user_ctx)->base_path);
+    }
 
     /* Concatenate the requested directory path */
     strcat(fullpath, "/"/*req->uri*/);
@@ -344,8 +345,10 @@ static esp_err_t http_resp_file(httpd_req_t *req, char* filepath)
     struct stat file_stat;
 
     if (strlen(filepath) == 0) {
-        /* Retrieve the base path of file storage to construct the full path */
-        strcpy(filepath, ((struct file_server_data *)req->user_ctx)->base_path);
+        if (!strncmp(req->uri, "/sdcard", 7) == 0) {
+            /* Retrieve the base path of file storage to construct the full path */
+            strcpy(filepath, ((struct file_server_data *)req->user_ctx)->base_path);
+        }
 
         /* Concatenate the requested file path */
         strcat(filepath, req->uri);
@@ -1012,7 +1015,7 @@ static esp_err_t event_handler(httpd_req_t *req)
     }
     ESP_LOGD(TAG, "received event: '%s'", eventName);
 
-    char* confData = spiffs_read_file("/spiffs/events.json"); // todo: possible memory leak in spiffs func
+    char* confData = read_file("/spiffs/events.json"); // todo: possible memory leak in spiffs func
     if (confData == NULL) {
         httpd_resp_set_status(req, "200 OK");
         httpd_resp_sendstr(req, "EVENT NOT FOUND"); // todo: json response

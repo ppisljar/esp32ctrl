@@ -21,11 +21,11 @@ class Config
         }
         void loadConfig() {
              ESP_LOGI("CONF", "loading config object");
-            char* confData = spiffs_read_file((char*)config_filename);
+            char* confData = read_file((char*)config_filename);
             if (confData == NULL) {
                 ESP_LOGI("CONF", "warning: config file not found, creating new!");
-                spiffs_write_file((char*)config_filename, (char*)config_default_json, strlen(config_default_json));
-                confData = spiffs_read_file((char*)config_filename);
+                write_file((char*)config_filename, (char*)config_default_json, strlen(config_default_json));
+                confData = read_file((char*)config_filename);
             }
             ESP_LOGI("CONF", "Parsing JSON object");
             JsonObject& ref = jsonBuffer.parseObject(confData);
