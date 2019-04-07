@@ -17,6 +17,12 @@
 
 extern IO io;
 
+// connect to SSID 1
+// fails ? retry
+// fails ? try SSID 2
+// fails ? retry
+// fails ? were we connected to 2 ? if not STA
+
 
 struct wifi_status_struct {
     bool wifi_connected;
@@ -27,9 +33,12 @@ struct wifi_status_struct {
 class WiFiPlugin: public Plugin {
     
     public:
-        wifi_config_t wifi_config;
+        wifi_config_t wifi_config = {};
         struct wifi_status_struct status;
         bool secondarySSID = false;
+
+        uint8_t failed_1 = 0;
+        uint8_t failed_2 = 0;
         
         DEFINE_PLUGIN(WiFiPlugin);
 };

@@ -7,7 +7,7 @@ module.exports = env => ({
     mode: 'development', //env && env.production ? 'production' : 'development',
     entry: {
         app: './src/app.js',
-        dash: './src/plugins/dashboard/index.js',
+        iconpicker: './src/plugins/iconpicker/index.js',
     },
     output: {
         path: path.resolve(__dirname, 'build'),

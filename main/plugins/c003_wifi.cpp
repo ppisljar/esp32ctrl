@@ -1,4 +1,5 @@
 #include "c003_wifi.h"
+#include "../lib/global_state.h"
 
 static const char *TAG = "WiFiPlugin";
 
@@ -7,6 +8,20 @@ extern bool ledInverted;
 
 PLUGIN_CONFIG(WiFiPlugin, mode, ssid, pass, ssid2, pass2, static_ip)
 PLUGIN_STATS(WiFiPlugin, status.wifi_connected, status.wifi_connected)
+
+static esp_err_t ap_mode(WiFiPlugin &p) {
+    esp_wifi_stop();
+    p.wifi_config = {};
+    strcpy((char*)p.wifi_config.ap.ssid, "ESP32Ctrl");
+    strcpy((char*)p.wifi_config.ap.password, "");
+    p.wifi_config.ap.ssid_len = strlen((char*)p.wifi_config.ap.ssid);
+    p.wifi_config.ap.max_connection = 5;
+    p.wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &p.wifi_config));
+    esp_wifi_start();
+    return ESP_OK;
+}
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
 {
@@ -22,25 +37,45 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         case SYSTEM_EVENT_STA_GOT_IP:
             if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 0 : 1);
             p.status.wifi_connected = true;
+            global_state.wifi_connected = true;
             p.status.local_ip = ip4_addr_get_u32(&event->event_info.got_ip.ip_info.ip);
             esp_read_mac(p.status.mac, (esp_mac_type_t)0);
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_GOT_IP");
-            ESP_LOGI(TAG, "Got IP: '%s'",
-                    ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
+            ESP_LOGI(TAG, "Got IP: '%s'", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
             break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
             if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 1 : 0);
             p.status.wifi_connected = false;
+            global_state.wifi_connected = false;
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_DISCONNECTED");
 			ESP_LOGI(TAG, "reason: %d\n",event->event_info.disconnected.reason);
 
-            // if (mode == 1) { 
-            //     p.secondarySSID = (strlen(params["ssid2"]) > 0 && !p.secondarySSID);
-            //     char *ssid = p.secondarySSID ? (char*)params["ssid2"].as<char*>() : (char*)params["ssid"].as<char*>();
-            //     char *pass = p.secondarySSID ? (char*)params["pass2"].as<char*>() : (char*)params["pass"].as<char*>();
-            //     strcpy((char*)p.wifi_config.sta.ssid, ssid);
-            //     strcpy((char*)p.wifi_config.sta.password, pass);
-            // }
+            if (mode == 1) { 
+                bool ssid1 = true; //strcmp((char*)wifi_config.sta.ssid, (char*)params["ssid1"].as<char*>()) == 0;
+                if (ssid1) {
+                    p.failed_1++;
+                    if (p.failed_1 > 1) {
+                        if (p.secondarySSID) {
+                            strcpy((char*)p.wifi_config.sta.ssid,  (char*)params["ssid2"].as<char*>());
+                            strcpy((char*)p.wifi_config.sta.password, (char*)params["pass2"].as<char*>());
+                        } else {
+                            params["mode"] = 0;
+                            return ap_mode(p);
+                        }
+                    }
+                } else {
+                    p.failed_2++;
+                    if (p.failed_2 > 1) {
+                        if (p.failed_1 == 0) {
+                            strcpy((char*)p.wifi_config.sta.ssid,  (char*)params["ssid2"].as<char*>());
+                            strcpy((char*)p.wifi_config.sta.password, (char*)params["pass2"].as<char*>());
+                        }  else {
+                            params["mode"] = 0;
+                            return ap_mode(p);
+                        }
+                    }
+                }
+            }
             ESP_ERROR_CHECK(esp_wifi_connect());
             break;
         default:
@@ -52,12 +87,12 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 bool WiFiPlugin::init(JsonObject &params) {
     cfg = &params;   
 
-    uint8_t mode = params["mode"] | 1;
+    uint8_t mode = params["mode"] | 1; 
     char *ssid = (char*)params["ssid"].as<char*>();
     char *pass = (char*)params["pass"].as<char*>();
 
     if (ssid == nullptr || pass == nullptr) mode = 0;
-    else ESP_LOGI(TAG, "starting wifi with %s:%s", ssid, pass);
+    else ESP_LOGI(TAG, "starting wifi in STA mode with %s:%s", ssid, pass);
 
     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, this));
 
@@ -79,11 +114,13 @@ bool WiFiPlugin::init(JsonObject &params) {
         ret = tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
     }
 
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+    wifi_init_config_t cfgw = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfgw));
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 
     if (mode == 0) { // AP
+        ssid = (char*)params["ap_ssid"].as<char*>();
+        pass = (char*)params["ap_pass"].as<char*>();
         strcpy((char*)wifi_config.ap.ssid, ssid == nullptr ? "ESP32Ctrl" : ssid);
         strcpy((char*)wifi_config.ap.password, pass == nullptr ? "" : pass);
         wifi_config.ap.ssid_len = strlen((char*)wifi_config.ap.ssid);
@@ -93,12 +130,12 @@ bool WiFiPlugin::init(JsonObject &params) {
         if (strlen((char*)wifi_config.ap.password) == 0) {
             wifi_config.ap.authmode = WIFI_AUTH_OPEN;
         }
-
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
         ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
     } else { // STA
         strcpy((char*)wifi_config.sta.ssid, ssid);
         strcpy((char*)wifi_config.sta.password, pass);
+        secondarySSID = params["ssid2"].as<char*>() != nullptr && strlen(params["ssid2"].as<char*>()) > 0;
 
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));

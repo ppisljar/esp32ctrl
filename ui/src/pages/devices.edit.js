@@ -8,7 +8,7 @@ const baseFields = {
     enabled: { name: 'Enabled', type: 'checkbox', var: 'enabled' },
     name: { name: 'Name', type: 'string', var: 'name' },
     idx: { name: 'Idx', type: 'string', var: 'idx' },
-    icon: { name: 'Icon', type: 'string', var: 'icon', extra: { 'data-action': 'iconPicker' }},
+    icon: { name: 'Icon', type: 'string', var: 'icon', extra: { 'class': 'iconpicker' }},
     lock: { name: 'Lock', type: 'checkbox', var: 'lock', adminOnly: true },
 };
 
@@ -109,9 +109,5 @@ export class DevicesEditPage extends Component {
         return (
             <Form config={formConfig} selected={this.config} />
         );
-    }
-
-    componentDidMount() {
-        new window.bulmaIconpicker('[data-action="iconPicker"]');
     }
 }

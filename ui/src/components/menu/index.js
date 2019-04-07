@@ -2,32 +2,35 @@ import { h, Component } from 'preact';
 import { settings } from '../../lib/settings';
 
 export class Menu extends Component {
+    renderMenuChildren(menu) {
+        return [...menu.children.map(child => {
+            if (child.action) {
+                return (
+                <li>
+                    <a href={`#${child.href}`} onClick={child.action}>{child.title}</a>
+                </li>  
+                )
+            }
+            return (<li>
+                <a href={`#${child.href}`}>{child.title}</a>
+            </li>);
+        })];
+    }
     renderMenuItem(menu) {
         if (menu.adminOnly && settings.userName !== 'admin') return (null);
         if (menu.action) {
             return (
-            <li class="pure-menu-item">
-                <a href={`#${menu.href}`} onClick={menu.action} class="pure-menu-link">{menu.title}</a>
+            <li>
+                <a href={`#${menu.href}`} onClick={menu.action}>{menu.title}</a>
             </li>  
             )
         }
         if (menu.href === this.props.selected.href) {
             return [
-                (<li class="pure-menu-item pure-menu-item-selected">
-                    <a href={`#${menu.href}`} class="pure-menu-link">{menu.title}</a>
+                (<li>
+                    <a href={`#${menu.href}`} class="is-active">{menu.title}</a>
+                    <ul>{this.renderMenuChildren(menu)}</ul>
                 </li>),
-                ...menu.children.map(child => {
-                    if (child.action) {
-                        return (
-                        <li class="pure-menu-item submenu">
-                            <a href={`#${child.href}`} onClick={child.action} class="pure-menu-link">{child.title}</a>
-                        </li>  
-                        )
-                    }
-                    return (<li class="pure-menu-item submenu">
-                        <a href={`#${child.href}`} class="pure-menu-link">{child.title}</a>
-                    </li>);
-                })
             ]
         }
         return (<li class="pure-menu-item">
@@ -40,9 +43,9 @@ export class Menu extends Component {
     
         return (
         <div id="menu">
-            <div class="pure-menu">
+            <div class="menu">
                 <a class="pure-menu-heading" href="/"><b>ESP</b>Easy</a>
-                <ul class="pure-menu-list">
+                <ul class="menu-list">
                     {props.menus.map(menu => (this.renderMenuItem(menu)))}
                 </ul>
             </div>

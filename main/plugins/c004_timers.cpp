@@ -18,11 +18,19 @@ xQueueHandle evt_queue;
 static void IRAM_ATTR gpio_isr_handler(void* arg)
 {
     uint32_t gpio_num = (uint32_t) arg;
-    timer_event_t evt;
-    evt.id = gpio_num;
-    evt.type = 1;
-    evt.value = 0;
-    xQueueSendFromISR(evt_queue, &evt, NULL);
+    for (int i = 0; i < 100; ++i) {}
+    if (GPIO.in & (1 << gpio_num)) {
+        timer_event_t evt;
+        evt.id = gpio_num;
+        evt.type = 1;
+        evt.value = 0;
+        xQueueSendFromISR(evt_queue, &evt, NULL);
+
+        // unsigned char *start = rule_engine_hwinterrupts[gpio_num];
+        // if (start != nullptr) {
+        //     run_rule(start, nullptr, 0, 255);
+        // }
+    }
 }
 
 /*
@@ -51,6 +59,11 @@ void IRAM_ATTR timer_group0_isr(void *para)
     evt.id = timer_idx;
     evt.type = 0;
     evt.value = timer_counter_value;
+
+    // unsigned char *start = rule_engine_hwtimers[timer_idx];
+    // if (start != nullptr) {
+    //     run_rule(start, nullptr, 0, 255);
+    // }
 
     /* Clear the interrupt
        and update the alarm time for the timer with without reload */
@@ -109,15 +122,15 @@ void IRAM_ATTR timer_group1_isr(void *para)
 
 static void timer_example_evt_task(void *arg)
 {
+    timer_event_t evt = {};
     while (1) {
-        timer_event_t evt;
-        xQueueReceive(evt_queue, &evt, portMAX_DELAY);
-
-        unsigned char *start = nullptr;
-        if (evt.type == 0) start = rule_engine_hwtimers[evt.id];
-        if (evt.type == 1) start = rule_engine_hwinterrupts[evt.id];
-        if (start != nullptr) {
-            run_rule(start, nullptr, 0, 255);
+        if (xQueueReceive(evt_queue, &evt, portMAX_DELAY)) {
+            unsigned char *start = nullptr;
+            if (evt.type == 0) start = rule_engine_hwtimers[evt.id];
+            if (evt.type == 1) start = rule_engine_hwinterrupts[evt.id];
+            if (start != nullptr) {
+                run_rule(start, nullptr, 0, 255);
+            }
         }
     }
 }
@@ -235,7 +248,7 @@ bool TimersPlugin::init(JsonObject &params) {
 
     gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
 
-    xTaskCreatePinnedToCore(timer_example_evt_task, "timer_evt_task", 2048, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore(timer_example_evt_task, "timer_evt_task", 2048, this, 2 | portPRIVILEGE_BIT, NULL, 1);
 
     return true;
 }

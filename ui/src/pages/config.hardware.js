@@ -94,7 +94,7 @@ const formConfig = {
             }
         },
         bluetooth: {
-            name: 'Bluetooth Settinggs',
+            name: 'Bluetooth Settings',
             configs: {
                 enabled: { name: 'Enabled', type: 'checkbox' },
             }

@@ -265,10 +265,16 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
     if (!strncmp(req->uri, "/sdcard", 7) == 0) {
         /* Retrieve the base path of file storage to construct the full path */
         strcpy(fullpath, ((struct file_server_data *)req->user_ctx)->base_path);
-    }
+    }    
 
     /* Concatenate the requested directory path */
-    strcat(fullpath, req->uri);
+    if (strcmp(req->uri, "/filelist") == 0) {
+        strcat(fullpath, "/");
+    } else {
+        strcat(fullpath, req->uri);
+    }
+
+    ESP_LOGI(TAG, "scanning dir %s", fullpath);
     dir = opendir(fullpath);
     const size_t entrypath_offset = strlen(fullpath);
 
@@ -297,7 +303,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
             continue;
         }
         sprintf(entrysize, "%ld", entry_stat.st_size);
-        ESP_LOGD(TAG, "Found %s : %s (%s bytes)", entrytype, entry->d_name, entrysize);
+        ESP_LOGI(TAG, "Found %s : %s (%s bytes)", entrytype, entry->d_name, entrysize);
 
         if (first) { first = false; }
         else { httpd_resp_sendstr_chunk(req, "," ); }
@@ -331,12 +337,18 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req)
 /* Set HTTP response content type according to file extension */
 static esp_err_t set_content_type_from_file(httpd_req_t *req, char *uri)
 {
+    if (IS_FILE_EXT(uri, ".gz")) {
+        httpd_resp_set_hdr(req, "Content-Encoding", "gzip");
+    }
+
     if (IS_FILE_EXT(uri, ".pdf")) {
         return httpd_resp_set_type(req, "application/pdf");
-    } else if (IS_FILE_EXT(uri, ".html") || IS_FILE_EXT(uri, ".htm")) {
+    } else if (IS_FILE_EXT(uri, ".html") || IS_FILE_EXT(uri, ".htm") || IS_FILE_EXT(uri, ".html.gz") || IS_FILE_EXT(uri, ".htm.gz") ) {
         return httpd_resp_set_type(req, "text/html");
     } else if (IS_FILE_EXT(uri, ".jpeg") || IS_FILE_EXT(uri, ".jpg")) {
         return httpd_resp_set_type(req, "image/jpeg");
+    } else if (IS_FILE_EXT(uri, ".css") || IS_FILE_EXT(uri, ".css.gz")) {
+        return httpd_resp_set_type(req, "text/css");
     }
     /* This is a limited set only */
     /* For any other type always set as plain text */

@@ -6,7 +6,7 @@ import { Page } from './components/page';
 import { loadConfig, loadRules } from './lib/config';
 import { settings } from './lib/settings';
 import { loader } from './lib/loader';
-import { loadPlugins } from './lib/plugins';
+import { loadPlugins, firePageLoad } from './lib/plugins';
 import { menu } from './lib/menu';
 
 miniToastr.init({})
@@ -51,6 +51,10 @@ class App extends Component {
         );
     }
 
+    componentDidUpdate() {
+        this.onPageLoad();
+    }
+
     componentDidMount() {
         loader.hide();
 
@@ -72,6 +76,14 @@ class App extends Component {
             }
         }
         this.interval = setInterval(fn, 100);
+
+        this.onPageLoad();
+    }
+
+    onPageLoad() {
+        window.requestAnimationFrame(() => {
+            firePageLoad(); 
+        });
     }
 
     componentWillUnmount() {}

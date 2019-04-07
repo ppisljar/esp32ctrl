@@ -15,19 +15,41 @@ const dynamicallyLoadScript = (url) => {
     });
 }
 
+const onPageLoadHandlers = [];
+const page = {
+    appendStyles: (url) => {
+        const linkElement = document.createElement('link');
+        linkElement.setAttribute('rel', 'stylesheet');
+        linkElement.setAttribute('type', 'text/css');
+        linkElement.setAttribute('href', url);
+        document.head.appendChild(linkElement);
+    },
+    
+    appendScript: dynamicallyLoadScript,
+
+    onLoad: (fn) => {
+        onPageLoadHandlers.push(fn);
+    }
+};
+
 const getPluginAPI = () => {
     return {
         settings,
         loader,
         menu,
         espeasy,
+        page,
     }
 }
 
 window.getPluginAPI = getPluginAPI;
 
+export const firePageLoad = () => {
+    onPageLoadHandlers.forEach(h => h());
+}
+
 export const loadPlugins = async () => {
-    return Promise.all(settings.get('plugins_ui', []).filter(p => p.enabled).map(async plugin => {
+    return Promise.all(settings.get('ui_plugins', []).filter(p => p.enabled).map(async plugin => {
         return dynamicallyLoadScript(plugin.url);
     }));
 }
