@@ -9,10 +9,10 @@ void IO::addDigitalPins(uint8_t number, struct IO_DIGITAL_PINS *pins) {
 }
 
 struct IO_DIGITAL_PINS* IO::getDigitalPin(uint8_t pin_nr) {
-    ESP_LOGI("IO", "getting digital pin %d", pin_nr);
+    ESP_LOGD("IO", "getting digital pin %d", pin_nr);
     for (struct IO_DIGITAL_PINS *pin: io_d_pins) {
         if (pin_nr >= pin->start && pin_nr <= pin->end) {
-            ESP_LOGI("IO", "found pin %d, %p, %p ,%p", pin->start, pin->digital_read, pin->digital_write, pin->set_direction);
+            ESP_LOGD("IO", "found pin %d, %p, %p ,%p", pin->start, pin->digital_read, pin->digital_write, pin->set_direction);
             return pin;
         }
     }
