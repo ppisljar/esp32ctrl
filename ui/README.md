@@ -154,7 +154,6 @@ TODO:
 - ojacevalc k je na stekarju
 - file manager sdcard support
 - ota (0.7mb ota, 0.5mb data, 1.8mb app)
-- build process mora skopirat zadeve v spiffs folder
 - touch
 
 -- v9:
