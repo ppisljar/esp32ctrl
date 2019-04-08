@@ -21,6 +21,7 @@ static const char *TAG = "MAIN";
 #include "plugins/c003_wifi.h"
 #include "plugins/c004_timers.h"
 #include "plugins/c005_hue.h"
+#include "plugins/c006_touch.h"
 #include "plugins/p001_switch.h"
 #include "plugins/p002_dht.h"
 #include "plugins/p003_bmp280.h"
@@ -34,6 +35,7 @@ static const char *TAG = "MAIN";
 #include "plugins/p011_mqtt.h"
 #include "plugins/p012_rotary_encoder.h"
 #include "plugins/p013_http_ctrl.h"
+#include "plugins/p014_dummy.h"
 
 #include "bluetooth.h"
 
@@ -46,6 +48,7 @@ NTPPlugin *ntp_plugin;
 WiFiPlugin *wifi_plugin;
 TimersPlugin *timers_plugin;
 HueEmulatorPlugin *hue_plugin;
+TouchPlugin *touch_plugin;
 
 IO io;
 
@@ -87,6 +90,9 @@ Plugin* RotaryEncoderPlugin_myProtoype = Plugin::addPrototype(12, new RotaryEnco
 #endif
 #ifdef CONFIG_ENABLE_P013_HTTP 
 Plugin* HTTPCtrlPlugin_myProtoype = Plugin::addPrototype(13, new HTTPCtrlPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P014_DUMMY
+Plugin* DummyPlugin_myProtoype = Plugin::addPrototype(14, new DummyPlugin);
 #endif
 
 BlueTooth* bluetooth;
@@ -152,6 +158,9 @@ extern "C" void app_main()
     pins.digital_write = new ESP_digital_write();
     pins.analog_read = new ESP_analog_read();
     io.addDigitalPins(40, &pins);
+
+    touch_plugin = new TouchPlugin();
+    touch_plugin->init(cfgObject);
 
     if (cfgObject["hardware"]["i2c"]["enabled"]) {
         JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];

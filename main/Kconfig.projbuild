@@ -73,6 +73,10 @@ menu "MyESP32 CTRL"
         config ENABLE_P013_HTTP
             bool "HTTP Controller"
             default y
+
+        config ENABLE_P014_DUMMY
+            bool "Dummy Device"
+            default y
     endmenu
 
     menu "WiFi Config"
