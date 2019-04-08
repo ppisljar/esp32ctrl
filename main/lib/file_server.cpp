@@ -508,6 +508,14 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
     }
 
     update_partition = esp_ota_get_next_update_partition(NULL);
+
+    // boots into the OTA app
+    esp_ota_set_boot_partition(update_partition);
+
+    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    esp_restart();
+    return ESP_OK;
+
     ESP_LOGD(TAG, "Writing to partition subtype %d at offset 0x%x",
              update_partition->subtype, update_partition->address);
     assert(update_partition != NULL);    

@@ -67,6 +67,12 @@ const formConfig = {
                 enabled: { name: 'Enabled', type: 'checkbox' },
             }
         },
+        bluetooth: {
+            name: 'Bluetooth Settings',
+            configs: {
+                enabled: { name: 'Enabled', type: 'checkbox' },
+            }
+        },
         timer: {
             name: 'Hardware Timer config',
             help: dividerHelp,
@@ -93,16 +99,13 @@ const formConfig = {
                 ]
             }
         },
-        bluetooth: {
-            name: 'Bluetooth Settings',
-            configs: {
-                enabled: { name: 'Enabled', type: 'checkbox' },
-            }
-        },
         gpio: {
             name: 'GPIO boot states',
             configs: 
                 [...new Array(32)].map((x, i) => {
+                    const isTouchPin = (pin) => [4, 0, 2, 15, 13, 12, 14, 27, 33, 32].includes(pin);
+                    const pinStateOptions = [...pinState];
+                    if (isTouchPin(i)) pinStateOptions.push({ name: 'Touch', value: 4 });
                     return [
                         { name: `Pin Mode GPIO-${i}`, type: 'select', options: pinState, var: `gpio.${i}.mode` }, 
                         { name: 'interrupt', type: 'checkbox', if: `hardware.gpio.${i}.mode`, ifval:3, var: `gpio.${i}.interrupt` }
