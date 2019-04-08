@@ -69,6 +69,10 @@ gulp.task('pagesinline', function() {
       .pipe(gulp.dest('./build'));
   });
 
+gulp.task('copytospiffs', function () {
+  gulp.src(['./src/index.dev.htm', './build/app.js.gz', './build/bulma.min.css.gz', './build/iconpicker.js']).pipe(gulp.dest('../data/'))
+});
+
 // Gulp task to minify all files
 gulp.task('default', function () {
   runSequence(
@@ -76,6 +80,7 @@ gulp.task('default', function () {
     'styles_ext',
     'scripts',
     'pages',
-    'pagesinline'
+    'pagesinline',
+    'copytospiffs'
   );
 });
