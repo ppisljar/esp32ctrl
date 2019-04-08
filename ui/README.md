@@ -122,6 +122,41 @@ before the last line insert something like `{ name: 'My Plugin Name', value: 103
 TODO:
 
 
+- stile spimpat
+- iconpicker
+- download pplugin to sdcard (install)
+- alerting
+-- generate alert file
+-- parse alert file (plugin init)
+-- watch for alerts (plugin task)
+-- fire alert from rule
+-- clear alert from rule
+-- log alert
+-- dashboard alerts
+-- system alerts (from system plugins)
+-- device/plugin alerts
+-- notifications to: email, sms, call
+- locit nepotreben config v svoj config file
+- log device values (amount of history)
+-- show history in webui
+- microphone
+- speaker
+- mp3 plaer plugin
+- inter plugin dependency
+- clock rule trigger
+- system boot rule trigger
+- motor driver
+- uporaba hw interruptov/hw timerjev iz drugih pluginov
+- wifi scanner
+- bluetooth scanner
+- svetlobni senzor k je na stekarju
+- laser k je na stekarju
+- ojacevalc k je na stekarju
+- file manager sdcard support
+- ota (0.7mb ota, 0.5mb data, 1.8mb app)
+- build process mora skopirat zadeve v spiffs folder
+- touch
+
 -- v9:
 - pimp up
 - bug hunting

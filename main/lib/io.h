@@ -81,7 +81,7 @@ class ESP_digital_read : public IO_digital_read {
         ESP_digital_read() { };
         uint8_t operator()(uint8_t pin) {
             if (pin > 31) return 0;
-            ESP_LOGI("IO", "ESP get level %d", pin);
+            ESP_LOGD("IO", "ESP get level %d", pin);
             return gpio_get_level((gpio_num_t)pin);
         }
 };
@@ -91,7 +91,7 @@ class ESP_digital_write : public IO_digital_write {
         ESP_digital_write() {};
         uint8_t operator()(uint8_t pin, uint8_t value) {
             if (pin > 31) return ESP_FAIL;
-            ESP_LOGI("IO", "ESP set level %d = %d", pin, value);
+            ESP_LOGD("IO", "ESP set level %d = %d", pin, value);
             return gpio_set_level((gpio_num_t)pin, value);
         }
 };

@@ -36,6 +36,12 @@ gulp.task('styles', function () {
       .pipe(gulp.dest('./build'))
   });
 
+  gulp.task('styles_ext', function () {
+    return gulp.src(['./src/pure-min.css', './src/bulma.min.css'])
+      .pipe(gzip())
+      .pipe(gulp.dest('./build'));
+  });
+
   gulp.task('scripts', function () {
     return gulp.src('./build/dash.js')
       .pipe(gzip())
@@ -67,6 +73,7 @@ gulp.task('pagesinline', function() {
 gulp.task('default', function () {
   runSequence(
     'styles',
+    'styles_ext',
     'scripts',
     'pages',
     'pagesinline'

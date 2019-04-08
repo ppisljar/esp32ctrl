@@ -75,7 +75,7 @@ export class Form extends Component {
         switch (config.type) {
             case 'string':
                 return (
-                    <input id={id} type="text" value={value} onChange={this.onChange(id, varName, config)} {...config.extra}/>
+                    <input class="input" id={id} type="text" value={value} onChange={this.onChange(id, varName, config)} {...config.extra}/>
                 );
             case 'number':
                 return (
@@ -152,7 +152,7 @@ export class Form extends Component {
 
     renderConfigGroup(id, configs, values) {
         const configArray = Array.isArray(configs) ? configs : [configs];
-        const classes = `pure-control-group ${configArray.length === 3 ? 'group-3': ''}`
+        const classes = `field is-grouped is-horizontal ${configArray.length === 3 ? 'group-3': ''}`
 
         return (
             <div className={classes}>
@@ -173,8 +173,8 @@ export class Form extends Component {
                         return (<CustomComponent conf={conf} values={values} />);
                     }
                     return [
-                        (<label for={varId}>{conf.name} {conf.help ? (<span class='fa fa-info-circle'></span>) : ''}</label>),
-                        this.renderConfig(varId, conf, val, varName),
+                        (<div class="field-label"><label for={varId} class="label">{conf.name} {conf.help ? (<span class='fa fa-info-circle'></span>) : ''}</label></div>),
+                        (<div class="field-body"><div class="control is-expanded">{this.renderConfig(varId, conf, val, varName)}</div></div>),
                     ];
                 })}
             </div>

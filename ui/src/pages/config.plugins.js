@@ -8,7 +8,7 @@ export class ConfigPluginsPage extends Component {
         this.plugins = settings.get('ui_plugins');
         if (!this.plugins) {
             this.plugins = [
-                { name: 'IconSelector', enabled: false, url: '/iconselector.plugin.js.gz' },
+                { name: 'IconSelector', enabled: false, url: 'http://localhost:8080/build/iconpicker.js' },
             ];
             settings.set('ui_plugins', this.plugins);
         }
