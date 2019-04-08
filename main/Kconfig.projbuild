@@ -77,6 +77,14 @@ menu "MyESP32 CTRL"
         config ENABLE_P014_DUMMY
             bool "Dummy Device"
             default y
+
+        config ENABLE_P015_DIMMER
+            bool "Dimmer Device"
+            default y
+        
+        config ENABLE_P016_MOTOR
+            bool "Motor Controller"
+            default y
     endmenu
 
     menu "WiFi Config"

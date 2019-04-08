@@ -36,6 +36,7 @@ static const char *TAG = "MAIN";
 #include "plugins/p012_rotary_encoder.h"
 #include "plugins/p013_http_ctrl.h"
 #include "plugins/p014_dummy.h"
+#include "plugins/p016_motor.h"
 
 #include "bluetooth.h"
 
@@ -93,6 +94,9 @@ Plugin* HTTPCtrlPlugin_myProtoype = Plugin::addPrototype(13, new HTTPCtrlPlugin)
 #endif
 #ifdef CONFIG_ENABLE_P014_DUMMY
 Plugin* DummyPlugin_myProtoype = Plugin::addPrototype(14, new DummyPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P016_MOTOR
+Plugin* MotorPlugin_myProtoype = Plugin::addPrototype(16, new MotorPlugin);
 #endif
 
 BlueTooth* bluetooth;
