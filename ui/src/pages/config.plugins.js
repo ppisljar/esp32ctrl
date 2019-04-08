@@ -6,7 +6,7 @@ export class ConfigPluginsPage extends Component {
         super(props);
 
         this.plugins = settings.get('ui_plugins');
-        if (this.plugins) {
+        if (!this.plugins) {
             this.plugins = [
                 { name: 'IconSelector', enabled: false, url: '/iconselector.plugin.js.gz' },
             ];
