@@ -48,7 +48,7 @@ class App extends Component {
         const active = this.state.menuActive ? 'active' : '';
         return (
             <div id="layout1" class={active}>
-                <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
+                <nav class="navbar is-link is-fixed-top" role="navigation" aria-label="main navigation">
                     <div class="navbar-brand" style="width: 250px;">
                         <a class="navbar-item" href="https://bulma.io">
                             <b>SH</b>TECH-<b>R</b>
