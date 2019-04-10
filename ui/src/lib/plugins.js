@@ -18,11 +18,20 @@ const dynamicallyLoadScript = (url) => {
 const onPageLoadHandlers = [];
 const page = {
     appendStyles: (url) => {
-        const linkElement = document.createElement('link');
-        linkElement.setAttribute('rel', 'stylesheet');
-        linkElement.setAttribute('type', 'text/css');
-        linkElement.setAttribute('href', url);
-        document.head.appendChild(linkElement);
+        return new Promise(resolve => {
+            const link = document.createElement('link');
+            link.type = 'text/css';
+            link.rel = 'stylesheet';
+            link.onload = () => {
+                resolve();
+            }
+            link.href = url;
+
+            if (!document.querySelector('link[href="' + url + '"]')) {
+                let headScript = document.querySelector('head');
+                headScript.append(link);
+            }
+        });
     },
     
     appendScript: dynamicallyLoadScript,

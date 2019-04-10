@@ -104,7 +104,12 @@ export class DevicesPage extends Component {
         if (!tasks) return;
         return (
             <div>
-                <div><button type="button" onClick={this.addDevice}>add device</button></div>
+                <div class="level">
+                    <div class="level-left"></div>
+                    <div class="level-right">
+                        <button type="button" class="level-item button" onClick={this.addDevice}>add device</button>
+                    </div>    
+                </div>
             {tasks.map((task, i) => {
                 if (task === null) return (null);
                 if (settings.userName !== 'admin' && task.lock) return (null);
@@ -120,24 +125,28 @@ export class DevicesPage extends Component {
                 });
                 const iconClass = `${task.icon}`;
                 return (
-                    <div class="device">
-                        <div class="icon">
-                            <span class={iconClass} />
+                    <div class="media device">
+                        <div class="media-left">
+                            <p class="image is-64x64">
+                                <span class={iconClass} />
+                            </p>
                         </div>
-                        <div class="body">
+                        <div class="media-content">
                             <div class="info">
                                 {i+1}: <input type="checkbox" defaultChecked={task.enabled} data-prop={enabledProp} onChange={this.handleEnableToggle}></input>
                                 &nbsp;&nbsp;{task.name} [{deviceType}]
-                                <a href={editUrl}>edit</a>
-                                <a onClick={() => {this.deleteDevice(i);}}>delete</a>
-                                <a onClick={() => {this.moveDevice(i, 'up');}}>up</a>
-                                <a onClick={() => {this.moveDevice(i, 'down');}}>down</a>
                             </div>
                             <div class="vars">
                             {vals.map(v => {
                                     return (<span>{v.name}: {v.value} </span>);
                                 })}
                             </div>
+                        </div>
+                        <div class="media-right">
+                            <a href={editUrl}>edit</a>
+                            <a onClick={() => {this.deleteDevice(i);}}>delete</a>
+                            <a onClick={() => {this.moveDevice(i, 'up');}}>up</a>
+                            <a onClick={() => {this.moveDevice(i, 'down');}}>down</a>
                         </div>
                     </div>
                     )

@@ -286,9 +286,6 @@ fieldset > label {
 .device {
     background: aliceblue;
     padding: 1em;
-    margin: 1em;
-    display: flex;
-    flex-direction: row;
 }
 
 .device .icon {
@@ -613,4 +610,12 @@ tooltip {
 
 .breadcrumb a {
     color: white;
+}
+
+.image.is-64x64 {
+    font-size: 64px;
+}
+
+.device .media-right a {
+    padding: 10px;
 }

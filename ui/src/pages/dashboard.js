@@ -18,14 +18,19 @@ export class DashboardPage extends Component {
                 // this.forceUpdate(); 
             }
             return (
-                <div className='device'>
-                    <div class="icon">
-                        <span class={device.icon} />
+                <div className='media device'>
+                   <div class="media-left">
+                        <p class="image is-64x64">
+                            <span class={device.icon} />
+                        </p>
                     </div>
-                    <div class="body">
+                    <div class="media-content">
                         <div class='info'>
-                            {device.name}<span><button onClick={buttonClick}>{!state ? 'ON' : 'OFF'}</button></span>
+                            {device.name}
                         </div>
+                    </div>
+                    <div class="media-right">
+                        <button class="button" onClick={buttonClick}>{!state ? 'ON' : 'OFF'}</button>
                     </div>
                 </div>
             );
@@ -33,11 +38,13 @@ export class DashboardPage extends Component {
 // TODO: we should have a generic way to access device values
         this.renderSensor = (device, deviceState) => {
             return (
-                <div className='device'>
-                    <div class="icon">
-                        <span class={device.icon} />
+                <div className='media device'>
+                    <div class="media-left">
+                        <p class="image is-64x64">
+                            <span class={device.icon} />
+                        </p>
                     </div>
-                    <div class="body">
+                    <div class="media-content">
                         <div class='info'>
                             {device.name}
                             <span>
@@ -60,11 +67,13 @@ export class DashboardPage extends Component {
             };
 
             return (
-            <div className='device'>
-                <div class="icon">
-                    <span class={device.icon} />
+            <div className='media device'>
+                <div class="media-left">
+                    <p class="image is-64x64">
+                        <span class={device.icon} />
+                    </p>
                 </div>
-                <div class="body">
+                <div class="media-content">
                     <div class='info'>
                     {device.name}<span><input width='200px' type='range' value={device.params.level} onChange={rangeChange}/></span>
                     </div>

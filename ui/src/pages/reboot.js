@@ -16,7 +16,7 @@ export class RebootPage extends Component {
                 loader.hide();
                 window.location.hash = '#devices';
                 window.location.reload();
-            }, 5000)
+            }, 10000)
         })
     }
 }
