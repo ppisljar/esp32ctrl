@@ -17,7 +17,9 @@ int parse_rules(unsigned char *rules, long len);
 uint8_t run_rule(unsigned char* start, unsigned char* start_val, uint8_t start_val_length, uint8_t len);
 void run_rules();
 
-void register_command(uint8_t cmd_id, std::function<uint8_t(uint8_t*)> handler);
+void register_command(uint8_t cmd_id, std::function<uint8_t(uint8_t*)> handler);\
+
+void fire_system_event(uint16_t evt_id, uint8_t evt_data_len, uint8_t *evt_data);
 
 ESP_EVENT_DECLARE_BASE(RULE_EVENTS)
 enum {
@@ -31,7 +33,7 @@ extern esp_event_loop_handle_t rule_event_loop;
 // #define TRIGGER_EVENT(x) event_triggers[x/8] |= 1 << (x%8)
 // #define CLEAR_EVENT(x) event_triggers[x/8] &= ~(1 << (x%8))
 // #define IS_EVENT_TRIGGERED(x) (event_triggers[x/8] >> (x%8) & 1) > 0
-#define TRIGGER_EVENT(x) ESP_ERROR_CHECK(esp_event_post_to(rule_event_loop, RULE_EVENTS, RULE_USER_EVENT, (void*)x, 1, portMAX_DELAY));
+#define TRIGGER_EVENT(evt) ESP_ERROR_CHECK(esp_event_post_to(rule_event_loop, RULE_EVENTS, RULE_USER_EVENT, (void*)evt, 1, portMAX_DELAY));
 
 #define TRIGGER_TIMER(x, time) timers[x] = time; timer_triggers[x/8] |= 1 << (x%8)
 #define CLEAR_TIMER(x) timers[x] = 0; timer_triggers[x/8] &= ~(1 << (x%8))

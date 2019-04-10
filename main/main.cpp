@@ -211,6 +211,8 @@ extern "C" void app_main()
     http_server_ready();
     init_logging();
 
+    fire_system_event(1024, 0, nullptr);
+
     //i2c_plugin->scan();
 
     for(;;) {

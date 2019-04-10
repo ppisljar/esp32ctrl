@@ -12,6 +12,7 @@ byte *event_list[20];
 byte old_values[256]; // reserve 128 bytes for storing old values
 byte old_values_free_ptr = 0; // points to the place in array which is free
 std::map<uint16_t, void*> rule_data_ptrs;
+std::map<uint16_t, unsigned char*> system_events;
 //byte event_triggers[8]; // 256 possible events (custom)
 uint16_t timers[16];
 byte timer_triggers[2];
@@ -24,6 +25,7 @@ extern TimersPlugin *timers_plugin;
 
 ESP_EVENT_DEFINE_BASE(RULE_EVENTS)
 esp_event_loop_handle_t rule_event_loop;
+esp_event_loop_handle_t system_event_loop;
 
 static void user_event_handler(void* handler_args, esp_event_base_t base, int32_t id, void* event_data)
 {
@@ -33,9 +35,18 @@ static void user_event_handler(void* handler_args, esp_event_base_t base, int32_
     // the memory location it points to is still valid when the handler executes.
     //
     // The event-specific data (event_data) is a pointer to a deep copy of the original data, and is managed automatically.
-    uint32_t event_id = ((uint32_t) event_data);
-    ESP_LOGI(TAG_RE, "user event triggered: %p : %i [%p]", event_data, event_id, event_list[event_id]);
-    run_rule(event_list[event_id], nullptr, 0, 255);
+    uint16_t event_id = ((uint16_t*) event_data)[0];
+    ESP_LOGI(TAG_RE, "user event triggered: %p : %i", event_data, event_id);
+    if (event_id < 1024) {
+        auto event = event_list[event_id];
+        uint8_t data_len = ((uint8_t*)event_data)[2];
+        if (event != nullptr) run_rule(event_list[event_id], ((uint8_t*)event_data) + 3, data_len, 255);
+    } else {
+        if (system_events[event_id] != nullptr) {
+            run_rule(system_events[event_id], nullptr, 0, 255);
+        }
+    }
+
 }
 
 void init() {
@@ -79,14 +90,28 @@ bool compare(byte** ptr, byte *val, byte *old) {
                 if (val[i] == old[i]) match = false;
                 break;
             case 1: // equals
-                ESP_LOGI(TAG_RE, "compare val(%p):%d to :%d", val, val[i], cmd[i + 2]);
+                ESP_LOGI(TAG_RE, "compare val(%p):%d == :%d", val, val[i], cmd[i + 2]);
                 if (cmd[i + 2] != val[i]) match = false;
                 break;
             case 2: // <
+                ESP_LOGI(TAG_RE, "compare val(%p):%d < :%d", val, val[i], cmd[i + 2]);
+                if (cmd[i + 2] >= val[i]) match = false;
+                break;
             case 3: // >
+                ESP_LOGI(TAG_RE, "compare val(%p):%d > :%d", val, val[i], cmd[i + 2]);
+                if (cmd[i + 2] <= val[i]) match = false;
+                break;
             case 4: // <=
+                ESP_LOGI(TAG_RE, "compare val(%p):%d <= :%d", val, val[i], cmd[i + 2]);
+                if (cmd[i + 2] > val[i]) match = false;
+                break;
             case 5: // >=
+                ESP_LOGI(TAG_RE, "compare val(%p):%d >= :%d", val, val[i], cmd[i + 2]);
+                if (cmd[i + 2] < val[i]) match = false;
+                break;
             case 6: // <>
+                ESP_LOGI(TAG_RE, "compare val(%p):%d <> :%d", val, val[i], cmd[i + 2]);
+                if (cmd[i + 2] == val[i]) match = false;
                 break;
         }
         old[i] = val[i]; // todo: val[i];
@@ -189,8 +214,8 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 break;
             case CMD_EVENT:
                 ESP_LOGI(TAG_RE, "cmd triggering event %d", cmd[1]);
-                TRIGGER_EVENT(cmd[1]);
-                cmd += 2;
+                TRIGGER_EVENT(cmd+1);
+                cmd += 4 + cmd[3];
                 break;
             case CMD_TIMER:
                 ESP_LOGI(TAG_RE, "cmd triggering timer %d time: %d", cmd[1], cmd[2]*100);
@@ -284,6 +309,14 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
         }
     }
     return (uint8_t)(cmd-start);
+}
+
+void fire_system_event(uint16_t evt_id, uint8_t evt_data_len, uint8_t *evt_data) {
+    uint8_t *data = (uint8_t*)malloc(evt_data_len + 3);
+    data[0] = evt_id;
+    data[2] = evt_data_len;
+    memcpy(data+3, evt_data, evt_data_len);
+    TRIGGER_EVENT(data);
 }
 
 void run_rules() {

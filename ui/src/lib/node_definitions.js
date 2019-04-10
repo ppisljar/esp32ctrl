@@ -33,7 +33,8 @@ export const getNodes = (devices, vars) => {
             toDsl: function ({ events }) { 
                 const event = events.find(e => e.name === this.config[0].value);
                 if (!event) return null;
-                return [`\xFF\xFE\x00\xFF\x01${String.fromCharCode(event.value)}`]; 
+                
+                return [`\xFF\xFE\x00\xFF\x01${getString(toByteArray(value,2))}`]; 
             }
         }, {
             group: 'TRIGGERS',
@@ -227,7 +228,7 @@ export const getNodes = (devices, vars) => {
             toDsl: function({events}) {
                 const event = events.find(e => e.name === this.config[0].value);
                 if (!event) return '';
-                return [`\xF2${String.fromCharCode(event.value)}`];
+                return [`\xF2${getString(toByteArray(event,2))}\x00`];
             }
         }, {
             group: 'ACTIONS',
