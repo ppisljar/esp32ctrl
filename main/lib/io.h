@@ -4,6 +4,7 @@
 #include "esp_log.h"
 #include "esp_system.h"
 #include <driver/adc.h>
+#include "driver/ledc.h"
 #include <list>
 
 class IO_set_direction {
@@ -65,12 +66,34 @@ class IO
 };
 
 
-
+extern ledc_channel_config_t *ledc_channel[8];
+extern uint8_t ledc_channel_cnt;
 
 class ESP_set_direction : public IO_set_direction {
     public:
         ESP_set_direction() { };
         uint8_t operator()(uint8_t pin, uint8_t mode) {
+            if (mode == 3) {
+                ledc_timer_config_t ledc_timer;
+                ledc_timer.duty_resolution = LEDC_TIMER_13_BIT; // resolution of PWM duty
+                ledc_timer.freq_hz = 5000;                      // frequency of PWM signal
+                ledc_timer.speed_mode = LEDC_HIGH_SPEED_MODE;           // timer mode
+                ledc_timer.timer_num = LEDC_TIMER_0;            // timer index
+                // Set configuration of timer0 for high speed channels
+                ledc_timer_config(&ledc_timer);
+
+                ledc_channel[ledc_channel_cnt] = (ledc_channel_config_t*)malloc(sizeof(ledc_channel_config_t));
+                ledc_channel[ledc_channel_cnt]->channel = (ledc_channel_t)ledc_channel_cnt;
+                ledc_channel[ledc_channel_cnt]->duty = 0;
+                ledc_channel[ledc_channel_cnt]->gpio_num = pin;
+                ledc_channel[ledc_channel_cnt]->speed_mode = LEDC_HIGH_SPEED_MODE;
+                ledc_channel[ledc_channel_cnt]->hpoint = 0;
+                ledc_channel[ledc_channel_cnt]->timer_sel = LEDC_TIMER_0;
+                ledc_channel_config(ledc_channel[ledc_channel_cnt]);
+                ledc_fade_func_install(0);
+                ledc_channel_cnt++;
+                return ESP_OK;
+            }
             if (pin > 31) return ESP_FAIL;
             return gpio_set_direction((gpio_num_t)pin, (gpio_mode_t)mode);
         }
@@ -109,6 +132,15 @@ class ESP_analog_write : public IO_analog_write {
     public:
         ESP_analog_write() {};
         uint8_t operator()(uint8_t pin, uint16_t value) {
+            for (uint i =0; i < 8; i++) {
+                if (ledc_channel[i] == nullptr) return 0;
+                if (ledc_channel[i]->gpio_num == pin) {
+                    ledc_set_duty(LEDC_HIGH_SPEED_MODE, ledc_channel[i]->channel, value);
+                    ledc_update_duty(LEDC_HIGH_SPEED_MODE, ledc_channel[i]->channel);
+                    return 0;
+                }
+            }
+            
             return 0;
         }
 };

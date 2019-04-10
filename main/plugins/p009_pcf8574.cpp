@@ -17,17 +17,20 @@ class PCF8574Plugin_digital_read : public IO_digital_read {
     private:
         uint8_t addr;
         struct IO_DIGITAL_PINS *pins;
+        uint8_t type;
     public:
-        PCF8574Plugin_digital_read(uint8_t addr_, struct IO_DIGITAL_PINS *pins_) {
+        PCF8574Plugin_digital_read(uint8_t addr_, uint8_t type_, struct IO_DIGITAL_PINS *pins_) {
             addr = addr_;
             pins = pins_;
+            type = type_;
         }
         uint8_t operator()(uint8_t pin) {
-            uint8_t val = 0;
+            uint16_t val = 0;
             ESP_LOGI(P009_TAG, "reading pin %d on addr %d with pinStart %d", pin, addr, pins->start);
-            pcf8574_port_read(addr, &val);
+            if (type == 0) pcf8574_port_read(addr, (uint8_t*)&val);
+            else pcf8575_port_read(addr, &val);
             ESP_LOGI(P009_TAG, "current port value: %d", val);
-            return (val >> (pin - pins->start)) & 1;
+            return (uint8_t)(val >> (pin - pins->start)) & 1;
         }
 };
 
@@ -35,19 +38,24 @@ class PCF8574Plugin_digital_write : public IO_digital_write {
     private:
         uint8_t addr;
         struct IO_DIGITAL_PINS *pins;
+        uint8_t type;
     public:
-        PCF8574Plugin_digital_write(uint8_t addr_, struct IO_DIGITAL_PINS *pins_) {
+        PCF8574Plugin_digital_write(uint8_t addr_, uint8_t type_, struct IO_DIGITAL_PINS *pins_) {
             addr = addr_;
             pins = pins_;
+            type = type_;
         }
         uint8_t operator()(uint8_t pin, uint8_t value) {
-            uint8_t val = 0;
-            ESP_LOGI(P009_TAG, "writting %d to pin %d on addr %d with pinStart %d", value, pin, addr, pins->start);
-            pcf8574_port_read(addr, &val);
+            uint16_t val = 0;
+            ESP_LOGI(P009_TAG, "writting %d to pin %d on addr %d with type %d", value, pin - pins->start, addr, type);
+            if (type == 0) pcf8574_port_read(addr, (uint8_t*)&val);
+            else pcf8575_port_read(addr, &val);
             ESP_LOGI(P009_TAG, "current port value: %d", val);
             val = (value != 0) ? (val | (1 << (pin - pins->start))) : (val & ~(1 << (pin - pins->start)));
             ESP_LOGI(P009_TAG, "writing port value: %d", val);
-            return pcf8574_port_write(addr, val);  
+            if (type == 0) pcf8574_port_write(addr, (uint8_t)val);  
+            else pcf8575_port_write(addr, val);  
+            return ESP_OK;
         }
 };
 
@@ -56,23 +64,27 @@ bool PCF8574Plugin::init(JsonObject &params) {
     state_cfg = &((JsonArray &)params["state"]);
 
     uint8_t pcf8574_addr = (*cfg)["addr"];
+    uint8_t type = (*cfg)["type"] | 0;
     ESP_LOGI(P009_TAG, "PCF8574 init on addr %d", pcf8574_addr);
     
-    PCF8574Plugin_digital_read *digitalRead = new PCF8574Plugin_digital_read(pcf8574_addr, &pins);
+    PCF8574Plugin_digital_read *digitalRead = new PCF8574Plugin_digital_read(pcf8574_addr, type, &pins);
     //ESP_LOGI(P009_TAG, "setting digital read %p", digitalRead);
-    PCF8574Plugin_digital_write *digitalWrite = new PCF8574Plugin_digital_write(pcf8574_addr, &pins);
+    PCF8574Plugin_digital_write *digitalWrite = new PCF8574Plugin_digital_write(pcf8574_addr, type, &pins);
     pins.set_direction = new PCF8574Plugin_set_direction();
     pins.digital_write = digitalWrite;
     pins.digital_read = digitalRead;
-    io.addDigitalPins(8, &pins);
+    io.addDigitalPins(type ? 16 : 8, &pins);
 
-    uint8_t val = 0;
-    pcf8574_port_read(pcf8574_addr, &val);
+    uint16_t val = 0;
+    if (type == 0) pcf8574_port_read(pcf8574_addr, (uint8_t*)&val);
+    else pcf8575_port_read(pcf8574_addr, &val);
     ESP_LOGI(P009_TAG, "initial port value: %d", val);
     val = 0;
-    pcf8574_port_write(pcf8574_addr, val);
+    if (type == 0) pcf8574_port_write(pcf8574_addr, (uint8_t)val);
+    else pcf8574_port_write(pcf8574_addr, val);
     val = 0;
-    pcf8574_port_read(pcf8574_addr, &val);
+    if (type == 0) pcf8574_port_read(pcf8574_addr, (uint8_t*)&val);
+    else pcf8575_port_read(pcf8574_addr, &val);
     ESP_LOGI(P009_TAG, "af.boot port value: %d", val);
 
 

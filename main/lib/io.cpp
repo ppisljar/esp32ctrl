@@ -2,6 +2,9 @@
 
 std::list<struct IO_DIGITAL_PINS*> IO::io_d_pins;
 
+uint8_t ledc_channel_cnt = 0;
+ledc_channel_config_t *ledc_channel[8] = {};
+
 void IO::addDigitalPins(uint8_t number, struct IO_DIGITAL_PINS *pins) {
     pins->start = io_d_pins.empty() ? 0 : io_d_pins.back()->end + 1;
     pins->end = pins->start + number - 1;

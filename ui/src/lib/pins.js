@@ -49,8 +49,8 @@ class IO_PINS {
 
         const i2c = settings.get('hardware.i2c');
         if (i2c && i2c["enabled"]) {
-            allPins.find(ap => ap.value == i2c["scl"]).disabled = "I2C";
-            allPins.find(ap => ap.value == i2c["sda"]).disabled = "I2C";
+            if (i2c["scl"]) allPins.find(ap => ap.value == i2c["scl"]).disabled = "I2C";
+            if (i2c["sda"]) allPins.find(ap => ap.value == i2c["sda"]).disabled = "I2C";
         }
 
         const sdcard = settings.get('hardware.sdcard');
