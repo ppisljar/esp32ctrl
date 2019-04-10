@@ -36,17 +36,51 @@ class App extends Component {
         }
     }
 
+    getBreadcrumbs(page) {
+        if (!page) return (null);
+
+        return (<li><a href={`#${page.href}`}>{page.pagetitle == null ? page.title : page.pagetitle}</a></li>)
+    }
+
     render(props, state) {
         
         const params = getFragment().split('/').slice(2);
         const active = this.state.menuActive ? 'active' : '';
         return (
-            <div id="layout" class={active}>
-                <a id="menuLink" class="menu-link" onClick={this.menuToggle}>
-                    <span></span>
-                </a>
+            <div id="layout1" class={active}>
+                <nav class="navbar is-info" role="navigation" aria-label="main navigation">
+                    <div class="navbar-brand">
+                        <a class="navbar-item" href="https://bulma.io">
+                            <img src="https://bulma.io/images/bulma-logo.png" width="112" height="28" />
+                        </a>
+                        <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                        </div>
+                    </div>
+                    <div id="navbarBasicExample" class="navbar-menu">
+                        <div class="navbar-start">
+                            <nav class="breadcrumb has-succeeds-separator" aria-label="breadcrumbs">
+                                <ul>
+                                    {this.getBreadcrumbs(state.page.parent)}
+                                    {this.getBreadcrumbs(state.page)}
+                                </ul>
+                            </nav>
+                        </div>
+                        <div class="navbar-end">
+                        { state.changed ? (
+                            <a style="float: right" href="#tools/diff">CHANGED! Click here to SAVE</a>
+                        ) : (null) }
+                        </div>
+                    </div>
+                </nav>
+                
+
                 <Menu menus={menu.menus} selected={state.menu} />
                 <Page page={state.page} params={params} changed={this.state.changed} />
+                
+
             </div>
         );
     }
