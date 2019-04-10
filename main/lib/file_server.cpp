@@ -375,7 +375,7 @@ static esp_err_t http_resp_file(httpd_req_t *req, char* filepath)
         ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
         /* If file doesn't exist respond with 404 Not Found */
         
-        return ESP_OK;
+        return ESP_FAIL;
     }
 
     fd = fopen(filepath, "r");
@@ -430,13 +430,12 @@ static esp_err_t download_get_handler(httpd_req_t *req)
     // Check if the target is a directory
     if (req->uri[strlen(req->uri) - 1] == '/') {
         // In so, send an html with directory listing
-        http_resp_dir_html(req);
+        return http_resp_dir_html(req);
     } else {
         // Else send the file
         ESP_LOGI(TAG, "whats going on %s", filepath);
-        http_resp_file(req, filepath);
+        return http_resp_file(req, filepath);
     }
-    return ESP_OK;
 }
 
 static esp_err_t config_get_handler(httpd_req_t *req)
@@ -461,15 +460,15 @@ static esp_err_t index_get_handler(httpd_req_t *req)
 
 std::function<esp_err_t(httpd_req_t*)> handlers_404[10] = {};
 static esp_err_t handler_404(httpd_req_t *req) {
-    bool responded = false;
+    esp_err_t responded = ESP_FAIL;
     //if (isAuthenticated(req, false)) {
         responded = download_get_handler(req);
     //}
     for (uint8_t i = 0; i < 10; i++) {
-        if (responded || handlers_404[i] == nullptr) break;
-        handlers_404[i](req);
+        if (responded == ESP_OK || handlers_404[i] == nullptr) break;
+        responded = handlers_404[i](req);
     }
-    if (!responded) {
+    if (responded != ESP_OK) {
         httpd_resp_send_404(req);
     }
     return ESP_OK;

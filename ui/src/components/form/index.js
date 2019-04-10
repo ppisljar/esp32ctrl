@@ -162,7 +162,12 @@ export class Form extends Component {
                     const val = varName.startsWith('ROOT') ? settings.get(varName.replace('ROOT.', '')) : get(values, varName, null);
 
                     if (conf.if) {
-                        const val = get(settings.settings, conf.if, false);
+                        let val;
+                        if (conf.if.startsWith('ROOT')) {
+                            val = settings.get(conf.if.replace('ROOT.', ''));
+                        } else {
+                            val = get(this.props.selected, conf.if, false);
+                        }
                         if (conf.ifval === undefined && !val) {
                             return (null);
                         }

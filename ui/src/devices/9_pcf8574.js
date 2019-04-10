@@ -35,8 +35,9 @@ class PCF8574 extends Device {
             }
         }
 
-        for (let i = 0; i < 8; i++) {
-            this.pins.configs[i] = { name: `Pin ${i} boot state`, type: 'select', options: pinBootStates };
+        for (let i = 0; i < 16; i++) {
+            if (i < 8) this.pins.configs[i] = { name: `Pin ${i} boot state`, type: 'select', options: pinBootStates };
+            else this.pins.configs[i] = { name: `Pin ${i} boot state`, type: 'select', if: 'params.type', ifval: 1, options: pinBootStates };
         }
     }
 
@@ -45,7 +46,8 @@ class PCF8574 extends Device {
     });
 
     getDevicePins = (conf, plugin) => {
-       return [...new Array(8)].map((x,i) => ({
+        const n = conf.params.type ? 16 : 8;
+       return [...new Array(n)].map((x,i) => ({
            name: `${conf.name} GPIO${i}`,
            value: i,
            capabilities: ['digital_in', 'digital_out'],
