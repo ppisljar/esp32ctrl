@@ -100,7 +100,7 @@ export class Form extends Component {
             case 'select':
                 options = (typeof config.options === 'function') ? config.options(this.props.selected) : config.options;
                 return (
-                    <select id={id} onChange={this.onChange(id, varName, config )}>
+                    <div class="select"><select id={id} onChange={this.onChange(id, varName, config )}>
                         {options.map(option => {
                             const name = option instanceof Object ? option.name : option;
                             const val = option instanceof Object ? option.value : option;
@@ -110,7 +110,7 @@ export class Form extends Component {
                                 return (<option value={val} disabled={option.disabled ? true : null}>{name}{option.disabled ? ` [${option.disabled}]` : ''}</option>);
                             }
                         })}
-                    </select>
+                    </select></div>
                 ) ;
             case 'gpio':
                 options = window.pins();
@@ -121,7 +121,7 @@ export class Form extends Component {
                     form.forceUpdate();
                 }
                 return (
-                    <select id={id} onChange={this.onChange(id, varName, { ...config, onChange: (e, form, id, prop, val, config) => {
+                    <div class="select"><select id={id} onChange={this.onChange(id, varName, { ...config, onChange: (e, form, id, prop, val, config) => {
                         selectPin(val, config.name.toLowerCase(), form);
                     }})}>
                         {options.map(option => {
@@ -133,7 +133,7 @@ export class Form extends Component {
                                 return (<option value={val} disabled={option.disabled ? true : null}>{name}{option.disabled ? ` [${option.disabled}]` : ''}</option>);
                             }
                         })}
-                    </select>
+                    </select></div>
                 )
             case 'file':
                 return (

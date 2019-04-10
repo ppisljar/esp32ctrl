@@ -601,3 +601,16 @@ tooltip {
     font-size: .8em;
     margin: 0;
 }
+
+
+
+
+
+
+
+
+
+
+.breadcrumb a {
+    color: white;
+}

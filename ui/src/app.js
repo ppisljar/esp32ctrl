@@ -48,10 +48,10 @@ class App extends Component {
         const active = this.state.menuActive ? 'active' : '';
         return (
             <div id="layout1" class={active}>
-                <nav class="navbar is-info" role="navigation" aria-label="main navigation">
-                    <div class="navbar-brand">
+                <nav class="navbar is-info is-fixed-top" role="navigation" aria-label="main navigation">
+                    <div class="navbar-brand" style="width: 250px;">
                         <a class="navbar-item" href="https://bulma.io">
-                            <img src="https://bulma.io/images/bulma-logo.png" width="112" height="28" />
+                            <b>SH</b>TECH-<b>R</b>
                         </a>
                         <div class="navbar-burger burger" data-target="navbarExampleTransparentExample">
                         <span></span>
@@ -61,8 +61,8 @@ class App extends Component {
                     </div>
                     <div id="navbarBasicExample" class="navbar-menu">
                         <div class="navbar-start">
-                            <nav class="breadcrumb has-succeeds-separator" aria-label="breadcrumbs">
-                                <ul>
+                            <nav class="breadcrumb has-succeeds-separator navbar-item" aria-label="breadcrumbs">
+                                >&nbsp; <ul>
                                     {this.getBreadcrumbs(state.page.parent)}
                                     {this.getBreadcrumbs(state.page)}
                                 </ul>
@@ -70,15 +70,20 @@ class App extends Component {
                         </div>
                         <div class="navbar-end">
                         { state.changed ? (
-                            <a style="float: right" href="#tools/diff">CHANGED! Click here to SAVE</a>
+                            <a class="navbar-item" href="#tools/diff">CHANGED! Click here to SAVE</a>
                         ) : (null) }
                         </div>
                     </div>
                 </nav>
                 
-
-                <Menu menus={menu.menus} selected={state.menu} />
-                <Page page={state.page} params={params} changed={this.state.changed} />
+                <section style="display: flex; margin-top: 52px;">
+                    <div style="flex: 0 0 250px">
+                        <Menu menus={menu.menus} selected={state.menu} />
+                    </div>
+                    <div style="flex: 1">
+                    <Page page={state.page} params={params} changed={this.state.changed} />
+                    </div>
+                </section>
                 
 
             </div>

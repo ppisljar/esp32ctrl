@@ -3,7 +3,8 @@ import { settings } from '../../lib/settings';
 
 export class Menu extends Component {
     renderMenuChildren(menu) {
-        return [...menu.children.map(child => {
+        if (!menu.children.length) return (null);
+        return (<ul>{[...menu.children.map(child => {
             if (child.action) {
                 return (
                 <li>
@@ -14,7 +15,7 @@ export class Menu extends Component {
             return (<li>
                 <a href={`#${child.href}`}>{child.title}</a>
             </li>);
-        })];
+        })]}</ul>);
     }
     renderMenuItem(menu) {
         if (menu.adminOnly && settings.userName !== 'admin') return (null);
@@ -29,7 +30,7 @@ export class Menu extends Component {
             return [
                 (<li>
                     <a href={`#${menu.href}`} class="is-active">{menu.title}</a>
-                    <ul>{this.renderMenuChildren(menu)}</ul>
+                    {this.renderMenuChildren(menu)}
                 </li>),
             ]
         }
@@ -42,14 +43,11 @@ export class Menu extends Component {
         if (props.open === false) return;
     
         return (
-        <div id="menu">
-            <div class="menu">
-                <a class="pure-menu-heading" href="/"><b>ESP</b>Easy</a>
-                <ul class="menu-list">
-                    {props.menus.map(menu => (this.renderMenuItem(menu)))}
-                </ul>
-            </div>
-        </div>
+        <aside class="menu">
+            <ul class="menu-list">
+                {props.menus.map(menu => (this.renderMenuItem(menu)))}
+            </ul>
+        </aside>
         );
     }
 }
