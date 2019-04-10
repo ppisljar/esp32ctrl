@@ -22,7 +22,7 @@ void SwitchPlugin::task(void * pvParameters)
 
         if (gpio != 255) {
             uint8_t val = io.digitalRead((gpio_num_t)gpio);
-            SET_STATE(s, state, 0, true, invert ? (val > 0 ? 0 : 1) : val);
+            SET_STATE(s, state, 0, true, invert ? (val > 0 ? 0 : 1) : val, 1);
             ESP_LOGI(P001_TAG, "reading gpio %d: %d", gpio, s->state);
         }
         ESP_LOGI(P001_TAG, "parameters: interval: %i, gpio: %i", interval, gpio);
@@ -51,7 +51,7 @@ void SwitchPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
     bool invert = (*cfg)["invert"] | false;
     
     if (n == 0 && state != *val) {
-        SET_STATE(this, state, 0, shouldNotify, *val);
+        SET_STATE(this, state, 0, shouldNotify, val, 1);
         ESP_LOGI(P001_TAG, "updating state %d (%p) [%d]", n, &state, state);
         if (gpio != 255) {
             io.digitalWrite(gpio, invert ? !state : state);

@@ -114,7 +114,8 @@ class MQTT_Notify : public Controller_Notify_Handler {
         MQTT_Notify(MQTTPlugin* parent) {     
                 p = parent;
         };
-        uint8_t operator()(Plugin *x, uint8_t var_id, uint8_t val) {
+        uint8_t operator()(Plugin *x, uint8_t var_id, void *val1, uint8_t val_type) {
+            uint8_t val = *(uint8_t*)val1;
             ESP_LOGI(TAG, "sending mqtt notification %p %d %d", p, var_id, val);
             if (!p->connected) {
                 ESP_LOGW(TAG, "mqtt not connected, skipping");

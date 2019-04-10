@@ -25,8 +25,8 @@ void DHTPlugin::task(void * pvParameters)
 		    errorHandler(ret);
             s->temp[0] = getTemperature();
             s->temp[1] = getHumidity();
-            SET_STATE(s, temperature, 0, true, te_eval(s->temp_expr));
-            SET_STATE(s, humidity, 1, true, te_eval(s->humi_expr));
+            SET_STATE(s, temperature, 0, true, te_eval(s->temp_expr), 5);
+            SET_STATE(s, humidity, 1, true, te_eval(s->humi_expr), 5);
             ESP_LOGI(P002_TAG, "Humidity: %f%% Temp: %fC", s->humidity, s->temperature);
         }
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);

@@ -53,6 +53,6 @@ void* DummyPlugin::getStatePtr(uint8_t n) {
 void DummyPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
     if (n < 10 && values[n] != nullptr && values[n]->name != nullptr) {
         memcpy(values[n]->value, val, 1);
-        if (shouldNotify) notify(this, n, *val);
+        if (shouldNotify) notify(this, n, val, 1);
     }
 }

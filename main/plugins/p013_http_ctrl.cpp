@@ -14,7 +14,8 @@ class HTTP_Notify : public Controller_Notify_Handler {
         HTTP_Notify(HTTPCtrlPlugin* parent) {     
                 p = parent;
         };
-        uint8_t operator()(Plugin *x, uint8_t var_id, uint8_t val) {
+        uint8_t operator()(Plugin *x, uint8_t var_id, void *val1, uint8_t val_type) {
+            uint8_t val = *(uint8_t*)val1;
             ESP_LOGI(TAG, "sending http notification %p %d %d", p, var_id, val);
             JsonObject &cfg = *(p->cfg);
             const char *uri_format = cfg["uri"];

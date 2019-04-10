@@ -29,7 +29,7 @@ void RegulatorPlugin::task(void * pvParameters)
             JsonObject& state = (s->jb).createObject();
             active_plugins[device]->getState(state);
             float currentValue = state[cfg["value"].as<char*>()];
-            SET_STATE(s, output, 0, true, currentValue > (level + hysteresis));
+            SET_STATE(s, output, 0, true, currentValue > (level + hysteresis), 1);
             ESP_LOGI(P005_TAG, "current output %i (%f > %f + %f)", s->output, currentValue, level, hysteresis);
         }
 

@@ -18,7 +18,7 @@ void AnalogPlugin::task(void * pvParameters)
         if (interval == 0) interval = 60;
 
         if (gpio != 255) {
-            SET_STATE(s, value, 9, true, io.analogRead(gpio));
+            SET_STATE(s, value, 0, true, io.analogRead(gpio), 2);
         }
 
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);

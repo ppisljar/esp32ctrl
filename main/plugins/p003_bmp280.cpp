@@ -18,9 +18,9 @@ void BMP280Plugin::task(void * pvParameters)
         if (interval == 0) { interval = 60; }
 
         if (bmp280_read_float(&s->dev, &s->temp[0], &s->temp[2], &s->temp[1]) == ESP_OK) {
-            SET_STATE(s, temperature, 0, true, te_eval(s->temp_expr));
-            SET_STATE(s, humidity, 1, true, te_eval(s->humi_expr));
-            SET_STATE(s, pressure, 2, true, te_eval(s->pres_expr));
+            SET_STATE(s, temperature, 0, true, te_eval(s->temp_expr), 5);
+            SET_STATE(s, humidity, 1, true, te_eval(s->humi_expr), 5);
+            SET_STATE(s, pressure, 2, true, te_eval(s->pres_expr), 5);
             ESP_LOGI(P003_TAG, "Pressure: %.2f Pa, Temperature: %.2f C", s->pressure, s->temperature);
         } else {
             ESP_LOGI(P003_TAG, "Could not read data from sensor");

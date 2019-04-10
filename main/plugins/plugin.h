@@ -103,8 +103,8 @@ void* TYPE::getStatePtr(uint8_t val) { \
     bool getConfig(JsonObject& ); \
     void* getStatePtr(uint8_t ); 
 
-#define SET_STATE(plugin, var, var_index, shouldNotify, value) plugin->var = value; \
-            if (shouldNotify) notify(plugin, var_index, plugin->var)
+#define SET_STATE(plugin, var, var_index, shouldNotify, value, value_type) plugin->var = value; \
+            if (shouldNotify) notify(plugin, var_index, &plugin->var, value_type)
 
 class Plugin
 {
