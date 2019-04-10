@@ -39,6 +39,16 @@ inline esp_err_t pcf8574_port_write(uint8_t dev, uint8_t value)
     return I2Cdev::write(dev, NULL, 0, &value, 1);
 }
 
+inline esp_err_t pcf8575_port_read(uint8_t dev, uint16_t *val)
+{
+    return I2Cdev::read(dev, NULL, 0, (uint8_t*)val, 2);
+}
+
+inline esp_err_t pcf8575_port_write(uint8_t dev, uint16_t value)
+{
+    return I2Cdev::write(dev, NULL, 0, (uint8_t*)&value, 2);
+}
+
 #ifdef __cplusplus
 }
 #endif

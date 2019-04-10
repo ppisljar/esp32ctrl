@@ -7,6 +7,11 @@ const i2cAddr = [
     { value: 35, name: '0x23' },
 ];
 
+const typeOptions = [
+    { value: 0, name: 'pcf8574' },
+    { value: 1, name: 'pcf8575' },
+]
+
 const pinBootStates = [
     { value: 0, name: 'LOW' },
     { value: 1, name: 'HIGH' },
@@ -18,7 +23,8 @@ class PCF8574 extends Device {
         this.params = {
             name: 'Sensor',
             configs: {
-                addr: { name: 'Address', type: 'select', options: i2cAddr }
+                addr: { name: 'Address', type: 'select', options: i2cAddr },
+                type: { name: 'Type', type: 'select', options: typeOptions }
             }
         };
 
