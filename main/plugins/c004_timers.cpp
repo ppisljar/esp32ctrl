@@ -135,8 +135,8 @@ static void timer_example_evt_task(void *arg)
     }
 }
 
-void TimersPlugin::enableHwInterrupt(uint8_t pin) {
-    gpio_set_intr_type((gpio_num_t)pin, GPIO_INTR_ANYEDGE);
+void TimersPlugin::enableHwInterrupt(uint8_t pin, gpio_int_type_t type) {
+    gpio_set_intr_type((gpio_num_t)pin, type);
     gpio_isr_handler_add((gpio_num_t)pin, gpio_isr_handler, (void*)pin);
 }
 

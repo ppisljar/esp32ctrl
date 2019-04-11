@@ -1,61 +1,89 @@
 #include "p015_dimmer.h"
 
-const char *P001_TAG = "DimmerPlugin";
+static const char *TAG = "DimmerPlugin";
 
-PLUGIN_CONFIG(DimmerPlugin, interval, gpio1, gpio2)
-PLUGIN_STATS(DimmerPlugin, state, state);
+PLUGIN_CONFIG(DimmerPlugin, interval, gpio_zc, outputs)
+PLUGIN_STATS(DimmerPlugin, state[0], state[1], state[2], state[3], state[4], state[5], state[6], state[7]);
 
-void DimmerPlugin::task(void * pvParameters)
+struct dimmer_pins_t {
+    gpio_num_t gpio;
+    esp_timer_handle_t timer;
+    uint32_t delay;
+};
+
+struct dimmer_pins_t *dimmer_pins[8];
+
+static void timer_callback(void* arg)
 {
-    // DimmerPlugin* s = (DimmerPlugin*)pvParameters;
-    // JsonObject &cfg = *(s->cfg);
+    uint32_t gpio_num = (uint32_t) arg;
+    GPIO.out_w1tc = 1 << gpio_num;
+}
 
-    // ESP_LOGI(P001_TAG, "main task: %i:%i", (unsigned)s, unsigned(s->cfg));
-    // for( ;; )
-    // {
-    //     // Task code goes here.
-    //     int interval = cfg["interval"] | 60;
-    //     int gpio = cfg["gpio"] | 255;
-    //     bool invert = cfg["invert"] | false;
+static void IRAM_ATTR dimmer_isr_handler(void* arg)
+{
+    uint32_t gpio_num = (uint32_t) arg;
+    uint32_t intr_st = GPIO.status;
+    if (intr_st & (1 << gpio_num)) {
+        for (int i = 0; i < 100; ++i) {}
+        if (GPIO.in & (1 << gpio_num)) {
 
-    //     if (interval == 0) interval = 60;
-
-    //     if (gpio != 255) {
-    //         uint8_t val = io.digitalRead((gpio_num_t)gpio);
-    //         SET_STATE(s, state, 0, true, invert ? (val > 0 ? 0 : 1) : val);
-    //         ESP_LOGI(P001_TAG, "reading gpio %d: %d", gpio, s->state);
-    //     }
-    //     ESP_LOGI(P001_TAG, "parameters: interval: %i, gpio: %i", interval, gpio);
-    //     vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);
-    // }
+            // set gpio outputs (all)
+            for (uint8_t i = 0;  i < 8; i++) {
+                if (dimmer_pins[i] == nullptr) break;
+                if (dimmer_pins[i]->delay == 0) {
+                    GPIO.out_w1tc = 1 << dimmer_pins[i]->gpio;
+                } else {
+                    GPIO.out_w1ts = 1 << dimmer_pins[i]->gpio;
+                    ESP_ERROR_CHECK(esp_timer_stop(dimmer_pins[i]->timer));
+                    ESP_ERROR_CHECK(esp_timer_start_once(dimmer_pins[i]->timer, dimmer_pins[i]->delay));
+                }
+            }
+        }
+    }
 }
 
 bool DimmerPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]["values"]);
 
-    // gpio1 = (*cfg)["gpio1"] | 255;
-    // gpio2 = (*cfg)["gpio2"] | 255;
-    // if (gpio1 != 255 && gpio2 != 255) {
-    //     ESP_LOGI(P001_TAG, "setting gpio %d to OUTPUT", gpio);
-    //     io.setDirection(gpio, GPIO_MODE_INPUT_OUTPUT);
+    gpio_zc = (*cfg)["gpio1"] | 255;
+    JsonArray &outputs = (*cfg)["outputs"];
+    
+    if (gpio_zc != 255) {
+        io.setDirection(gpio_zc, GPIO_MODE_INPUT);
+        gpio_set_intr_type((gpio_num_t)gpio_zc, GPIO_INTR_POSEDGE);
+        gpio_set_pull_mode((gpio_num_t)gpio_zc, GPIO_PULLDOWN_ONLY);
+        gpio_isr_handler_add((gpio_num_t)gpio_zc, dimmer_isr_handler, (void*)gpio_zc);
 
-    //     // xTaskCreatePinnedToCore(this->task, P001_TAG, 4096, this, 5, NULL, 1);
-    // }
+        uint8_t i = 0;
+        for (auto output : outputs) {
+            if (i == 8) {
+                ESP_LOGW(TAG, "too many outputs defined");
+                break;
+            }
+            io.setDirection(output.as<uint8_t>(), GPIO_MODE_INPUT_OUTPUT);
+            dimmer_pins[i] = (dimmer_pins_t*)malloc(sizeof(dimmer_pins_t));
+            dimmer_pins[i]->gpio = (gpio_num_t)output.as<uint8_t>();
+            dimmer_pins[i]->delay = 0;
+            esp_timer_create_args_t timer_args = {};
+            timer_args.callback = &timer_callback;
+            timer_args.arg = (void*) output.as<uint8_t>();
+            timer_args.name = "dimmer";
+            ESP_ERROR_CHECK(esp_timer_create(&timer_args, &dimmer_pins[i]->timer));
+            i++;
+        }
+    }
 
     return true;
 }
 
 void DimmerPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
-    // bool invert = (*cfg)["invert"] | false;
-    
-    // if (n == 0 && state != *val) {
-    //     SET_STATE(this, state, 0, shouldNotify, *val);
-    //     ESP_LOGI(P001_TAG, "updating state %d (%p) [%d]", n, &state, state);
-    //     if (gpio != 255) {
-    //         io.digitalWrite(gpio, invert ? !state : state);
-    //     }
-    // } else if (n != 0) {
-    //     ESP_LOGW(P001_TAG, "invalid state id: %d", n);
-    // }
+
+    if (n < 8 && state[n] != *val) {
+        //SET_STATE(this, state[n], n, shouldNotify, *val, 1);
+        dimmer_pins[n]->delay = 65 * *val;
+        //ESP_LOGI(TAG, "updating state %d (%p) [%d]", n, &state, state);
+    } else {
+        ESP_LOGW(TAG, "invalid state id: %d", n);
+    }
 }

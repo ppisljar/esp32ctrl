@@ -134,19 +134,19 @@ TODO:
 -- device/plugin alerts
 -- notifications to: email, sms, call
 
-- log device values (amount of history)
--- show history in webui
+- show history in webui
 
 - inter plugin dependency
 - uporaba hw interruptov/hw timerjev iz drugih pluginov
 - clock rule trigger
+- pwm
 
+- touch
 - motor driver
 - wifi scanner
 - bluetooth scanner
 - svetlobni senzor k je na stekarju
 - ojacevalc k je na stekarju
-- touch
 - microphone
 - speaker
 

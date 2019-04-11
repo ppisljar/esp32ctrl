@@ -32,7 +32,7 @@ class TimersPlugin: public Plugin {
         
         DEFINE_PLUGIN(TimersPlugin);
 
-        void enableHwInterrupt(uint8_t pin);
+        void enableHwInterrupt(uint8_t pin, gpio_int_type_t type = GPIO_INTR_ANYEDGE);
 };
 
 #endif
