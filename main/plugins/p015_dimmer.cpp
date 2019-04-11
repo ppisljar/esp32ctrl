@@ -13,20 +13,25 @@ struct dimmer_pins_t {
 
 struct dimmer_pins_t *dimmer_pins[8];
 
+int16_t cnt_D = 0;
+
 static void timer_callback(void* arg)
 {
+    //ESP_LOGI(TAG, "interrupts last second: %d", cnt_D);
+    //cnt_D = 0;
     uint32_t gpio_num = (uint32_t) arg;
     GPIO.out_w1tc = 1 << gpio_num;
 }
 
 static void IRAM_ATTR dimmer_isr_handler(void* arg)
 {
+    
     uint32_t gpio_num = (uint32_t) arg;
     uint32_t intr_st = GPIO.status;
     if (intr_st & (1 << gpio_num)) {
         for (int i = 0; i < 100; ++i) {}
         if (GPIO.in & (1 << gpio_num)) {
-
+            cnt_D++;        
             // set gpio outputs (all)
             for (uint8_t i = 0;  i < 8; i++) {
                 if (dimmer_pins[i] == nullptr) break;
@@ -34,7 +39,7 @@ static void IRAM_ATTR dimmer_isr_handler(void* arg)
                     GPIO.out_w1tc = 1 << dimmer_pins[i]->gpio;
                 } else {
                     GPIO.out_w1ts = 1 << dimmer_pins[i]->gpio;
-                    ESP_ERROR_CHECK(esp_timer_stop(dimmer_pins[i]->timer));
+                    esp_timer_stop(dimmer_pins[i]->timer);
                     ESP_ERROR_CHECK(esp_timer_start_once(dimmer_pins[i]->timer, dimmer_pins[i]->delay));
                 }
             }
@@ -46,7 +51,7 @@ bool DimmerPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]["values"]);
 
-    gpio_zc = (*cfg)["gpio1"] | 255;
+    gpio_zc = (*cfg)["gpio_zc"] | 255;
     JsonArray &outputs = (*cfg)["outputs"];
     
     if (gpio_zc != 255) {
@@ -61,10 +66,11 @@ bool DimmerPlugin::init(JsonObject &params) {
                 ESP_LOGW(TAG, "too many outputs defined");
                 break;
             }
+            ESP_LOGI(TAG, "adding output on pin %d", output.as<uint8_t>());
             io.setDirection(output.as<uint8_t>(), GPIO_MODE_INPUT_OUTPUT);
             dimmer_pins[i] = (dimmer_pins_t*)malloc(sizeof(dimmer_pins_t));
             dimmer_pins[i]->gpio = (gpio_num_t)output.as<uint8_t>();
-            dimmer_pins[i]->delay = 0;
+            dimmer_pins[i]->delay = 500;
             esp_timer_create_args_t timer_args = {};
             timer_args.callback = &timer_callback;
             timer_args.arg = (void*) output.as<uint8_t>();
@@ -74,6 +80,8 @@ bool DimmerPlugin::init(JsonObject &params) {
         }
     }
 
+    //ESP_ERROR_CHECK(esp_timer_start_periodic(dimmer_pins[0]->timer, 1000000));
+
     return true;
 }
 
@@ -81,7 +89,7 @@ void DimmerPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
 
     if (n < 8 && state[n] != *val) {
         //SET_STATE(this, state[n], n, shouldNotify, *val, 1);
-        dimmer_pins[n]->delay = 65 * *val;
+        dimmer_pins[n]->delay = 1000 + 30 * (*val);
         //ESP_LOGI(TAG, "updating state %d (%p) [%d]", n, &state, state);
     } else {
         ESP_LOGW(TAG, "invalid state id: %d", n);

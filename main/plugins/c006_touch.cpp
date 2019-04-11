@@ -35,6 +35,9 @@ void TouchPlugin::task(void * pvParameters)
                 vTaskDelay(200 / portTICK_PERIOD_MS);
                 // Clear information on pad activation
                 s_pad_activated[i] = false;
+                if (rule_engine_touch_triggers[i] != nullptr) {
+                    run_rule(rule_engine_touch_triggers[i], nullptr, 0, 255);
+                }
             }
         }
         vTaskDelay(100 / portTICK_PERIOD_MS);
@@ -55,8 +58,10 @@ bool TouchPlugin::init(JsonObject &params) {
     // Init touch pad IO
     
     uint16_t touch_value;
-    for (int i = 0; i<TOUCH_PAD_MAX; i++) {
-        if (params["hardware"]["gpio"][i]["mode"] != 4) continue;
+    uint8_t touch_pins[10] = { 4, 0, 2, 15, 13, 12, 14, 27, 33, 32 };
+
+    for (int i = 0; i < 10; i++) {
+        if (params["hardware"]["gpio"][touch_pins[i]]["mode"] != 4) continue;
 
         touch_pad_config((touch_pad_t)i, TOUCH_THRESH_NO_USE);
         //read filtered value

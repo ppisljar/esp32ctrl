@@ -12,6 +12,7 @@ import { mqtt } from './11_mqtt';
 import { rotaryEncoder } from './12_rotary_encoder';
 import { http } from './13_http';
 import { dummy } from './14_dummy';
+import { dimmer } from './15_dimmer';
 
 // import { bmp085 } from './6_bmp085';
 // import { pcf8591 } from './7_pcf8591';
@@ -71,6 +72,7 @@ export const devices = [
     { name: 'Generic - Rotary Encoder', value: 12, fields: rotaryEncoder },
     { name: 'Generic - HTTP', value: 13, fields: http },
     { name: 'Generic - Dummy Device', value: 14, fields: dummy },
+    { name: 'Generic - Dimmer', value: 15, fields: dimmer },
     //{ name: 'Light/Lux - BH1750', value: 10, fields: bh1750 },
     // { name: 'Extra IO - ProMini Extender', value: 11, fields: pme },
     // { name: 'Display - LCD2004', value: 12, fields: lcd2004 },

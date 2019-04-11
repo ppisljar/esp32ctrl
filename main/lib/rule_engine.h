@@ -10,6 +10,7 @@
 class Plugin;
 
 extern unsigned char *rule_engine_alexa_triggers[10];
+extern unsigned char *rule_engine_touch_triggers[10];
 extern unsigned char *rule_engine_hwtimers[4];
 extern unsigned char *rule_engine_hwinterrupts[16];
 
@@ -70,5 +71,6 @@ extern esp_event_loop_handle_t rule_event_loop;
 #define TRIG_HWTIMER    0x04
 #define TRIG_HWINTER    0x05
 #define TRIG_ALEXA      0x06
+#define TRIG_TOUCH      0x07
 
 #endif

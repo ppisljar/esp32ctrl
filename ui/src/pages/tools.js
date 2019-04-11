@@ -70,7 +70,8 @@ export class ToolsPage extends Component {
                 cmdArray.push(this.state.device);
                 cmdArray.push(this.state.state);
                 if (this.state.cmd === 240)
-                    cmdArray.push(this.state.value);
+                    cmdArray.push(1);
+                    cmdArray.push(this.state.val);
             }
 
             fetch(`/cmd/3`, {

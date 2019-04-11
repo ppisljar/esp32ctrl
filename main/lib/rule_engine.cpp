@@ -19,6 +19,7 @@ byte timer_triggers[2];
 byte *rule_engine_hwtimers[4] = {};
 byte *rule_engine_hwinterrupts[16] = {};
 byte *rule_engine_alexa_triggers[10] = {};
+byte *rule_engine_touch_triggers[10] = {};
 
 extern Plugin *active_plugins[10];
 extern TimersPlugin *timers_plugin;
@@ -183,6 +184,10 @@ int parse_rules(byte *rules, long len) {
                 case TRIG_ALEXA:
                     ESP_LOGI(TAG_RE, "found alexa %d on address: %p", rules[i + 5], (void*)(rules + i + 6));
                     rule_engine_alexa_triggers[rules[i + 5]] = rules + i + 6;
+                    break;
+                case TRIG_TOUCH:
+                    ESP_LOGI(TAG_RE, "found touch %d on address: %p", rules[i + 5], (void*)(rules + i + 6));
+                    rule_engine_touch_triggers[rules[i + 5]] = rules + i + 6;
                     break;
             }
         }

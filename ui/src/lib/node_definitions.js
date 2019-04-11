@@ -98,6 +98,28 @@ export const getNodes = (devices, vars) => {
             toDsl: function () { return [`\xFF\xFE\x00\xFF\x05${String.fromCharCode(this.config[0].value)}`]; }
         }, {
             group: 'TRIGGERS',
+            type: 'touch',
+            inputs: [],
+            outputs: [1],
+            config: [{
+                name: 'trigger',
+                type: 'select',
+                values: function () {
+                    return settings.get('hardware.gpio', []).map((t, i) => ({ name: t.name, value: i, m: t.mode })).filter(gpio => gpio.mode == 4);
+                },
+            }],
+            if: () => {
+                return settings.get('hardware.gpio', []).map((t, i) => ({ name: t.name, value: i, m: t.mode })).filter(gpio => gpio.mode == 4).length > 0;
+            },
+            indent: true,
+            toString: function () {
+                const vals = this.config[0].values(); 
+                const val = vals.find(v => v.value == this.config[0].value) || { name: '' };
+                return `on touch '${val.name}'`; 
+            },
+            toDsl: function () { return [`\xFF\xFE\x00\xFF\x07${String.fromCharCode(this.config[0].value)}`]; }
+        } , {
+            group: 'TRIGGERS',
             type: 'alexa',
             inputs: [],
             outputs: [1],
