@@ -41,10 +41,14 @@ export const getNodes = (devices, vars) => {
             type: 'clock',
             inputs: [],
             outputs: [1],
-            config: [],
+            config: [{
+                name: 'cron expression',
+                type: 'text',
+                value: '* * * * * *'
+            }],
             indent: true,
             toString: () => { return 'clock'; },
-            toDsl: () => { return [`\xFF\xFE\x00\xFF\x03\x00`]; }
+            toDsl: () => { return [`\xFF\xFE\x00\xFF\x08${this.config[0].value}\x00`]; }
         }, {
             group: 'TRIGGERS',
             type: 'system boot',

@@ -1,6 +1,7 @@
 
 #include "rule_engine.h"
 #include "../plugins/c004_timers.h"
+#include "../plugins/c008_cron.h"
 #include "../plugins/utils.h"
 #include <map>
 
@@ -23,6 +24,7 @@ byte *rule_engine_touch_triggers[10] = {};
 
 extern Plugin *active_plugins[10];
 extern TimersPlugin *timers_plugin;
+extern CronPlugin *cron_plugin;
 
 ESP_EVENT_DEFINE_BASE(RULE_EVENTS)
 esp_event_loop_handle_t rule_event_loop;
@@ -189,6 +191,10 @@ int parse_rules(byte *rules, long len) {
                     ESP_LOGI(TAG_RE, "found touch %d on address: %p", rules[i + 5], (void*)(rules + i + 6));
                     rule_engine_touch_triggers[rules[i + 5]] = rules + i + 6;
                     break;
+                case TRIG_CRON:
+                    ESP_LOGI(TAG_RE, "found cron %s on address: %p", rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
+                    cron_plugin->addCron(rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
+                    break;    
             }
         }
     }

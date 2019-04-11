@@ -72,5 +72,6 @@ extern esp_event_loop_handle_t rule_event_loop;
 #define TRIG_HWINTER    0x05
 #define TRIG_ALEXA      0x06
 #define TRIG_TOUCH      0x07
+#define TRIG_CRON       0x08
 
 #endif

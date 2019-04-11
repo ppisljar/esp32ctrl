@@ -22,6 +22,9 @@ static const char *TAG = "MAIN";
 #include "plugins/c004_timers.h"
 #include "plugins/c005_hue.h"
 #include "plugins/c006_touch.h"
+#include "plugins/c007_logging.h"
+#include "plugins/c008_cron.h"
+
 #include "plugins/p001_switch.h"
 #include "plugins/p002_dht.h"
 #include "plugins/p003_bmp280.h"
@@ -50,6 +53,8 @@ WiFiPlugin *wifi_plugin;
 TimersPlugin *timers_plugin;
 HueEmulatorPlugin *hue_plugin;
 TouchPlugin *touch_plugin;
+LoggingPlugin *logging_plugin;
+CronPlugin *cron_plugin;
 
 IO io;
 

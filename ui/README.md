@@ -122,6 +122,9 @@ before the last line insert something like `{ name: 'My Plugin Name', value: 103
 TODO:
 
 - download pplugin to sdcard (install)
+- show history in webui
+- file manager sdcard support
+
 - alerting
 -- generate alert file
 -- parse alert file (plugin init)
@@ -134,23 +137,18 @@ TODO:
 -- device/plugin alerts
 -- notifications to: email, sms, call
 
-- show history in webui
 
 - inter plugin dependency
 - uporaba hw interruptov/hw timerjev iz drugih pluginov
 - clock rule trigger
-- pwm
 
-- touch
 - motor driver
 - wifi scanner
-- bluetooth scanner
 - svetlobni senzor k je na stekarju
 - ojacevalc k je na stekarju
 - microphone
 - speaker
 
-- file manager sdcard support
 - ota (0.7mb ota, 0.5mb data, 1.8mb app)
 - locit nepotreben config v svoj config file
 
