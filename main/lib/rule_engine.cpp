@@ -9,6 +9,7 @@
 #define TAG_RE "RuleEngine"
 
 byte *rule_list[20]; //every trigger has its entry
+byte *alert_list[20]; //every trigger has its entry
 byte *event_list[20];
 byte old_values[256]; // reserve 128 bytes for storing old values
 byte old_values_free_ptr = 0; // points to the place in array which is free
@@ -205,10 +206,10 @@ int parse_alerts(byte *alerts, long len) {
     int alerts_found = 0;
 
     for (byte i = 0; i < len; i++) {
-        if (rules[i] == 0xff && rules[i+1] == 0xfe && rules[i+2] == 0x00 && rules[i+3] == 0xff) {
-            switch (rules[i+4]) {
+        if (alerts[i] == 0xff && alerts[i+1] == 0xfe && alerts[i+2] == 0x00 && alerts[i+3] == 0xff) {
+            switch (alerts[i+4]) {
                 case TRIG_VAR:
-                    alert_list[alerts_found++] = rules + i + 4;
+                    alert_list[alerts_found++] = alerts + i + 4;
                     break;
             }
         }
@@ -220,8 +221,8 @@ void check_alerts() {
     for (auto alert : alert_list) {
         if (alert == NULL) break;
         uint8_t alert_id = *alert;
-
-        if (multi_compare(alert + 1)) {
+        alert++;
+        if (multi_compare(&alert)) {
             // fire alert
         }
     }

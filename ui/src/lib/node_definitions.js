@@ -109,11 +109,12 @@ export const getNodes = (devices, vars) => {
                 name: 'trigger',
                 type: 'select',
                 values: function () {
-                    return settings.get('hardware.gpio', []).map((t, i) => ({ name: t.name, value: i, m: t.mode })).filter(gpio => gpio.mode == 4);
+                    let x = 0;
+                    return settings.get('hardware.gpio', []).map((t, i) => (t && t.mode == 4 ? { name: `GPIO ${i}`, value: x++ } : null)).filter(gpio => gpio);
                 },
             }],
             if: () => {
-                return settings.get('hardware.gpio', []).map((t, i) => ({ name: t.name, value: i, m: t.mode })).filter(gpio => gpio.mode == 4).length > 0;
+                return settings.get('hardware.gpio', []).filter(t => t && t.mode == 4).length > 0;
             },
             indent: true,
             toString: function () {

@@ -107,9 +107,9 @@ const formConfig = {
                     const pinStateOptions = [...pinState];
                     if (isTouchPin(i)) pinStateOptions.push({ name: 'Touch', value: 4 });
                     return [
-                        { name: `Pin Mode GPIO-${i}`, type: 'select', options: pinState, var: `gpio.${i}.mode` }, 
-                        { name: 'interrupt', type: 'checkbox', if: `hardware.gpio.${i}.mode`, ifval:3, var: `gpio.${i}.interrupt` },
-                        { name: 'threshold', type: 'number', if: `hardware.gpio.${i}.mode`, ifval: 4, var: `gpio.${i}.threshold` },
+                        { name: `Pin Mode GPIO-${i}`, type: 'select', options: pinStateOptions, var: `gpio.${i}.mode` }, 
+                        { name: 'interrupt', type: 'checkbox', if: `gpio.${i}.mode`, ifval:3, var: `gpio.${i}.interrupt` },
+                        { name: 'threshold', type: 'number', if: `gpio.${i}.mode`, ifval: 4, var: `gpio.${i}.threshold` },
                     ];
                 }),
                 
