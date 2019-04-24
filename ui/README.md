@@ -112,13 +112,6 @@ before the last line insert something like `{ name: 'My Plugin Name', value: 103
 
 
 
-
-
-
-
-
-
-
 TODO:
 
 - download pplugin to sdcard (install)
@@ -126,9 +119,11 @@ TODO:
 - file manager sdcard support
 
 - alerting
--- generate alert file
--- parse alert file (plugin init)
--- watch for alerts (plugin task)
+-- nekje morm oznact da je alert triggeran (da ga lahko potem clearam)
+-- kaj se zgodi ce se isti alert veckrat triggera ?
+-- kaj se zgodi ce ni vec aktiven ? (neki je blo prevec zdej je pa ok)
+
+
 -- fire alert from rule
 -- clear alert from rule
 -- log alert
@@ -140,7 +135,6 @@ TODO:
 
 - inter plugin dependency
 - uporaba hw interruptov/hw timerjev iz drugih pluginov
-- clock rule trigger
 
 - motor driver
 - wifi scanner

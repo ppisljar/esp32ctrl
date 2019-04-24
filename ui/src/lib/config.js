@@ -1,6 +1,22 @@
 import { settings } from './settings';
 import { storeFile } from './espeasy';
 
+const prepareAlerts = () => {
+    const alerting = settings.get('alerting');
+    if (!alerting || !alerting.enabled) return;
+
+    const alerts = alerting.alerts.map(alert => {
+        const trigger = `\xFF\xFE\x00\xFF\x00${String.fromCharCode(alert.triggers.length)}`;
+        alert.triggers.forEach(t => {
+            trigger += `${String.fromCharCode(t.device)}${String.fromCharCode(t.value_id)}${String.fromCharCode(t.compare)})}\x01`;
+            trigger += String.fromCharCode(t.value);
+        });
+        return trigger;
+    }).join('\xFF') + '\xFF';
+
+    return storeFile('alerts.bin', alerts);
+}
+
 export const loadConfig = () => {
     return fetch('/config.json').then(r => {
         settings.user(r.headers.get('user').replace(',','').trim());
@@ -12,7 +28,9 @@ export const loadConfig = () => {
 };
 
 export const saveConfig = () => {
-    return storeFile('config.json', JSON.stringify(settings.get()));
+    return storeFile('config.json', JSON.stringify(settings.get())).then(() => {
+        return prepareAlerts();
+    });
 }
 
 export const loadRules = async () => {

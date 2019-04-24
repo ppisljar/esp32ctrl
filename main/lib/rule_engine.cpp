@@ -201,6 +201,32 @@ int parse_rules(byte *rules, long len) {
     return rules_found;
 }
 
+int parse_alerts(byte *alerts, long len) {
+    int alerts_found = 0;
+
+    for (byte i = 0; i < len; i++) {
+        if (rules[i] == 0xff && rules[i+1] == 0xfe && rules[i+2] == 0x00 && rules[i+3] == 0xff) {
+            switch (rules[i+4]) {
+                case TRIG_VAR:
+                    alert_list[alerts_found++] = rules + i + 4;
+                    break;
+            }
+        }
+    }
+    return alerts_found;
+}
+
+void check_alerts() {
+    for (auto alert : alert_list) {
+        if (alert == NULL) break;
+        uint8_t alert_id = *alert;
+
+        if (multi_compare(alert + 1)) {
+            // fire alert
+        }
+    }
+}
+
 int averagerun = 1000;
 int lastrun = 0;
 uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t len = 255) {
