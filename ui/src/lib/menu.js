@@ -23,6 +23,7 @@ import {
     AlertsPage,
     AlertsEditPage,
     ConfigPluginsPage,
+    ConfigBluetoothPage,
 } from '../pages';
 
 import { deleteFile } from './espeasy';
@@ -63,6 +64,7 @@ const menus = [
     { title: 'Alerts', href: 'alerts', component: AlertsPage, children: [] },
     { title: 'Config', adminOnly: true, href: 'config', component: ConfigPage, children: [
         { title: 'Hardware', pagetitle: 'Hardware', href: 'config/hardware', component: ConfigHardwarePage },
+        { title: 'Bluetooth', pagetitle: 'Bluetooth', href: 'config/bluetooth', component: ConfigBluetoothPage },
         { title: 'Advanced', href: 'config/advanced', component: ConfigAdvancedPage },
         { title: 'Plugins', href: 'config/plugins', component: ConfigPluginsPage },
         { title: 'Save', href: 'config/save', action: saveConfig },

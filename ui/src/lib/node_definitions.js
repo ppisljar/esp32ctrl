@@ -123,6 +123,27 @@ export const getNodes = (devices, vars) => {
                 return `on touch '${val.name}'`; 
             },
             toDsl: function () { return [`\xFF\xFE\x00\xFF\x07${String.fromCharCode(this.config[0].value)}`]; }
+        }, {
+            group: 'TRIGGERS',
+            type: 'bluetooth',
+            inputs: [],
+            outputs: [1],
+            config: [{
+                name: 'value',
+                type: 'select',
+                values: function () {
+                    return settings.get('bluetooth.server.values', []).map((t, i) => ({ name: t.name, value: i }));
+                },
+            }],
+            if: () => {
+                return settings.get('bluetooth.server.enabled', false);
+            },
+            toString: function () {
+                const vals = this.config[0].values(); 
+                const val = vals.find(v => v.value == this.config[0].value) || { name: '' };
+                return `on bluetooth '${val.name}'`; 
+            },
+            toDsl: function () { return [`\xFF\xFE\x00\xFF\x09${String.fromCharCode(this.config[0].value)}`]; }
         } , {
             group: 'TRIGGERS',
             type: 'alexa',

@@ -2,6 +2,7 @@ export * from './controllers';
 export * from './devices';
 export * from './config';
 export * from './config.advanced';
+export * from './config.bluetooth';
 export * from './config.hardware';
 export * from './config.plugins';
 export * from './reboot';

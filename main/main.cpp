@@ -42,6 +42,7 @@ static const char *TAG = "MAIN";
 #include "plugins/p015_dimmer.h"
 
 #include "bluetooth.h"
+#include "plugins/c009_bluetooth.h"
 
 
 // global config object
@@ -55,6 +56,7 @@ HueEmulatorPlugin *hue_plugin;
 TouchPlugin *touch_plugin;
 LoggingPlugin *logging_plugin;
 CronPlugin *cron_plugin;
+BlueToothPlugin *bluetooth_plugin;
 
 IO io;
 
@@ -153,12 +155,16 @@ extern "C" void app_main()
     timers_plugin = new TimersPlugin();
     timers_plugin->init(timer_config);
 
-    JsonObject &bluetooth_config = cfgObject["hardware"]["bluetooth"];
-    // if (bluetooth_config["enabled"]) {
-    //     bluetooth = new BlueTooth();
-    //     bluetooth->init();
-    //     bluetooth->getDevices(btfunc, 0);
-    // }
+    JsonObject &bluetooth_config = cfgObject["bluetooth"];
+    if (bluetooth_config["enabled"]) {
+        if (bluetooth_config["server"]["enabled"]) {
+            bluetooth_plugin = new BlueToothPlugin();
+            bluetooth_plugin->init(bluetooth_config);
+        }
+        // bluetooth = new BlueTooth();
+        // bluetooth->init();
+        // bluetooth->getDevices(btfunc, 0);
+    }
 
     //JsonObject &io_cfg = cfgObject["io"];
     struct IO_DIGITAL_PINS pins;

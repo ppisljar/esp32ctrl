@@ -22,6 +22,7 @@ byte *rule_engine_hwtimers[4] = {};
 byte *rule_engine_hwinterrupts[16] = {};
 byte *rule_engine_alexa_triggers[10] = {};
 byte *rule_engine_touch_triggers[10] = {};
+byte *rule_engine_bluetooth_triggers[10] = {};
 
 extern Plugin *active_plugins[10];
 extern TimersPlugin *timers_plugin;
@@ -195,7 +196,11 @@ int parse_rules(byte *rules, long len) {
                 case TRIG_CRON:
                     ESP_LOGI(TAG_RE, "found cron %s on address: %p", rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
                     cron_plugin->addCron(rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
-                    break;    
+                    break;   
+                case TRIG_BLUETOOTH:
+                    ESP_LOGI(TAG_RE, "found bletooth %s on address: %p", rules + i + 5, (void*)(rules + i + 6));
+                    rule_engine_bluetooth_triggers[rules[i + 5]] = rules + i + 6;
+                    break;     
             }
         }
     }
