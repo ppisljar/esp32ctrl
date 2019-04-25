@@ -40,6 +40,7 @@ static const char *TAG = "MAIN";
 #include "plugins/p013_http_ctrl.h"
 #include "plugins/p014_dummy.h"
 #include "plugins/p015_dimmer.h"
+#include "plugins/p016_udp_server.h"
 
 #include "bluetooth.h"
 #include "plugins/c009_bluetooth.h"
@@ -104,6 +105,9 @@ Plugin* DummyPlugin_myProtoype = Plugin::addPrototype(14, new DummyPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P015_DIMMER
 Plugin* DimmerPlugin_myProtoype = Plugin::addPrototype(15, new DimmerPlugin);
+#endif
+#ifdef CONFIG_ENABLE_P016_UDPSERVER
+Plugin* UdpServerPlugin_myProtoype = Plugin::addPrototype(16, new UdpServerPlugin);
 #endif
 
 BlueTooth* bluetooth;
@@ -218,6 +222,7 @@ extern "C" void app_main()
 
     long rule_length;
     uint8_t *rules = (uint8_t*)read_file("/spiffs/rules.dat", &rule_length);
+    init_rules();
     if (rules != NULL && rule_length > 0) {
         ESP_LOGI(TAG, "parsing rule file of size: %ld", rule_length);
         parse_rules(rules, rule_length);

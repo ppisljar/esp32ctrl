@@ -82,8 +82,8 @@ menu "MyESP32 CTRL"
             bool "Dimmer Device"
             default y
         
-        config ENABLE_P016_MOTOR
-            bool "Motor Controller"
+        config ENABLE_P016_UDPSERVER
+            bool "UDP Server"
             default y
     endmenu
 

@@ -54,7 +54,7 @@ static void user_event_handler(void* handler_args, esp_event_base_t base, int32_
 
 }
 
-void init() {
+void init_rules() {
     esp_event_loop_args_t rule_event_loop_args = {
         .queue_size = 50,
         .task_name = "rule_loop_task", // task will be created
@@ -157,7 +157,7 @@ bool multi_compare(byte **ptr) {
 }
 
 int parse_rules(byte *rules, long len) {
-    init();
+    
     int rules_found = 0;
     int events_found = 0;
     for (byte i = 0; i < len; i++) {
