@@ -135,9 +135,9 @@ bool DimmerPlugin::init(JsonObject &params) {
 }
 
 void DimmerPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
-
+    ESP_LOGI(TAG, "setting dimmer state %d to %d", n, *val);
     if (n < 8 && state[n] != *val) {
-        //SET_STATE(this, state[n], n, shouldNotify, *val, 1);
+        SET_STATE(this, state[n], n, shouldNotify, *val, 1);
         dimmer_pins[n]->delay = 4 * (*val);
         //ESP_LOGI(TAG, "updating state %d (%p) [%d]", n, &state, state);
     } else {

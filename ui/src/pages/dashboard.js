@@ -10,6 +10,36 @@ export class DashboardPage extends Component {
             deviceState: [],
         }
 
+        this.renderDimmer = (device, deviceState) => {
+            
+
+            const rangeChange = (i) => async (e) => {
+                await fetch(`/plugin/${device.id}/state/${i}/${e.currentTarget.value}`);
+            };
+
+            return (
+            <div className='media device'>
+                <div class="media-left">
+                    <p class="image is-64x64">
+                        <span class={device.icon} />
+                    </p>
+                </div>
+                <div class="media-content">
+                    <div class='info'>
+                        {device.name}
+                    </div>
+                </div>
+                <div class="media-right">
+                    {device.state.values.map((v, i) => {
+                        const state = deviceState[v.name];
+                        return (
+                            <div>{v.name}: <input min='0' max='255' width='200px' type='range' value={state} onChange={rangeChange(i)}/></div>
+                        )
+                    })}
+                </div>
+            </div>);
+        };
+
         this.renderSwitch = (device, deviceState) => {
             const state = deviceState[device.state.values[0].name];
             const buttonClick = async () => {
@@ -87,6 +117,7 @@ export class DashboardPage extends Component {
                 case 2: case 3: case 4: case 6: case 12:
                         return this.renderSensor(device, deviceState);
                 case 5: return this.renderRegulator(device, deviceState);
+                case 15: return this.renderDimmer(device, deviceState);
                 
                 default:
                     return (null);
@@ -98,7 +129,7 @@ export class DashboardPage extends Component {
         return (
             <div>
                 {this.state.devices.map((device, i) => {
-                    return this.renderDevice(device, this.state.deviceState[device.id] || {});
+                    return this.renderDevice(device, this.state.deviceState[i] || {});
                 })}
             </div>
         );
