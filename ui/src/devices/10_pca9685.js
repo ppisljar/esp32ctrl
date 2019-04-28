@@ -1,11 +1,10 @@
 import {Device} from './_defs';
 
-const i2cAddr = [
-    { value: 56, name: '0x38' },
-    { value: 57, name: '0x39' },
-    { value: 58, name: '0x3A' },
-    { value: 59, name: '0x3B' },
-];
+const i2cAddr = 
+    [...new Array(64)].map((x, i) => {
+        return { name: `0x${(i+64).toString(16)}`, value: i+64 };
+    })
+;
 
 class PCA9685 extends Device {
     constructor() {
@@ -14,13 +13,15 @@ class PCA9685 extends Device {
         this.params = {
             name: 'Sensor',
                 configs: {
-                addr: { name: 'Address', type: 'select', options: i2cAddr }
+                addr: { name: 'Address', type: 'select', options: i2cAddr },
+                freq: { name: 'Frequency', type: 'number', min: 24, max: 1526 },
             }
         };
     }
 
     defaults = () => ({
         'params.addr': 56,
+        'params.freq': 500,
     });
 
     getDevicePins = (conf) => {

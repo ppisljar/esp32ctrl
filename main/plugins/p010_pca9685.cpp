@@ -24,7 +24,7 @@ bool PCA9685Plugin::init(JsonObject &params) {
     state_cfg = &((JsonArray &)params["state"]);
 
     uint8_t addr = (*cfg)["addr"];
-    uint16_t freq = (*cfg)["freq"];
+    uint16_t freq = (*cfg)["freq"] | 500;
 
     pca9685_set_pwm_frequency(addr, freq);
     PCA9685Plugin_analog_write *analogWrite = new PCA9685Plugin_analog_write(addr, &pins);

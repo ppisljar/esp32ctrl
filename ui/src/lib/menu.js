@@ -24,6 +24,9 @@ import {
     AlertsEditPage,
     ConfigPluginsPage,
     ConfigBluetoothPage,
+    ConfigLCDPage,
+    ConfigLCDScreenPage,
+    ConfigLCDWidgetPage,
 } from '../pages';
 
 import { deleteFile } from './espeasy';
@@ -64,6 +67,7 @@ const menus = [
     { title: 'Alerts', href: 'alerts', component: AlertsPage, children: [] },
     { title: 'Config', adminOnly: true, href: 'config', component: ConfigPage, children: [
         { title: 'Hardware', pagetitle: 'Hardware', href: 'config/hardware', component: ConfigHardwarePage },
+        { title: 'LCD', pagetitle: 'LCD', href: 'config/lcd', component: ConfigLCDPage },
         { title: 'Bluetooth', pagetitle: 'Bluetooth', href: 'config/bluetooth', component: ConfigBluetoothPage },
         { title: 'Advanced', href: 'config/advanced', component: ConfigAdvancedPage },
         { title: 'Plugins', href: 'config/plugins', component: ConfigPluginsPage },
@@ -84,6 +88,8 @@ const routes = [
     { title: 'Edit Controller', href:'controllers/edit', component: ControllerEditPage },
     { title: 'Edit Device', href:'devices/edit', component: DevicesEditPage },
     { title: 'Edit Alert', href:'alerts/edit', component: AlertsEditPage },
+    { title: 'Edit Screen', href:'config/lcdscreen', component: ConfigLCDScreenPage },
+    { title: 'Edit Widget', href:'config/lcdwidget', component: ConfigLCDWidgetPage },
     { title: 'Save to Flash', href:'tools/diff', component: DiffPage },
     { title: 'Setup', href: 'config/setup', component: SetupPage }
 ];

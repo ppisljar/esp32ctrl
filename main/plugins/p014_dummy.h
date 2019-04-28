@@ -6,13 +6,14 @@
 struct dummy_vals_t {
     char *name;
     uint8_t type;
-    void *value;
+    uint8_t *value;
 };
 
 class DummyPlugin: public Plugin {
     private:
         int value = 0;
         dummy_vals_t **values;
+        uint8_t values_len;
     public:
 
         DEFINE_PLUGIN(DummyPlugin);

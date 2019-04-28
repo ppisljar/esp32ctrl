@@ -109,8 +109,8 @@ export const getNodes = (devices, vars) => {
                 name: 'trigger',
                 type: 'select',
                 values: function () {
-                    let x = 0;
-                    return settings.get('hardware.gpio', []).map((t, i) => (t && t.mode == 4 ? { name: `GPIO ${i}`, value: x++ } : null)).filter(gpio => gpio);
+                    const getTouch = (pin) => [4, 0, 2, 15, 13, 12, 14, 27, 33, 32].findIndex(x => x == pin);
+                    return settings.get('hardware.gpio', []).map((t, i) => (t && t.mode == 4 ? { name: `GPIO ${i}`, value: getTouch(i) } : null)).filter(gpio => gpio);
                 },
             }],
             if: () => {

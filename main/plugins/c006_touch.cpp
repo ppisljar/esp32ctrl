@@ -63,6 +63,7 @@ bool TouchPlugin::init(JsonObject &params) {
     
 
     uint16_t touch_value;
+    uint16_t threshold;
     uint8_t touch_pins[10] = { 4, 0, 2, 15, 13, 12, 14, 27, 33, 32 };
 
     for (int i = 0; i < 10; i++) {
@@ -78,9 +79,10 @@ bool TouchPlugin::init(JsonObject &params) {
         //read filtered value
         touch_pad_read_filtered((touch_pad_t)i, &touch_value);
         s_pad_init_val[i] = touch_value;
-        ESP_LOGI(TAG, "test init: touch pad [%d] val is %d", i, touch_value);
+        threshold = params["hardware"]["gpio"][touch_pins[i]]["threshold"] | touch_value * 2/3;
+        ESP_LOGI(TAG, "test init: touch pad [%d] val is %d, threshold %d", i, touch_value, threshold);
         //set interrupt threshold.
-        ESP_ERROR_CHECK(touch_pad_set_thresh((touch_pad_t)i, touch_value * 2 / 3));
+        ESP_ERROR_CHECK(touch_pad_set_thresh((touch_pad_t)i, threshold));
 
     }
 

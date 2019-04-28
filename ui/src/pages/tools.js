@@ -87,7 +87,11 @@ export class ToolsPage extends Component {
         fetch('/logs').then(response => response.text()).then(response => {
             response.split('\n').map(log => {
                 if (log.trim() === '') return;
-                this.history += `<div class="log_level"><span class="date"></span><span class="value">${log}</span></div>`;
+                let formatted = log.trim().substr(4);
+                formatted = formatted.substr(0, formatted.length - 4);
+                const cls = formatted.substr(0, 3);
+                formatted = formatted.substr(3);
+                this.history += `<div class="log_level c${cls}"><span class="date"></span><span class="value">${formatted}</span></div>`;
                 this.log.innerHTML = this.history;
                 if (true) {
                     this.log.scrollTop = this.log.scrollHeight;
@@ -100,13 +104,13 @@ export class ToolsPage extends Component {
         const devices = settings.get('plugins');
         
         const setCmd = e => {
-            this.setState({ cmd: parseInt(e.currentTarget.value) });
+            this.setState({ cmd: parseInt(e.currentTarget.value), event: null, device: null, state: null });
         }
         const setEvent = e => {
             this.setState({ event: parseInt(e.currentTarget.value) });
         }
         const setDevice = e => {
-            this.setState({ device: parseInt(e.currentTarget.value) });
+            this.setState({ device: parseInt(e.currentTarget.value), state: null });
         }
         const setDeviceState = e => {
             this.setState({ state: e.currentTarget.value });
@@ -119,17 +123,17 @@ export class ToolsPage extends Component {
 
         return (
             <div>
-                <div style="width: 100%; height: 200px; overflow-y: scroll;" ref={ref => this.log = ref}>loading logs ...</div>
-                <div>Command: <input type="text" ref={ref => this.cmd = ref}/><button type="button" onClick={this.sendCommand}>send</button></div>
+                <div style="width: 100%; height: 200px; overflow-y: scroll; border: 1px solid gray; margin-bottom: 10px;" ref={ref => this.log = ref}>loading logs ...</div>
                 <div>
                     Command: 
-                    <select onChange={setCmd}>
+                    <select value={this.state.cmd} onChange={setCmd}>
                         <option value='242'>event</option>
                         <option value='240'>set state</option>
                     </select>
 
                     {this.state.cmd === 242 &&
-                    <select onChange={setEvent}>
+                    <select value={this.state.event} onChange={setEvent}>
+                        
                         {Object.keys(this.events).map((key) => { 
                             const i = this.events[key];
                             return (<option value={i}>{key}</option>);
@@ -137,14 +141,16 @@ export class ToolsPage extends Component {
                     </select>}
 
                     {this.state.cmd !== 242 && 
-                    <select onChange={setDevice}>
+                    <select value={this.state.device} onChange={setDevice}>
+                        
                         {devices.map((device, i) => { 
                             return (<option value={i}>{device.name}</option>);
                         })}
                     </select>}
 
                     {this.state.cmd !== 242 && 
-                    <select onChange={setDeviceState}>
+                    <select value={this.state.state} onChange={setDeviceState}>
+                        
                         {
                             Object.keys(device_state).map((state, i) => { 
                                 return (<option value={i}>{state}</option>);
@@ -158,7 +164,7 @@ export class ToolsPage extends Component {
 
                     <button type="button" onClick={this.sendCommand2}>send</button>                  
                 </div>
-                <textarea style="width: 100%; height: 200px" ref={ref => this.cmdOutput = ref}></textarea>
+                <textarea readonly style="width: 100%; height: 200px" ref={ref => this.cmdOutput = ref}></textarea>
             </div>
         );
     }
