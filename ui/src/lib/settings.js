@@ -44,14 +44,14 @@ class Settings {
         if (this.diff().length) this.changed = true;
     }
 
-    getRules() {
-        return this.rules;
-    }
+    // getRules() {
+    //     return this.rules;
+    // }
 
-    setRules(rules) {
-        this.storedRules = JSON.parse(JSON.stringify(rules));
-        this.rulesChanged = false;
-    }
+    // setRules(rules) {
+    //     this.storedRules = JSON.parse(JSON.stringify(rules));
+    //     this.rulesChanged = false;
+    // }
 
     /**
      * returns diff between applied and current version
@@ -69,4 +69,6 @@ class Settings {
     }
 }
 
-export const settings = window.settings1 = new Settings();
+const settings = window.settings1 = new Settings();
+settings.editor = new Settings();
+export { settings };

@@ -24,5 +24,6 @@ export * from './alerts.edit';
 export * from './devices.edit';
 export * from './diff';
 export * from './rules.editor';
+export * from './rules.editor.1';
 export * from './setup';
 export * from './tools.sysvars';

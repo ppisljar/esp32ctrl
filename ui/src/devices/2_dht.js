@@ -11,7 +11,9 @@ export const dht = {
         'params.gpio': 255,
         'params.type': 0,
         'state.values[0].name': 'Temperature',
+        'state.values[0].type': '2',
         'state.values[1].name': 'Humidity',
+        'state.values[1].type': '2',
     }),
     params: {
         name: 'Configuration',

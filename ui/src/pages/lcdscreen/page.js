@@ -52,6 +52,16 @@ class PageComponent extends Component {
         this.setState({ selected: item });
     }
 
+    onMoveHandler = (e, item) => {
+        const x = roundToGrid(e.x - this.position.left + this.el.scrollLeft, this.props.grid);
+        const y = roundToGrid(e.y - this.position.top + this.el.scrollTop, this.props.grid);
+
+        const existingItem = this.state.items.find(i => i.id === item.id);
+        existingItem.position.x = x;
+        existingItem.position.y = y;
+        this.forceUpdate();
+    }
+
     onRightClickHandler = (item) => {
         this.state.items.splice(this.state.items.findIndex(i => i.id == item.id), 1);
         this.forceUpdate();
@@ -71,7 +81,14 @@ class PageComponent extends Component {
         };
         const W = getWidgets().find(w => w.name == item.name).component;
         return (
-            <span style={itemStyle}><W conf={item} onClickHandler={this.onClickHandler} onRightClickHandler={this.onRightClickHandler} /></span>
+            <span style={itemStyle}>
+                <W 
+                    conf={item} 
+                    onClickHandler={this.onClickHandler} 
+                    onRightClickHandler={this.onRightClickHandler} 
+                    onMouseMove={this.onMoveHandler}
+                />    
+            </span>
         )
     }
 

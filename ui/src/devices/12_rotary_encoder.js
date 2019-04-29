@@ -34,6 +34,7 @@ class RotaryEncoder extends Device {
             'params.invert': false,
             interval: 60,
             'state.values[0].name': 'State',
+            'state.values[0].type': '2',
         }
     }
 }

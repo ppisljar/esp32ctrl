@@ -28,6 +28,7 @@ class InputSwitch extends Device {
             interval: 60,
 
             'state.values[0].name': 'Switch',
+            'state.values[0].type': '0',
         }
     }
 }

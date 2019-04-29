@@ -336,7 +336,7 @@ fieldset > label {
     border: 1px solid;
     text-align: center;
     margin-top: 5px;
-    padding: 10px;
+    padding: 5px 10px;
     user-select: none;
     border-radius: 5px;
 }

@@ -101,7 +101,8 @@ class App extends Component {
         const fn = () => {
             const newFragment = getFragment();
             const diff = settings.diff();
-            if(this.state.changed !== !!diff.length) {
+            const editorDiff = settings.editor.diff();
+            if(this.state.changed !== (!!diff.length || !!editorDiff.length)) {
                 this.setState({changed: !this.state.changed})
             }
             if(current !== newFragment) {

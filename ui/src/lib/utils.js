@@ -13,3 +13,18 @@ export const getTaskValues = (path) => {
         return task.state.values.filter(val => val).map((val, i) => ({ value: i, name: val.name }));
     };
 };
+
+export const getTaskValueType = (taskPath, valuePath, type) => {
+    
+    return (config) => {
+        const selectedTask = get(config, taskPath);
+        const task = settings.get('plugins').find(p => p.id === selectedTask);
+        if (!task || !task.state || !task.state.values) return false;
+
+        const selectedValue = get(config, valuePath);
+        const value = task.state.values[selectedValue];
+        if (!value) return false;
+
+        return value.type == type;
+    };
+};

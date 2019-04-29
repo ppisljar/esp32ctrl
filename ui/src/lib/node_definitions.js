@@ -1,5 +1,6 @@
 import { settings } from './settings';
 import { pins } from './pins';
+import { getSetStateNode } from './nodes/set_state';
 
 export const getNodes = (devices, vars) => {
     const nodes = [
@@ -15,7 +16,6 @@ export const getNodes = (devices, vars) => {
                 values: [1, 2, 3, 4, 5, 6, 7, 8],
                 value: 1,
             }],
-            indent: true,
             toString: function () { return `on timer ${this.config[0].value}`; },
             toDsl: function () { return [`\xFF\xFE\x00\xFF\x02${String.fromCharCode(this.config[0].value)}`]; }
         }, {
@@ -28,7 +28,6 @@ export const getNodes = (devices, vars) => {
                 type: 'text',
                 value: 'eventname'
             }],
-            indent: true,
             toString: function () { return `event ${this.config[0].value}`; },
             toDsl: function ({ events }) { 
                 const event = events.find(e => e.name === this.config[0].value);
@@ -46,7 +45,6 @@ export const getNodes = (devices, vars) => {
                 type: 'text',
                 value: '* * * * * *'
             }],
-            indent: true,
             toString: () => { return 'clock'; },
             toDsl: () => { return [`\xFF\xFE\x00\xFF\x08${this.config[0].value}\x00`]; }
         }, {
@@ -55,7 +53,6 @@ export const getNodes = (devices, vars) => {
             inputs: [],
             outputs: [1],
             config: [],
-            indent: true,
             toString: function() {
                 return `on boot`;
             },
@@ -78,7 +75,6 @@ export const getNodes = (devices, vars) => {
             if: function () {
                 return this.config[0].values().length > 0;
             },
-            indent: true,
             toString: function () { return `on hw_timer ${this.config[0].value}`; },
             toDsl: function () { return [`\xFF\xFE\x00\xFF\x04${String.fromCharCode(this.config[0].value)}`]; }
         }, {
@@ -97,7 +93,6 @@ export const getNodes = (devices, vars) => {
             if: function () {
                 return this.config[0].values().length > 0;
             },
-            indent: true,
             toString: function () { return `on hw_interrupt ${this.config[0].value}`; },
             toDsl: function () { return [`\xFF\xFE\x00\xFF\x05${String.fromCharCode(this.config[0].value)}`]; }
         }, {
@@ -116,7 +111,6 @@ export const getNodes = (devices, vars) => {
             if: () => {
                 return settings.get('hardware.gpio', []).filter(t => t && t.mode == 4).length > 0;
             },
-            indent: true,
             toString: function () {
                 const vals = this.config[0].values(); 
                 const val = vals.find(v => v.value == this.config[0].value) || { name: '' };
@@ -159,7 +153,6 @@ export const getNodes = (devices, vars) => {
             if: () => {
                 return settings.get('alexa.triggers', []).length > 0;
             },
-            indent: true,
             toString: function () {
                 const vals = this.config[0].values(); 
                 const val = vals.find(v => v.value == this.config[0].value) || { name: '' };
@@ -168,36 +161,7 @@ export const getNodes = (devices, vars) => {
             toDsl: function () { return [`\xFF\xFE\x00\xFF\x06${String.fromCharCode(this.config[0].value)}`]; }
         } , 
         // LOGIC
-        {
-            group: 'LOGIC',
-            type: 'if/else',
-            inputs: [1],
-            outputs: [1, 2],
-            config: [{
-                name: 'state',
-                type: 'select',
-                values: [...vars, { name: 'state', value: 255 }],
-            },{
-                name: 'equality',
-                type: 'select',
-                values: [' changed ', '=', '<', '>', '<=', '>=', '!='],
-                value: 0,
-            },{
-                name: 'value',
-                type: 'text',
-                value: '',
-            }],
-            indent: true,
-            toString: function() {
-                const val = this.config[0].values.find(v => v.value == this.config[0].value);
-                return `IF ${val ? val.name : ''}${this.config[1].value}${this.config[2].value}`;
-            },
-            toDsl: function() {
-                const eq = this.config[1].values.findIndex(v => v === this.config[1].value);
-                const devprop = this.config[0].value.split('-').map(v => String.fromCharCode(v)).join('');
-                return [`\xFC\x01${devprop}${String.fromCharCode(eq)}\x01${String.fromCharCode(this.config[2].value)}%%output%%`, `\xFD%%output%%\xFE`];
-            }
-        }, {
+        getSetStateNode(vars), {
             group: 'LOGIC',
             type: 'delay',
             inputs: [1],
@@ -382,7 +346,7 @@ export const getNodes = (devices, vars) => {
             toDsl: function() {
                 return [`\xEF${this.config[0].value}\x00`];
             }
-        }
+        },
     ];
 
     return nodes;

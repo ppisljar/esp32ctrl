@@ -100,20 +100,16 @@ export class Form extends Component {
             case 'select':
                 options = (typeof config.options === 'function') ? config.options(this.props.selected) : config.options;
                 return (
-                    <div class="select"><select id={id} onChange={this.onChange(id, varName, config )}>
+                    <div class="select"><select id={id} value={value} onChange={this.onChange(id, varName, config )}>
                         {options.map(option => {
                             const name = option instanceof Object ? option.name : option;
                             const val = option instanceof Object ? option.value : option;
-                            if (val === value) {
-                                return (<option value={val} selected>{name}</option>)
-                            } else {
-                                return (<option value={val} disabled={option.disabled ? true : null}>{name}{option.disabled ? ` [${option.disabled}]` : ''}</option>);
-                            }
+                            return (<option value={val} disabled={option.disabled ? true : null}>{name}{option.disabled ? ` [${option.disabled}]` : ''}</option>);
                         })}
                     </select></div>
                 ) ;
             case 'gpio':
-                options = window.pins();
+                options = config.pins || window.pins();
                 const selectPin = (val, name, form) => {
                     const pins = window.pins();
                     const selectedPin = pins.find(pin => pin.value == val);
@@ -163,15 +159,20 @@ export class Form extends Component {
 
                     if (conf.if) {
                         let val;
-                        if (conf.if.startsWith('ROOT')) {
-                            val = settings.get(conf.if.replace('ROOT.', ''));
-                        } else {
-                            val = get(this.props.selected, conf.if, false);
+                        if (typeof conf.if === 'function') {
+                            if (!conf.if(values)) return (null);
                         }
-                        if (conf.ifval === undefined && !val) {
-                            return (null);
+                        else {
+                            if (conf.if.startsWith('ROOT')) {
+                                val = settings.get(conf.if.replace('ROOT.', ''));
+                            } else {
+                                val = get(this.props.selected, conf.if, false);
+                            }
+                            if (conf.ifval === undefined && !val) {
+                                return (null);
+                            }
+                            if (conf.ifval != val) return (null);
                         }
-                        if (conf.ifval != val) return (null);
                     }
                     if (conf.type === 'custom') {
                         const CustomComponent = conf.component;

@@ -3,6 +3,7 @@ import { getTasks, getTaskValues } from '../lib/utils';
 export const levelControl = {
     defaults: () => ({
         'state.values[0].name': 'Output',
+        'state.values[0].type': '1',
     }),
     params: {
         name: 'Configuration',
