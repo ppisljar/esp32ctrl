@@ -13,7 +13,7 @@ const hwinterruptNode = {
                 params: {
                     name: 'Interrupt',
                     configs: {
-                        int: { name: 'pin', type: 'gpio', pins: window.io_pins.getPins('interrupt') },
+                        int: { name: 'pin', type: 'select', options: window.io_pins.getPins('interrupt') },
                     }
                 }
             }
@@ -30,7 +30,7 @@ const hwinterruptNode = {
 
     getText: (item) => {
         const t = item.params && item.params.int;
-        return `on hw_timer${t}`
+        return `on interrupt ${t}`
     },
 
     toDsl: (item) => {
