@@ -91,7 +91,9 @@ class DropPageComponent extends Component {
             x1 = c.to.x - this.position.left;
             y1 = c.to.y - this.position.top;
         } else if (c.to) {
-            const trect = document.getElementById(c.to).getBoundingClientRect();
+            const tel = document.getElementById(c.to);
+            if (!tel) return;
+            const trect = tel.getBoundingClientRect();
             x1 = trect.left - this.position.left;
             y1 = trect.top + trect.height / 2 - this.position.top;
         } else {

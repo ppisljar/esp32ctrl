@@ -27,6 +27,10 @@ const delayNode = {
         return component;
     },
 
+    getText: () => {
+        return 'DELAY';
+    },
+
     toDsl: () => {
         const eq = this.config[1].values.findIndex(v => v === this.config[1].value);
         const devprop = this.config[0].value.split('-').map(v => String.fromCharCode(v)).join('');

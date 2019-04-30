@@ -12,7 +12,7 @@ const hwtimerNode = {
         return {
             groups: {
                 params: {
-                    name: 'Timer',
+                    name: 'HwTimer',
                     configs: {
                         timer: { name: 'Timer', type: 'select', options: timerOption },
                     }

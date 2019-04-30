@@ -1,6 +1,10 @@
 import { generateWidgetComponent } from "../helper";
 import { settings } from "../../../../lib/settings";
 
+const alexaOptions = () => {
+    return settings.get('alexa.triggers', []).map((t, i) => ({ name: t.name, value: i }));
+}
+
 const alexaNode = {
     group: 'TRIGGERS',
     name: 'alexa',
@@ -8,9 +12,7 @@ const alexaNode = {
     inputs: 0,
     outputs: 1,  
     getEditorConfig: () => {
-        const alexaOptions = () => {
-            return settings.get('alexa.triggers', []).map((t, i) => ({ name: t.name, value: i }));
-        }
+        
         return {
             groups: {
                 params: {
@@ -32,12 +34,12 @@ const alexaNode = {
     }),
 
     getText: (item) => {
-        const t = item.params && item.params.value;
-        return `on alexa${t}`
+        const t = item.params && item.params.trigger;
+        return `on alexa ${t}`
     },
 
     toDsl: (item) => {
-        const t = (item.params && item.params.value) || 0;
+        const t = (item.params && item.params.trigger) || 0;
         return [`\xFF\xFE\x00\xFF\x06${String.fromCharCode(t)}`];
     } ,     
 }

@@ -33,10 +33,9 @@ const clockNode = {
     },
 
     toDsl: function (item, { events }) { 
-        const event = events.find(e => e.name === item.params.event);
-        if (!event) return null;
+        const t = item.params && item.params.expr;
         
-        return [`\xFF\xFE\x00\xFF\x01${getString(toByteArray(value,2))}`]; 
+        return [`\xFF\xFE\x00\xFF\x08${t}\x00`];
     } ,     
 }
 

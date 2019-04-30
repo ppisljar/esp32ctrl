@@ -3,7 +3,7 @@ import { generateWidgetComponent } from "../helper";
 import { getTaskValueType, getTasks, getTaskValues } from "../../../../lib/utils";
 import { settings } from "../../../../lib/settings";
 
-const eqOptions = [' changed ', '=', '<', '>', '<=', '>=', '!='];
+const eqOptions = ['changed', '=', '<', '>', '<=', '>=', '!='];
 
 const compareValue = (type) => {
     const checkValue = getTaskValueType('params.device', 'params.value', type);
@@ -25,7 +25,7 @@ const ifElseNode = {
         const isInt16 = compareValue(2);
         const isInt32 = compareValue(4);
         const isString = compareValue(5);
-        const notChanged = config => { return config.params.eq != 0 };
+        const notChanged = config => { console.log(config.params); return config.params.eq != 'changed' };
         return {
             groups: {
                 params: {
@@ -52,22 +52,26 @@ const ifElseNode = {
 
     getDefault: () => ({
         state: 255,
-        comp: 1,
         val: 0,
     }),
 
     getText: (item) => {
-        const { device, value, val, eq } = item.params;
+        const { device, value, val, eq, val_type } = item.params;
         if (device === undefined || value === undefined) return 'click to configure';
         const deviceName = settings.get(`plugins[${device}].name`);
         const valueName = settings.get(`plugins[${device}].state.values[${value}].name`);
-        return `IF ${deviceName}#${valueName} ${eq} ${val}`;
+        let text = `IF ${deviceName}#${valueName} ${eq} `;
+        if (eq !== 'changed') {
+            text += val_type ? val : '[state]';
+        }
+        return text;
     },
 
     toDsl: (item) => {
-        const eq = eqOptions.findIndex(o => o == item.params.comp);
-        const devprop = items.params.state.split('-').map(v => String.fromCharCode(v)).join('');
-        return [`\xFC\x01${devprop}${String.fromCharCode(eq)}\x01${String.fromCharCode(items.params.val)}%%output%%`, `\xFD%%output%%\xFE`];
+        const { device, value, val, eq, val_type } = item.params;
+        const comp = eqOptions.findIndex(o => o == eq);
+        const sendval = val_type === 0 ? 255 : val;
+        return [`\xFC\x01${String.fromCharCode(device)}${String.fromCharCode(value)}${String.fromCharCode(comp)}\x01${String.fromCharCode(sendval)}%%output%%`, `\xFD%%output%%\xFE`];
     
     } ,     
 }

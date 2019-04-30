@@ -9,7 +9,10 @@ const fireeventNode = {
     inputs: 1,
     outputs: 1,  
     getEditorConfig: () => {
-        const events = settings.get('events');
+        const events = Object.keys(settings.events).map((k, i) => {
+            return { name: k, value: settings.events[k] };
+        });
+
         const cfg = {
             groups: {
                 params: {

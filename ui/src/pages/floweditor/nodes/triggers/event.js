@@ -10,7 +10,7 @@ const eventNode = {
         return {
             groups: {
                 params: {
-                    name: 'Timer',
+                    name: 'Event',
                     configs: {
                         event: { name: 'Event', type: 'string' },
                     }

@@ -14,9 +14,9 @@ const bluetoothNode = {
         return {
             groups: {
                 params: {
-                    name: 'Interrupt',
+                    name: 'Bluetooth',
                     configs: {
-                        value: { name: 'pin', type: 'select', options: btOptions },
+                        value: { name: 'Trigger', type: 'select', options: btOptions },
                     }
                 }
             }
@@ -33,7 +33,7 @@ const bluetoothNode = {
 
     getText: (item) => {
         const t = item.params && item.params.value;
-        return `on bluetooth${t}`
+        return `on bt ${t}`
     },
 
     toDsl: (item) => {

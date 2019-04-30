@@ -15,7 +15,7 @@ const touchNode = {
         return {
             groups: {
                 params: {
-                    name: 'Interrupt',
+                    name: 'Touch',
                     configs: {
                         touch: { name: 'pin', type: 'select', options: touchOptions },
                     }
