@@ -5,8 +5,12 @@
 
 IOT_COMPONENT_DIRS = ./components
 IOT_COMPONENT_DIRS += ./components/general
+IOT_COMPONENT_DIRS += ./components/network
 IOT_COMPONENT_DIRS += ./components/hmi
 IOT_COMPONENT_DIRS += ./components/spi_devices
+IOT_COMPONENT_DIRS += ./components/i2c_devices
+IOT_COMPONENT_DIRS += ./components/onewire_devices
+IOT_COMPONENT_DIRS += ./components/other_devices
 
 EXTRA_COMPONENT_DIRS += $(IOT_COMPONENT_DIRS)
 
