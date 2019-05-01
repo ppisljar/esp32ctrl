@@ -14,7 +14,7 @@ class HTTPCtrlPlugin: public Plugin {
         esp_http_client_config_t http_cfg = {};
         esp_http_client_handle_t client = {};
 
-        DEFINE_PLUGIN(HTTPCtrlPlugin);
+        DEFINE_PPLUGIN(HTTPCtrlPlugin, 13);
 
         void request(const char *uri, esp_http_client_method_t method, const char* data = nullptr);
 };

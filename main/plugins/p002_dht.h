@@ -12,7 +12,7 @@ class DHTPlugin: public Plugin {
 
         float temp[2];
     public:
-        DEFINE_PLUGIN(DHTPlugin);
+        DEFINE_PPLUGIN(DHTPlugin, 2);
 
         te_expr *temp_expr;
         te_expr *humi_expr;

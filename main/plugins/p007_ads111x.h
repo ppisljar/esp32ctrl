@@ -11,7 +11,7 @@ class ADS111xPlugin: public Plugin {
         uint8_t addr;
         struct IO_DIGITAL_PINS pins;
     public:
-        DEFINE_PLUGIN(ADS111xPlugin);
+        DEFINE_PPLUGIN(ADS111xPlugin, 7);
 };
 
 #endif

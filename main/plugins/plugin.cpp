@@ -18,5 +18,6 @@ Plugin* Plugin::addPrototype(int type, Plugin* p)
 {
     ESP_LOGD("PLUGIN", "registering plugin %i on 0x%08x", type, (unsigned)p);
     protoTable[type] = p;
+    p->p_type = type;
     return p;
 }

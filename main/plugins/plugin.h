@@ -103,6 +103,18 @@ void* TYPE::getStatePtr(uint8_t val) { \
     bool getConfig(JsonObject& ); \
     void* getStatePtr(uint8_t ); 
 
+#define DEFINE_PPLUGIN(TYPE, TYPENR) \
+    Plugin* clone() const { \
+        return new TYPE; \
+    } \
+    bool init(JsonObject &params); \
+    bool setState(JsonObject &params); \
+    bool setConfig(JsonObject &params); \
+    bool getState(JsonObject& ); \
+    bool getConfig(JsonObject& ); \
+    void* getStatePtr(uint8_t ); \
+    static const uint8_t p_type = TYPENR;
+
 #define SET_STATE(plugin, var, var_index, shouldNotify, value, value_type) plugin->var = value; \
             if (shouldNotify) notify(plugin, var_index, &plugin->var, value_type)
 
@@ -133,6 +145,7 @@ class Plugin
 
         const char* name;
         int id;
+        uint8_t p_type;
 };
 
 #define IMPLEMENT_CLONE(TYPE) Plugin* clone() const { return new TYPE(*this); }

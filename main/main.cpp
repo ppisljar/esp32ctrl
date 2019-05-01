@@ -68,7 +68,7 @@ LcdPlugin *lcd_plugin;
 IO io;
 
 #ifdef CONFIG_ENABLE_P001_SWITCH 
-Plugin* SwitchPlugin_myProtoype = Plugin::addPrototype(1, new SwitchPlugin);
+Plugin* SwitchPlugin_myProtoype = Plugin::addPrototype(SwitchPlugin::p_type, new SwitchPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P002_DHT 
 Plugin* DHTPlugin_myProtoype = Plugin::addPrototype(2, new DHTPlugin);

@@ -8,7 +8,7 @@ class RotaryEncoderPlugin: public Plugin {
         int value = 0;
         
     public:
-        DEFINE_PLUGIN(RotaryEncoderPlugin);
+        DEFINE_PPLUGIN(RotaryEncoderPlugin, 12);
 
 };
 

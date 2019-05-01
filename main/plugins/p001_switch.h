@@ -9,7 +9,7 @@ class SwitchPlugin: public Plugin {
         int gpio = 255;
         bool state = 0;
     public:
-        DEFINE_PLUGIN(SwitchPlugin);
+        DEFINE_PPLUGIN(SwitchPlugin, 1);
         void setStatePtr_(uint8_t, uint8_t*, bool);
         static void task(void *pvParameters);
 };

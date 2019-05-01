@@ -10,7 +10,7 @@ class DS18x20Plugin: public Plugin {
         ds18x20_addr_t addrs[16];
         int sensor_count = 0;
     public:
-        DEFINE_PLUGIN(DS18x20Plugin);
+        DEFINE_PPLUGIN(DS18x20Plugin, 4);
         static void task(void *pvParameters);
 };
 

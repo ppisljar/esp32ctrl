@@ -27,7 +27,7 @@ class MQTTPlugin: public Plugin {
         std::map<char*,std::function<void(char*,char*)>> registeredTopics;
         struct subscribe_info info = {};
 
-        DEFINE_PLUGIN(MQTTPlugin);
+        DEFINE_PPLUGIN(MQTTPlugin, 11);
 
         void publish(char *topic, char* data);
         void subscribe(char *topic, std::function<void(char*,char*)> handler);

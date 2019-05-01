@@ -9,7 +9,7 @@ class AnalogPlugin: public Plugin {
     private:
         int value = 0;
     public:
-        DEFINE_PLUGIN(AnalogPlugin);
+        DEFINE_PPLUGIN(AnalogPlugin, 6);
 
         static void task(void *pvParameters);
 };

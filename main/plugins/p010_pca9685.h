@@ -10,7 +10,7 @@ class PCA9685Plugin: public Plugin {
         uint8_t addr;
         struct IO_DIGITAL_PINS pins;
     public:
-        DEFINE_PLUGIN(PCA9685Plugin);
+        DEFINE_PPLUGIN(PCA9685Plugin, 10);
 };
 
 #endif

@@ -10,7 +10,7 @@ class MCP23017Plugin: public Plugin {
         uint8_t addr;
         struct IO_DIGITAL_PINS pins;
     public:
-        DEFINE_PLUGIN(MCP23017Plugin);
+        DEFINE_PPLUGIN(MCP23017Plugin, 8);
 };
 
 #endif

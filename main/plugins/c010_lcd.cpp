@@ -1,5 +1,7 @@
 #include "c010_lcd.h"
 
+//extern Config *cfg;
+extern Plugin *active_plugins[10];
 
 static const char *TAG = "LcdPlugin";
 
@@ -94,21 +96,42 @@ static void page_create()
 	lv_page_set_style(page, LV_PAGE_STYLE_SB, &style_sb);
 	lv_page_set_sb_mode(page, LV_SB_MODE_ON);
 
-	lv_obj_t* slider = slider_create(page, "R", 25);
-	lv_page_glue_obj(slider, true);
-	lv_obj_align(slider, NULL, LV_ALIGN_IN_TOP_MID, 0, 0);
-	lv_obj_t* slider2 = slider_create(page, "G", 225);
-	lv_page_glue_obj(slider2, true);
-	lv_obj_align(slider2, slider, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
-	lv_obj_t* slider3 = slider_create(page, "B", 125);
-	lv_page_glue_obj(slider3, true);
-	lv_obj_align(slider3, slider2, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
-	lv_obj_t* value = value_create(page, "temp", "21");
-	lv_obj_align(value, slider3, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
-	lv_obj_t* value2 = value_create(page, "humidity", "47");
-	lv_obj_align(value2, value, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
-	lv_obj_t* button = button_create(page, "switch 1", 0);
-	lv_obj_align(button, value2, LV_ALIGN_OUT_BOTTOM_MID, 0, 0);
+    lv_obj_t* element;
+    lv_obj_t* prev = NULL;
+    for (auto p : active_plugins) {
+        if (p == NULL) continue;
+        
+        switch (p->p_type) {
+            case 1: // SWITCH
+                // pass pointer to value
+                element = button_create(page, (char*)p->name, 0);
+                lv_page_glue_obj(element, true);
+                lv_obj_align(element, prev, prev ? LV_ALIGN_OUT_BOTTOM_MID : LV_ALIGN_IN_TOP_MID, 0, 0);
+                prev = element;
+                break;
+            case 2: case 3: case 4: case 6: case 14:
+                // walk over all states, get their names and their values
+                element = value_create(page, "humidity", "47");
+                lv_page_glue_obj(element, true);
+	            lv_obj_align(element, prev, prev ? LV_ALIGN_OUT_BOTTOM_MID : LV_ALIGN_IN_TOP_MID, 0, 0);
+                prev = element;
+                break;
+            case 5: // REGULATOR
+                element = slider_create(page, (char*)p->name, 25);
+                lv_page_glue_obj(element, true);
+                lv_obj_align(element, prev, prev ? LV_ALIGN_OUT_BOTTOM_MID : LV_ALIGN_IN_TOP_MID, 0, 0);
+                prev = element;
+                break;
+            case 15:// DIMMER
+                // walk over all dimmer states
+                element = slider_create(page, "R", 25);
+                lv_page_glue_obj(element, true);
+                lv_obj_align(element, prev, prev ? LV_ALIGN_OUT_BOTTOM_MID : LV_ALIGN_IN_TOP_MID, 0, 0);
+                prev = element;
+                break;
+
+        }
+    }
 
 }
 

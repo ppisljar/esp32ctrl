@@ -14,7 +14,7 @@ class UdpServerPlugin: public Plugin {
         uint8_t packet_len = 0;
         uint8_t state;
     public:
-        DEFINE_PLUGIN(UdpServerPlugin);
+        DEFINE_PPLUGIN(UdpServerPlugin, 16);
 
         static void task(void *pvParameters);
 };

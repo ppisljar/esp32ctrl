@@ -9,7 +9,7 @@ class PCF8574Plugin: public Plugin {
         int value = 0;
         struct IO_DIGITAL_PINS pins;
     public:
-        DEFINE_PLUGIN(PCF8574Plugin);
+        DEFINE_PPLUGIN(PCF8574Plugin, 9);
 };
 
 #endif

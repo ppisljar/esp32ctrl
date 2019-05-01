@@ -12,7 +12,7 @@ class BMP280Plugin: public Plugin {
         int type = 0;
         float temp[3];
     public:
-        DEFINE_PLUGIN(BMP280Plugin);
+        DEFINE_PPLUGIN(BMP280Plugin, 3);
 
         bmp280_t dev = {};
         bmp280_params_t devparams = {};

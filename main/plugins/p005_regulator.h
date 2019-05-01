@@ -8,7 +8,7 @@ class RegulatorPlugin: public Plugin {
         bool output = 0;
         StaticJsonBuffer<JSON_OBJECT_SIZE(3)> jb;
     public:
-        DEFINE_PLUGIN(RegulatorPlugin);
+        DEFINE_PPLUGIN(RegulatorPlugin, 5);
         static void task(void *pvParameters);
 };
 
