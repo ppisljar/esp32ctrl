@@ -76,6 +76,12 @@ static lv_obj_t* value_create(lv_obj_t * parent, char* label, char* valueText) {
 
 static void page_create()
 {
+    lv_obj_t *scr = lv_obj_create(NULL, NULL);
+    lv_scr_load(scr);
+
+    lv_theme_t *th = lv_theme_alien_init(100, NULL);
+    lv_theme_set_current(th);
+
 	static lv_style_t style_sb;
 	lv_style_copy(&style_sb, &lv_style_plain);
 	style_sb.body.main_color = LV_COLOR_BLACK;
@@ -100,6 +106,12 @@ static void page_create()
     lv_obj_t* prev = NULL;
     for (auto p : active_plugins) {
         if (p == NULL) continue;
+
+        // each widget should have
+        // - create function
+        // - update function
+        // - destroy function
+        // - action function
         
         switch (p->p_type) {
             case 1: // SWITCH
@@ -160,6 +172,7 @@ bool LcdPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params);
     state_cfg = &((JsonArray &)params["state"]);
 
+    lvgl_init();
     page_create();
 
     return true;
