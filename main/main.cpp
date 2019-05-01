@@ -24,7 +24,7 @@ static const char *TAG = "MAIN";
 #include "plugins/c006_touch.h"
 #include "plugins/c007_logging.h"
 #include "plugins/c008_cron.h"
-#include "plugins/c010_lcd.h"
+
 
 #include "plugins/p001_switch.h"
 #include "plugins/p002_dht.h"
@@ -59,7 +59,11 @@ TouchPlugin *touch_plugin;
 LoggingPlugin *logging_plugin;
 CronPlugin *cron_plugin;
 BlueToothPlugin *bluetooth_plugin;
+
+#ifdef LVGL_GUI_ENABLE
+#include "plugins/c010_lcd.h"
 LcdPlugin *lcd_plugin;
+#endif
 
 IO io;
 
@@ -204,11 +208,13 @@ extern "C" void app_main()
         hue_plugin->init(hue_conf);
     }
 
+    #ifdef LVGL_GUI_ENABLE
     if (cfgObject["lcd"]["enabled"]) {
         JsonObject &lcd_config = cfgObject["lcd"];
         lcd_plugin = new LcdPlugin();
         lcd_plugin->init(lcd_config);
     }
+    #endif
 
     vTaskDelay( 2000 / portTICK_PERIOD_MS);
 
@@ -225,7 +231,6 @@ extern "C" void app_main()
         active_plugins[pid]->name = plugin["name"].as<char*>();
         active_plugins[pid]->id = pid;
         active_plugins[pid]->init(plugin);
-        vTaskDelay( 1000 / portTICK_PERIOD_MS);
     }
 
     long rule_length;
