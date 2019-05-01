@@ -24,6 +24,7 @@ static const char *TAG = "MAIN";
 #include "plugins/c006_touch.h"
 #include "plugins/c007_logging.h"
 #include "plugins/c008_cron.h"
+#include "plugins/c010_lcd.h"
 
 #include "plugins/p001_switch.h"
 #include "plugins/p002_dht.h"
@@ -58,6 +59,7 @@ TouchPlugin *touch_plugin;
 LoggingPlugin *logging_plugin;
 CronPlugin *cron_plugin;
 BlueToothPlugin *bluetooth_plugin;
+LcdPlugin *lcd_plugin;
 
 IO io;
 
@@ -200,6 +202,12 @@ extern "C" void app_main()
         JsonObject &hue_conf = cfgObject["alexa"];
         hue_plugin = new HueEmulatorPlugin();
         hue_plugin->init(hue_conf);
+    }
+
+    if (cfgObject["lcd"]["enabled"]) {
+        JsonObject &lcd_config = cfgObject["lcd"];
+        lcd_plugin = new LcdPlugin();
+        lcd_plugin->init(lcd_config);
     }
 
     vTaskDelay( 2000 / portTICK_PERIOD_MS);

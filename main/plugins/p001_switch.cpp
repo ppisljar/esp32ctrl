@@ -34,8 +34,6 @@ bool SwitchPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]["values"]);
 
-    params["params"]["nastavitev_1"]
-
     ESP_LOGI(P001_TAG, "init gpio:%d interval:%d", (*cfg)["gpio"].as<int>(), (*cfg)["interval"].as<int>());
 
     uint8_t gpio = (*cfg)["gpio"] | 255;

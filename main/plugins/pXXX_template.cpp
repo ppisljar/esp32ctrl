@@ -20,10 +20,10 @@ void TemplatePlugin::task(void * pvParameters)
     for( ;; )                               // creates main loop
     {
         // loop
-        SET_STATE(s, state_1, 0, true, 100);    // set state_1 to 100
-        SET_STATE(s, state_2, 0, true, false);  // set state_2 to false
+        SET_STATE(s, state_1, 0, true, 100, 1);    // set state_1 to 100
+        SET_STATE(s, state_2, 0, true, false, 1);  // set state_2 to false
         
-        ESP_LOGI(TAG, "state 1 is %d", state_1);// ESP_LOGI, ESP_LOGW, ESP_LOGE
+        ESP_LOGI(TAG, "state 1 is %d", s->state_1);// ESP_LOGI, ESP_LOGW, ESP_LOGE
         vTaskDelay(1000 / portTICK_PERIOD_MS);  // once per second
     }
 }
@@ -36,13 +36,6 @@ bool TemplatePlugin::init(JsonObject &params) {
 
     setting_1 = (*cfg)["setting_1"];    // reads settings from config json to internal var
     setting_2 = (*cfg)["setting_2"];    //
-
-    // register new command to rule engine
-    register_command(CMD_EXEC_PXX, [setting_1](uint8_t *cmd) { 
-        // what to run when rules execute    
-        setting_1 = cmd[0];
-        
-    };)
 
     xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, NULL, 1);   // starts task
     return true;
