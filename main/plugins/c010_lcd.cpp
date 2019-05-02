@@ -10,6 +10,7 @@ PLUGIN_STATS(LcdPlugin, state, state)
 
 static lv_res_t slider_action(lv_obj_t * slider);
 static lv_res_t btn_action(lv_obj_t * slider);
+void update_lcd_f(void* ptr);
 
 /**
  * draws a left aligned label + right aligned slider
@@ -50,7 +51,11 @@ static lv_obj_t* button_create(lv_obj_t * parent, char* label, int value) {
 	lv_label_set_text(title, label);
 	lv_obj_align(title, NULL, LV_ALIGN_IN_LEFT_MID, 10, 0);  /*Align to the top*/
 
+	// todo: we will need to update state
+	// we need device_id and value_id 
+	// todo: we will need to update state on click
 	lv_obj_t *sw1 = lv_sw_create(box1, NULL);
+	lv_sw_set_action(sw1, btn_action);
 	lv_obj_align(sw1, NULL, LV_ALIGN_IN_RIGHT_MID, -10, 0);
 	return box1;
 }
@@ -141,8 +146,14 @@ static void page_create()
                 lv_obj_align(element, prev, prev ? LV_ALIGN_OUT_BOTTOM_MID : LV_ALIGN_IN_TOP_MID, 0, 0);
                 prev = element;
                 break;
+			default:
+				continue;
 
         }
+
+		lv_obj_set_free_ptr(element, p);
+		lv_obj_set_free_num(element, 0);
+		lv_task_create(update_lcd_f, 1000, LV_TASK_PRIO_LOW, element);
     }
 
 }
@@ -155,6 +166,10 @@ static void page_create()
 static lv_res_t slider_action(lv_obj_t * slider)
 {
     int16_t v = lv_slider_get_value(slider);
+	lv_obj_t* element = lv_obj_get_parent(slider);
+	Plugin* p = (Plugin*)lv_obj_get_free_ptr(element);
+	uint8_t d = lv_obj_get_free_num(element);
+	p->setStatePtr(d, (uint8_t*)&v, true);
     return LV_RES_OK;
 }
 
@@ -165,6 +180,11 @@ static lv_res_t slider_action(lv_obj_t * slider)
  */
 static lv_res_t btn_action(lv_obj_t * btn)
 {
+	lv_obj_t* element = lv_obj_get_parent(btn);
+	Plugin* p = (Plugin*)lv_obj_get_free_ptr(element);
+	uint8_t d = lv_obj_get_free_num(element);
+	uint8_t state = lv_sw_get_state(btn);
+	p->setStatePtr(d, (uint8_t*)&state, true);
     return LV_RES_OK;
 }
 
@@ -178,3 +198,26 @@ bool LcdPlugin::init(JsonObject &params) {
     return true;
 }
 
+void update_lcd_f(void* ptr)
+{
+	lv_obj_t* element = (lv_obj_t*)ptr;
+    Plugin* p = (Plugin*)lv_obj_get_free_ptr(element);
+	uint8_t d = lv_obj_get_free_num(element);
+	uint8_t* value = (uint8_t*)p->getStatePtr(d);
+	switch (p->p_type) {
+		case 1: // SWITCH
+			// pass pointer to value
+			if (*value) lv_sw_on(element);
+			else lv_sw_off(element);
+			break;
+		case 2: case 3: case 4: case 6: case 14:
+			// walk over all states, get their names and their values
+			lv_label_set_text(element, "hello");
+			break;
+		case 5: // REGULATOR
+		case 15:// DIMMER
+			lv_slider_set_value(element, *value);
+			break;
+	}
+
+}
