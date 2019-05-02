@@ -2,7 +2,7 @@
 #define ESP_PLUGIN_003_H
 
 #include "plugin_defs.h"
-#include <bmp280.h>
+#include <iot_bme280.h>
 
 class BMP280Plugin: public Plugin {
     private:
@@ -14,8 +14,7 @@ class BMP280Plugin: public Plugin {
     public:
         DEFINE_PPLUGIN(BMP280Plugin, 3);
 
-        bmp280_t dev = {};
-        bmp280_params_t devparams = {};
+        bme280_config_t dev = {};
 
         te_expr *temp_expr;
         te_expr *humi_expr;

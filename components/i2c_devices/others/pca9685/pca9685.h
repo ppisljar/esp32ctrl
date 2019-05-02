@@ -11,7 +11,7 @@
 #define __PCA9685_H__
 
 #include <stdbool.h>
-#include <I2Cdev.h>
+#include "../../I2Cdev/I2Cdev.h"
 
 #ifdef __cplusplus
 extern "C" {

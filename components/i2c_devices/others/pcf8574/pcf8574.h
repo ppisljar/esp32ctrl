@@ -10,7 +10,8 @@
 #define __PCF8574_H__
 
 #include <stddef.h>
-#include <I2Cdev.h>
+#include "driver/i2c.h"
+#include "iot_i2c_bus.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,10 +24,7 @@ extern "C" {
  * @param val 8-bit GPIO port value
  * @return `ESP_OK` on success
  */
-inline esp_err_t pcf8574_port_read(void* dev, uint8_t *val)
-{
-    return I2Cdev::read(dev, NULL, 0, val, 1);
-}
+esp_err_t pcf8574_port_read(void* dev, uint8_t *val);
 
 /**
  * @brief Write value to GPIO port
@@ -34,20 +32,11 @@ inline esp_err_t pcf8574_port_read(void* dev, uint8_t *val)
  * @param value GPIO port value
  * @return ESP_OK on success
  */
-inline esp_err_t pcf8574_port_write(void* dev, uint8_t value)
-{
-    return I2Cdev::write(dev, NULL, 0, &value, 1);
-}
+esp_err_t pcf8574_port_write(void* dev, uint8_t value);
 
-inline esp_err_t pcf8575_port_read(void* dev, uint16_t *val)
-{
-    return I2Cdev::read(dev, NULL, 0, (uint8_t*)val, 2);
-}
+esp_err_t pcf8575_port_read(void* dev, uint16_t *val);
 
-inline esp_err_t pcf8575_port_write(void* dev, uint16_t value)
-{
-    return I2Cdev::write(dev, NULL, 0, (uint8_t*)&value, 2);
-}
+esp_err_t pcf8575_port_write(void* dev, uint16_t value);
 
 #ifdef __cplusplus
 }

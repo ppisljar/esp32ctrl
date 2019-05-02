@@ -2,7 +2,7 @@
 #define ESP_PLUGIN_008_H
 
 #include "plugin_defs.h"
-#include "mcp23017.h"
+#include "iot_mcp23017.h"
 
 class MCP23017Plugin: public Plugin {
     private:
