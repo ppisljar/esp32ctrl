@@ -1,6 +1,7 @@
 #include "p003_bmp280.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "c001_i2c.h"
 
 const char *P003_TAG = "BMP280Plugin";
 
@@ -45,13 +46,13 @@ bool BMP280Plugin::init(JsonObject &params) {
     pres_expr = te_compile(pres_formula, vars_pres, 1, 0);
 
     uint8_t addr = (*cfg)["addr"] || 0;
-    ESP_LOGI(P003_TAG, "BME280 init on addr %d", dev.addr);
+    ESP_LOGI(P003_TAG, "BME280 init on addr %d", addr);
 
-    if (addr == 0 || (dev = iot_bme280_create(bus, addr)) != ESP_OK)
-    {
-        ESP_LOGI(P003_TAG, "Could not init BMP280, err: \n");
-        return false;
-    }
+    // if (addr == 0 || (dev = iot_bme280_create(i2c_plugin->i2c_bus, addr)) != ESP_OK)
+    // {
+    //     ESP_LOGI(P003_TAG, "Could not init BMP280, err: \n");
+    //     return false;
+    // }
 
     // type = dev.id == BME280_CHIP_ID ? 1 : 2;
     // ESP_LOGI(P003_TAG, "BMP280: found %s\n", type == 1 ? "BME280" : "BMP280");

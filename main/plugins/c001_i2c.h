@@ -6,6 +6,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_log.h"
+#include "iot_i2c_bus.h"
 #include "driver/i2c.h"
 
 #define ACK_CHECK_EN 0x1                        /*!< I2C master will check ack from slave*/
@@ -22,6 +23,10 @@ class I2CPlugin: public Plugin {
         esp_err_t read(uint8_t addr, uint8_t *data_rd, size_t size);
         esp_err_t write(uint8_t addr, uint8_t *data_wr, size_t size);
         void scan();
+
+        i2c_bus_handle_t i2c_bus;
 };
+
+extern I2CPlugin* i2c_plugin;
 
 #endif

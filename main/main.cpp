@@ -50,7 +50,6 @@ static const char *TAG = "MAIN";
 // global config object
 Config *cfg;
 Plugin *active_plugins[10];
-I2CPlugin *i2c_plugin;
 NTPPlugin *ntp_plugin;
 WiFiPlugin *wifi_plugin;
 TimersPlugin *timers_plugin;

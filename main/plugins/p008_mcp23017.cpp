@@ -1,53 +1,50 @@
 #include "p008_mcp23017.h"
+#include "c001_i2c.h"
 
 const char *P008_TAG = "MCP23017Plugin";
 
 PLUGIN_CONFIG(MCP23017Plugin, interval, gpio, type)
 PLUGIN_STATS(MCP23017Plugin, value, value)
 
-uint8_t mcp23017_addr = 0;
-
 class MCP23017Plugin_set_direction : public IO_set_direction {
     private:
-        uint8_t addr;
+        void* addr;
         struct IO_DIGITAL_PINS *pins;
     public:
-        MCP23017Plugin_set_direction(uint8_t addr_, struct IO_DIGITAL_PINS *pins_) {
+        MCP23017Plugin_set_direction(void* addr_, struct IO_DIGITAL_PINS *pins_) {
             addr = addr_;
             pins = pins_;
         }
         uint8_t operator()(uint8_t pin, uint8_t mode) {
-            return mcp23017_set_mode(addr, pin - pins->start, (mcp23017_gpio_mode_t)mode);
+            return iot_mcp23017_set_io_dir(addr, mode, (mcp23017_gpio_t)pin - pins->start);
         }
 };
 
 class MCP23017Plugin_digital_read : public IO_digital_read {
     private:
-        uint8_t addr;
+        void* addr;
         struct IO_DIGITAL_PINS *pins;
     public:
-        MCP23017Plugin_digital_read(uint8_t addr_, struct IO_DIGITAL_PINS *pins_) {
+        MCP23017Plugin_digital_read(void* addr_, struct IO_DIGITAL_PINS *pins_) {
             addr = addr_;
             pins = pins_;
         }
         uint8_t operator()(uint8_t pin) {
-            uint32_t level;
-            mcp23017_get_level(mcp23017_addr, pin - pins->start, &level);
-            return (uint8_t)level;
+            return iot_mcp23017_read_io(addr, (mcp23017_gpio_t)pin - pins->start);
         }
 };
 
 class MCP23017Plugin_digital_write : public IO_digital_write {
     private:
-        uint8_t addr;
+        void* addr;
         struct IO_DIGITAL_PINS *pins;
     public:
-        MCP23017Plugin_digital_write(uint8_t addr_, struct IO_DIGITAL_PINS *pins_) {
+        MCP23017Plugin_digital_write(void* addr_, struct IO_DIGITAL_PINS *pins_) {
             addr = addr_;
             pins = pins_;
         }
         uint8_t operator()(uint8_t pin, uint8_t value) {
-            return mcp23017_set_level(mcp23017_addr, pin - pins->start, value);
+            return iot_mcp23017_write_io(addr, value, (mcp23017_gpio_t)pin - pins->start);
         }
 };
 
@@ -56,9 +53,10 @@ bool MCP23017Plugin::init(JsonObject &params) {
     state_cfg = &((JsonArray &)params["state"]);
 
     uint8_t mcp23017_addr = (*cfg)["addr"];
-    MCP23017Plugin_digital_read *digitalRead = new MCP23017Plugin_digital_read(mcp23017_addr, &pins);
-    MCP23017Plugin_digital_write *digitalWrite = new MCP23017Plugin_digital_write(mcp23017_addr, &pins);
-    MCP23017Plugin_set_direction *setDirection = new MCP23017Plugin_set_direction(mcp23017_addr, &pins);
+    void* dev = iot_mcp23017_create(i2c_plugin->i2c_bus, mcp23017_addr);
+    MCP23017Plugin_digital_read *digitalRead = new MCP23017Plugin_digital_read(dev, &pins);
+    MCP23017Plugin_digital_write *digitalWrite = new MCP23017Plugin_digital_write(dev, &pins);
+    MCP23017Plugin_set_direction *setDirection = new MCP23017Plugin_set_direction(dev, &pins);
     pins.set_direction = setDirection;
     pins.digital_write = digitalWrite;
     pins.digital_read = digitalRead;

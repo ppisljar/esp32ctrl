@@ -29,9 +29,10 @@ bool I2CPlugin::init(JsonObject &params) {
     conf.scl_io_num = (gpio_num_t)params["scl"].as<int>();
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = (int)params["freq"];
-    i2c_param_config((i2c_port_t)i2c_master_port, &conf);
+    i2c_bus = iot_i2c_bus_create((i2c_port_t)i2c_master_port, &conf);
 
-    return i2c_driver_install((i2c_port_t)i2c_master_port, conf.mode, 0, 0, 0);
+    return true;
+    //return i2c_driver_install((i2c_port_t)i2c_master_port, conf.mode, 0, 0, 0);
 }
 
 void I2CPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool notify) {
@@ -64,3 +65,5 @@ void I2CPlugin::scan() {
     }
 
 }
+
+I2CPlugin *i2c_plugin;

@@ -12,11 +12,23 @@
 #define CHECK(x) do { esp_err_t __; if ((__ = x) != ESP_OK) return __; } while (0)
 #define CHECK_ARG(VAL) do { if (!(VAL)) return ESP_ERR_INVALID_ARG; } while (0)
 
+typedef struct {
+    i2c_bus_handle_t bus;
+    uint16_t dev_addr;
+} pcf8574_dev_t;
 
-esp_err_t pcf8574_port_write(void* dev, uint8_t data)
+pcf8574_handle_t pcf8574_create(i2c_bus_handle_t bus, uint16_t dev_addr)
+{
+    pcf8574_dev_t* device = (pcf8574_dev_t*) calloc(1, sizeof(pcf8574_dev_t));
+    device->bus = bus;
+    device->dev_addr = dev_addr;
+    return (pcf8574_handle_t) device;
+}
+
+esp_err_t pcf8574_port_write(pcf8574_handle_t dev, uint8_t data)
 {
     esp_err_t ret;
-    void** device = (void**) dev;
+    pcf8574_dev_t* device = (pcf8574_dev_t*) dev;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (device->dev_addr << 1) | WRITE_BIT,
@@ -27,11 +39,11 @@ esp_err_t pcf8574_port_write(void* dev, uint8_t data)
     return ret;
 }
 
-esp_err_t pcf8574_port_read(void* dev, uint8_t *data)
+esp_err_t pcf8574_port_read(pcf8574_handle_t dev, uint8_t *data)
 {
     //start-device_addr-word_addr-start-device_addr-data-stop; no_ack of end data
     esp_err_t ret;
-    void** device = (void**) dev;
+    pcf8574_dev_t* device = (pcf8574_dev_t*) dev;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
     i2c_master_start(cmd);
@@ -44,10 +56,10 @@ esp_err_t pcf8574_port_read(void* dev, uint8_t *data)
     return ret;
 }
 
-esp_err_t pcf8575_port_write(void* dev, uint16_t data)
+esp_err_t pcf8575_port_write(pcf8574_handle_t dev, uint16_t data)
 {
     esp_err_t ret;
-    void** device = (void**) dev;
+    pcf8574_dev_t* device = (pcf8574_dev_t*) dev;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, (device->dev_addr << 1) | WRITE_BIT,
@@ -59,11 +71,11 @@ esp_err_t pcf8575_port_write(void* dev, uint16_t data)
     return ret;
 }
 
-esp_err_t pcf8575_port_read(void* dev, uint16_t *data)
+esp_err_t pcf8575_port_read(pcf8574_handle_t dev, uint16_t *data)
 {
     //start-device_addr-word_addr-start-device_addr-data-stop; no_ack of end data
     esp_err_t ret;
-    void** device = (void**) dev;
+    pcf8574_dev_t* device = (pcf8574_dev_t*) dev;
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
     i2c_master_start(cmd);
