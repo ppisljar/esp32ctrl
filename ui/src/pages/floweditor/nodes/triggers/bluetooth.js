@@ -4,7 +4,7 @@ import { settings } from "../../../../lib/settings";
 const bluetoothNode = {
     group: 'TRIGGERS',
     name: 'bluetooth',
-    title: 'BLuETOOTH',
+    title: 'BLUETOOTH',
     inputs: 0,
     outputs: 1,  
     getEditorConfig: () => {

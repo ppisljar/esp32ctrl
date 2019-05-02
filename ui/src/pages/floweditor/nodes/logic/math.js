@@ -26,12 +26,12 @@ const mathNode = {
     },
 
     getDefault: () => ({
-        expr: '',
+        expr: 'state',
     }),
 
     getText: (item) => {
         const { expr } = item.params;
-        return expr;
+        return 'state = ' + expr;
     },
 
     toDsl: (item) => {
