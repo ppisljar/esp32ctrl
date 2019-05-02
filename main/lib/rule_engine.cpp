@@ -238,6 +238,9 @@ int lastrun = 0;
 uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t len = 255) {
     byte* cmd = start;
     byte* state_val = start_val;
+    byte* x = nullptr;
+    byte* y = nullptr;
+    double state_val_value = 0;
     uint8_t state_val_length = start_val_length;
 
     Plugin *p;
@@ -253,6 +256,7 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
             case CMD_DELAY:
                 // todo: add pointer to here to the timers ?
                 ESP_LOGI(TAG_RE, "cmd delay %d", cmd[1]);
+
                 cmd += 2;
                 break;
             case CMD_EVENT:
@@ -270,8 +274,18 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 ESP_LOGI(TAG_RE, "cmd get p:%d v:%d l:%d", cmd[1], cmd[2], cmd[3]);
                 p = active_plugins[cmd[1]];
                 if (p != nullptr) {
-                    state_val = (uint8_t*)p->getStatePtr(cmd[2]);
-                    state_val_length = cmd[3];
+                    switch(cmd[2]) {
+                        case 0:
+                            state_val = (uint8_t*)p->getStatePtr(cmd[3]);
+                            state_val_length = cmd[4];
+                            break;
+                        case 1:
+                            x = (uint8_t*)p->getStatePtr(cmd[3]);
+                            break;
+                        case 2:
+                            y = (uint8_t*)p->getStatePtr(cmd[3]);  
+                            break;
+                    }
                 }
                 cmd += 3;
                 break;
@@ -343,6 +357,18 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 makeHttpRequest((char*)url.c_str());
                 break;
             }
+            case CMD_MATH: {
+                cmd++;
+                std::string expr_str((const char*)cmd);
+                cmd += expr_str.length() + 1;
+                te_variable vars_temp[] = {{"state", state_val}, {"x", x}, {"y", y}};
+                te_expr *expr = te_compile(expr_str.c_str(), vars_temp, 1, 0);
+                state_val_value = te_eval(expr);
+                state_val = (uint8_t*)&state_val_value;
+                state_val_length = 4;
+                break;
+            }
+            
             // plugin provided commands
             default:
                 ESP_LOGI(TAG_RE, "cmd: %i", cmd[0]);

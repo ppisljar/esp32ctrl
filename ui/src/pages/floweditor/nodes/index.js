@@ -16,11 +16,12 @@ import { fireeventNode } from "./actions/fire_event";
 import { settimerNode } from "./actions/set_timer";
 import { getStateNode } from "./actions/get_state";
 import { setHwTimerNode } from "./actions/set_hw_timer";
+import { mathNode } from "./logic/math";
 
 export const nodes = [
     timerNode, hwtimerNode, hwinterruptNode, touchNode, bluetoothNode, alexaNode,
     eventNode, clockNode, bootNode, 
-    ifElseNode, delayNode, 
+    ifElseNode, delayNode, mathNode, 
     getStateNode, setStateNode, fireeventNode, settimerNode, setHwTimerNode,mqttNode, httpNode
 
 ];
