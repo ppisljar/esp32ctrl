@@ -253,3 +253,46 @@ bool TimersPlugin::init(JsonObject &params) {
     return true;
 }
 
+struct s_timer {
+    esp_timer_create_args_t args;
+    esp_timer_handle_t handle;
+    std::function<void()> fn;
+    bool repeat;
+};
+
+#define MAX_SOFT_TIMERS 5
+struct s_timer* soft_timers[MAX_SOFT_TIMERS] = {};
+
+static void soft_timer_callback(void* arg)
+{
+    uint8_t i = (uint8_t)(uint32_t)arg;
+    soft_timers[i]->fn();
+    if (!soft_timers[i]->repeat) {
+        free(soft_timers[i]);
+    }
+}
+
+esp_err_t soft_timer(std::function<void()> fn, int32_t delay, bool repeat = false) {
+    for (uint8_t i = 0; i < MAX_SOFT_TIMERS; i++) {
+        if (soft_timers[i] == nullptr) {
+            soft_timers[i] = (s_timer*)malloc(sizeof(s_timer));
+            soft_timers[i]->fn = fn;
+            soft_timers[i]->repeat = repeat;
+            
+            soft_timers[i]->args.callback = &soft_timer_callback;
+            soft_timers[i]->args.arg = (void*) i;
+            soft_timers[i]->args.name = "soft-timer";
+
+            ESP_ERROR_CHECK(esp_timer_create(&soft_timers[i]->args, &soft_timers[i]->handle));
+            if (repeat) {
+                ESP_ERROR_CHECK(esp_timer_start_periodic(soft_timers[i]->handle, delay));
+            } else {
+                ESP_ERROR_CHECK(esp_timer_start_once(soft_timers[i]->handle, delay));
+            }
+
+            return ESP_OK;
+        }
+    }
+
+    return ESP_FAIL;
+}

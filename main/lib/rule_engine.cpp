@@ -256,7 +256,9 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
             case CMD_DELAY:
                 // todo: add pointer to here to the timers ?
                 ESP_LOGI(TAG_RE, "cmd delay %d", cmd[1]);
-
+                soft_timer([cmd, state_val, state_val_length](){
+                    run_rule(cmd+2, state_val, state_val_length, 255);
+                }, cmd[1] * 1000, false);
                 cmd += 2;
                 break;
             case CMD_EVENT:

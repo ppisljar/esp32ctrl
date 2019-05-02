@@ -35,4 +35,6 @@ class TimersPlugin: public Plugin {
         void enableHwInterrupt(uint8_t pin, gpio_int_type_t type = GPIO_INTR_ANYEDGE);
 };
 
+esp_err_t soft_timer(std::function<void()> fn, int32_t delay, bool repeat);
+
 #endif

@@ -8,14 +8,11 @@ const delayNode = {
     inputs: 1,
     outputs: 1,  
     getEditorConfig: () => {
-        let vars = {};
         return {
             groups: {
                 params: {
-                    name: 'Set State',
+                    name: 'Delay',
                     configs: {
-                        state: { name: 'State', type: 'select', options: [{ name: 'state', value: 255 }] },
-                        comp: { name: 'Compare', type: 'select', options: [' changed ', '=', '<', '>', '<=', '>=', '!='] },
                         val: { name: 'Value', type: 'string' }
                     }
                 }
@@ -27,14 +24,14 @@ const delayNode = {
         return component;
     },
 
-    getText: () => {
-        return 'DELAY';
+    getText: (item) => {
+        const { val } = item.props;
+        return `DELAY ${val}`;
     },
 
     toDsl: () => {
-        const eq = this.config[1].values.findIndex(v => v === this.config[1].value);
-        const devprop = this.config[0].value.split('-').map(v => String.fromCharCode(v)).join('');
-        return [`\xFC\x01${devprop}${String.fromCharCode(eq)}\x01${String.fromCharCode(this.config[2].value)}%%output%%`, `\xFD%%output%%\xFE`];
+        const { val } = item.props;
+        return [`\xF4${String.fromCharCode(val)}`];
     
     } ,     
 }
