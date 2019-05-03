@@ -1092,6 +1092,14 @@ static esp_err_t logs_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+static esp_err_t index_redirect(httpd_req_t *req)
+{   
+    httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+    httpd_resp_set_status(req, "302 Found");
+    httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+
 static esp_err_t reset_handler(httpd_req_t *req)
 {
     if (!isAuthenticated(req, true)) return ESP_OK;
@@ -1240,6 +1248,9 @@ esp_err_t start_file_server(const char *base_path)
     // upload
     // delete
     // rename
+
+    // captive portal
+    http_quick_register("/generate_204", HTTP_GET, index_redirect, server_data);
 
     //http_quick_register("/config/*", HTTP_GET, plugins_delete_handler, server_data);
     //http_quick_register("/config/*", HTTP_POST, plugins_delete_handler, server_data);

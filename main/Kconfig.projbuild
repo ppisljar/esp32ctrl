@@ -1,6 +1,10 @@
 menu "MyESP32 CTRL"
+    config ENABLE_OTA
+        bool "OTA"
+        default y
 
-    menu "Enabled Controllers"
+
+    menu "Controllers"
 
         config ENABLE_C001_I2C
             bool "I2C"
@@ -17,13 +21,25 @@ menu "MyESP32 CTRL"
         config ENABLE_C005_HUE
             bool "HUE EMULATOR"
             default y
+
+        config ENABLE_C006
+            bool "TOUCH"
+            default y
+
+        config ENABLE_C007
+            bool "LOGGING"
+            default y
+
+        config ENABLE_C008
+            bool "CRON"
+            default y
+
+        config ENABLE_C009
+            bool "BLUETOOTH"
+            default y
     endmenu
 
-    menu "Enabled Plugins"
-
-        config ENABLE_P001_SWITCH
-            bool "SWITCH"
-            default y
+    menu "Sensors"
 
         config ENABLE_P002_DHT
             bool "DHT11/22"
@@ -38,13 +54,12 @@ menu "MyESP32 CTRL"
             bool "DS18x20"
             default y
 
-        config ENABLE_P005_REGULATOR
-            bool "REGULATOR"
+        config ENABLE_P017
+            bool "VEML6040"
             default y
+    endmenu
 
-        config ENABLE_P006_ANALOG
-            bool "ANALOG"
-            default y
+    menu "I2C Devices"
 
         config ENABLE_P007_ADS1115
             bool "ADS1115 IO Extender"
@@ -61,7 +76,9 @@ menu "MyESP32 CTRL"
         config ENABLE_P010_PCA9685
             bool "PCA9685 IO Extender"
             default y
+    endmenu
 
+    menu "Network Devices"
         config ENABLE_P011_MQTT
             bool "MQTT Controller"
             default y
@@ -73,6 +90,17 @@ menu "MyESP32 CTRL"
         config ENABLE_P013_HTTP
             bool "HTTP Controller"
             default y
+            
+        config ENABLE_P016_UDPSERVER
+            bool "UDP Server"
+            default y
+    endmenu
+
+    menu "Other Devices"
+
+        config ENABLE_P001_SWITCH
+            bool "SWITCH"
+            default y
 
         config ENABLE_P014_DUMMY
             bool "Dummy Device"
@@ -81,14 +109,15 @@ menu "MyESP32 CTRL"
         config ENABLE_P015_DIMMER
             bool "Dimmer Device"
             default y
-        
-        config ENABLE_P016_UDPSERVER
-            bool "UDP Server"
+
+        config ENABLE_P005_REGULATOR
+            bool "REGULATOR"
             default y
 
-        config ENABLE_P017
-            bool "VEML6040"
+        config ENABLE_P006_ANALOG
+            bool "ANALOG"
             default y
+
     endmenu
 
     menu "WiFi Config"

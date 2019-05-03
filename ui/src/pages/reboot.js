@@ -1,5 +1,6 @@
 import { h, Component } from 'preact';
 import { loader } from '../lib/loader';
+import { settings } from '../lib/settings';
 
 
 export class RebootPage extends Component {
@@ -13,9 +14,12 @@ export class RebootPage extends Component {
         loader.show();
         fetch('/reboot').then(() => {
             setTimeout(() => {
+                const name = settings.get('unit.name');
                 loader.hide();
-                window.location.hash = '#devices';
-                window.location.reload();
+                debugger;
+                window.location.href = `http://${name}.local`;
+                // window.location.hash = '';
+                // window.location.href = 'http://www.google.com';
             }, 10000)
         })
     }

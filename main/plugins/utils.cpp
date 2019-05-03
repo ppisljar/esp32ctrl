@@ -1,5 +1,12 @@
 #include "utils.h"
 
+bool string_to_lower(std::string& subject) {
+    for (auto& c : subject) {
+        c = std::tolower(c);
+    }
+    return true;
+}
+
 bool replace_string_in_place(std::string& subject, const std::string& search, const std::string& replace) {
     size_t pos = 0;
     bool success = false;

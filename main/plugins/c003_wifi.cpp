@@ -1,14 +1,19 @@
 #include "c003_wifi.h"
 #include "../lib/global_state.h"
+#include "DNSServer.h"
+#include "mdns.h"
+#include "../lib/config.h"
 
 static const char *TAG = "WiFiPlugin";
 
 extern uint8_t ledPin;
 extern bool ledInverted;
+extern Config* g_cfg;
 
 PLUGIN_CONFIG(WiFiPlugin, mode, ssid, pass, ssid2, pass2, static_ip)
 PLUGIN_STATS(WiFiPlugin, status.wifi_connected, status.wifi_connected)
 
+DNSServer dnsServer;
 static esp_err_t ap_mode(WiFiPlugin &p) {
     esp_wifi_stop();
     p.wifi_config = {};
@@ -20,7 +25,35 @@ static esp_err_t ap_mode(WiFiPlugin &p) {
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &p.wifi_config));
     esp_wifi_start();
+
     return ESP_OK;
+}
+
+static void initialise_mdns(void)
+{
+    JsonObject& c = g_cfg->getConfig();
+    const char* hostname = c["unit"]["name"];
+    //initialize mDNS
+    ESP_ERROR_CHECK( mdns_init() );
+    //set mDNS hostname (required if you want to advertise services)
+    ESP_ERROR_CHECK( mdns_hostname_set(hostname) );
+    ESP_LOGI(TAG, "mdns hostname set to: [%s]", hostname);
+    //set default mDNS instance name
+    ESP_ERROR_CHECK( mdns_instance_name_set("mdsn") );
+
+    //structure with TXT records
+    mdns_txt_item_t serviceTxtData[3] = {
+        {"board","esp32"},
+        {"u","user"},
+        {"p","password"}
+    };
+
+    //initialize service
+    ESP_ERROR_CHECK( mdns_service_add("ESP32Ctrl-WebServer", "_http", "_tcp", 80, serviceTxtData, 3) );
+    //add another TXT item
+    ESP_ERROR_CHECK( mdns_service_txt_item_set("_http", "_tcp", "path", "/foobar") );
+    //change TXT item value
+    ESP_ERROR_CHECK( mdns_service_txt_item_set("_http", "_tcp", "u", "admin") );
 }
 
 static esp_err_t event_handler(void *ctx, system_event_t *event)
@@ -33,7 +66,24 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         case SYSTEM_EVENT_STA_START:
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_START");
             ESP_ERROR_CHECK(esp_wifi_connect());
+            //dnsServer.stop();
             break;
+        // case SYSTEM_EVENT_AP_START:
+        //     ESP_LOGI(TAG, "SoftAP started");
+        //     break;
+        // case SYSTEM_EVENT_AP_STOP:
+        //     ESP_LOGI(TAG, "SoftAP stopped");
+        //     break;
+        // case SYSTEM_EVENT_AP_STACONNECTED:
+        //     ESP_LOGI(TAG, "Station:"MACSTR" join, AID=%d",
+        //              MAC2STR(event->event_info.sta_connected.mac),
+        //              event->event_info.sta_connected.aid);
+        //     break;
+        // case SYSTEM_EVENT_AP_STADISCONNECTED:
+        //     ESP_LOGI(TAG, "Station:"MACSTR"leave, AID=%d",
+        //              MAC2STR(event->event_info.sta_disconnected.mac),
+        //              event->event_info.sta_disconnected.aid);
+        //     break;
         case SYSTEM_EVENT_STA_GOT_IP:
             if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 0 : 1);
             p.status.wifi_connected = true;
@@ -119,6 +169,8 @@ bool WiFiPlugin::init(JsonObject &params) {
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 
     if (mode == 0) { // AP
+        inet_pton(AF_INET, "192.168.4.1", &status.local_ip);
+        dnsServer.start(53, "*", &status.local_ip);
         ssid = (char*)params["ap_ssid"].as<char*>();
         pass = (char*)params["ap_pass"].as<char*>();
         strcpy((char*)wifi_config.ap.ssid, ssid == nullptr ? "ESP32Ctrl" : ssid);
@@ -133,6 +185,7 @@ bool WiFiPlugin::init(JsonObject &params) {
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
         ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
     } else { // STA
+        
         strcpy((char*)wifi_config.sta.ssid, ssid);
         strcpy((char*)wifi_config.sta.password, pass);
         secondarySSID = params["ssid2"].as<char*>() != nullptr && strlen(params["ssid2"].as<char*>()) > 0;
@@ -140,6 +193,8 @@ bool WiFiPlugin::init(JsonObject &params) {
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     }
+
+    initialise_mdns();
     
     // in deep sleep mode we won't start wifi until needed
     if (mode != 2) {
