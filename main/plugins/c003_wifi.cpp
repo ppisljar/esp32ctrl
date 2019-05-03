@@ -33,6 +33,9 @@ static void initialise_mdns(void)
 {
     JsonObject& c = g_cfg->getConfig();
     const char* hostname = c["unit"]["name"];
+    if (hostname == nullptr || strcmp(hostname, "") == 0) {
+        return;
+    }
     //initialize mDNS
     ESP_ERROR_CHECK( mdns_init() );
     //set mDNS hostname (required if you want to advertise services)
