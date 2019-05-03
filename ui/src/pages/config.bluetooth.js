@@ -3,6 +3,7 @@ import { Form } from '../components/form';
 import { settings } from '../lib/settings';
 import { set } from '../lib/helpers';
 import { pins } from '../lib/pins';
+import { getTasks, getTaskValues } from '../lib/utils';
 
 export const types = [
     { name: '- None -', value: 0 },
@@ -28,7 +29,22 @@ const setDefaultConfig = (type, config) => {
 
 const getFormConfig = (config, form) => {
     const values = {};
+    const beacon = {};
     
+    config.beacon.values.forEach((trigger, i) => {
+        beacon[`${i}_name`] = [
+            { name: 'Check Device', type: 'select', options: getTasks, var: `beacon.values[${i}].device`, },
+            { name: 'Check Value', type: 'select', options: getTaskValues(`beacon.values[${i}].device`), var: `beacon.values[${i}].value` },
+            {
+                type: 'button',
+                value: 'remove',
+                click: () => {
+                    config.beacon.values.splice(i, 1);
+                    form.forceUpdate();
+                }
+            }];
+    });
+
     config.server.values.forEach((trigger, i) => {
         values[`${i}_name`] = [{
             name: 'Name',
@@ -50,6 +66,25 @@ const getFormConfig = (config, form) => {
             }
         }];
     });
+
+    const addDevice = () => {
+        config.beacon.values.push({
+            device: 'New Value',
+            value: 0,
+            idx: firstFreeKey(config.beacon.values),
+        });
+        form.forceUpdate();
+    }
+
+    const bytesLeft = () => {
+        let total = 0;
+        config.beacon.values.forEach(v => {
+            // get value length
+            total += 1;
+        });
+        const bl = 20-total;
+        return `${bl} bytes left`;
+    }
     
     return {
         groups: {
@@ -57,6 +92,15 @@ const getFormConfig = (config, form) => {
                 name: 'General Settings',
                 configs: {
                     enabled: { name: 'Enabled', type: 'checkbox', var: 'enabled' },
+                }
+            },
+            beacon: {
+                name: 'Bluetooth Beacon',
+                configs: {
+                    enabled: { name: 'Enabled', type: 'checkbox' },
+                    type: { name: 'Type', type: 'select', options: ['name', 'custom']},
+                    ...beacon,
+                    btn: { name: bytesLeft, value: 'add device value', type: 'button', click: addDevice }
                 }
             },
             server: {

@@ -85,6 +85,10 @@ menu "MyESP32 CTRL"
         config ENABLE_P016_UDPSERVER
             bool "UDP Server"
             default y
+
+        config ENABLE_P017
+            bool "VEML6040"
+            default y
     endmenu
 
     menu "WiFi Config"

@@ -159,7 +159,7 @@ export class Form extends Component {
 
                     if (conf.if) {
                         let val;
-                        if (typeof conf.if === 'function') {
+                        if (typeof conf.if === 'fucnction') {
                             if (!conf.if(values)) return (null);
                         }
                         else {
@@ -178,8 +178,10 @@ export class Form extends Component {
                         const CustomComponent = conf.component;
                         return (<CustomComponent conf={conf} values={values} />);
                     }
+
+                    const name = typeof conf.name === 'function' ? conf.name(values) : conf.name;
                     return [
-                        (<div class="field-label"><label for={varId} class="label">{conf.name} {conf.help ? (<span class='fa fa-info-circle'></span>) : ''}</label></div>),
+                        (<div class="field-label"><label for={varId} class="label">{name} {conf.help ? (<span class='fa fa-info-circle'></span>) : ''}</label></div>),
                         (<div class="field-body"><div class="control is-expanded">{this.renderConfig(varId, conf, val, varName)}</div></div>),
                     ];
                 })}

@@ -114,6 +114,10 @@ Plugin* DimmerPlugin_myProtoype = Plugin::addPrototype(15, new DimmerPlugin);
 #ifdef CONFIG_ENABLE_P016_UDPSERVER
 Plugin* UdpServerPlugin_myProtoype = Plugin::addPrototype(16, new UdpServerPlugin);
 #endif
+#ifdef CONFIG_ENABLE_P017
+#include "plugins/p017_vml6040.h"
+Plugin* VEML6040Plugin_myProtoype = Plugin::addPrototype(17, new VEML6040Plugin);
+#endif
 
 BlueTooth* bluetooth;
 
