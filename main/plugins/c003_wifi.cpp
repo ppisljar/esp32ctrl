@@ -66,11 +66,15 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
     JsonObject &params = *(p.cfg);
     uint8_t mode = params["mode"] | 1;
     switch(event->event_id) {
-        case SYSTEM_EVENT_STA_START:
+        case SYSTEM_EVENT_STA_START: {
+            wifi_mode_t mode;
+            esp_wifi_get_mode(&mode);
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_START");
-            ESP_ERROR_CHECK(esp_wifi_connect());
+            if (mode == WIFI_MODE_STA)
+                ESP_ERROR_CHECK(esp_wifi_connect());   
             //dnsServer.stop();
             break;
+        }
         // case SYSTEM_EVENT_AP_START:
         //     ESP_LOGI(TAG, "SoftAP started");
         //     break;
@@ -191,7 +195,7 @@ bool WiFiPlugin::init(JsonObject &params) {
             if (strlen((char*)wifi_config.ap.password) == 0) {
                 wifi_config.ap.authmode = WIFI_AUTH_OPEN;
             }
-            ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+            ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));
             ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
         } else { // STA
             

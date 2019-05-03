@@ -1022,7 +1022,7 @@ static esp_err_t reboot_handler(httpd_req_t *req)
 
     httpd_resp_set_status(req, "200 OK");
     httpd_resp_sendstr(req, "OK");
-    vTaskDelay(2000 / portTICK_PERIOD_MS);
+    vTaskDelay(500 / portTICK_PERIOD_MS);
 
     esp_restart();
     return ESP_OK;
@@ -1095,7 +1095,7 @@ static esp_err_t logs_handler(httpd_req_t *req)
 
 static esp_err_t index_redirect(httpd_req_t *req)
 {   
-    httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/");
+    httpd_resp_set_hdr(req, "Location", "http://192.168.4.1/#config");
     httpd_resp_set_status(req, "302 Found");
     httpd_resp_sendstr_chunk(req, NULL);
     return ESP_OK;
