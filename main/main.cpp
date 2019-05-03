@@ -133,6 +133,7 @@ void btfunc(uint16_t packet_id, void* devices, uint16_t len) {
 extern "C" void app_main()
 {
     //initArduino();
+    //nvs_flash_erase();
     ESP_ERROR_CHECK(nvs_flash_init());
     tcpip_adapter_init();
 
@@ -219,7 +220,7 @@ extern "C" void app_main()
     }
     #endif
 
-    vTaskDelay( 2000 / portTICK_PERIOD_MS);
+    //vTaskDelay( 2000 / portTICK_PERIOD_MS);
 
     JsonArray &plugins = cfgObject["plugins"];
     for (auto plugin : plugins){

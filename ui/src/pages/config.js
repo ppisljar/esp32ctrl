@@ -34,7 +34,7 @@ const getFormConfig = (config, form) => {
                 name: 'WiFi',
                 configs: {
                     ssid: [
-                        { name: 'SSID', type: 'select', options: ssids, var: 'wifi.ssid' },
+                        { name: 'SSID', type: ssids.length ? 'select' : 'string', options: ssids, var: 'wifi.ssid' },
                         { name: '', type: 'button', value: 'scan', click: wifiScan },
                     ],
                     pass: { name: 'Password', type: 'password' },

@@ -1209,7 +1209,7 @@ static esp_err_t wifiscan_handler(httpd_req_t *req)
     };
     uint16_t ap_num;
     
-    ESP_ERROR_CHECK(esp_wifi_scan_start(&scanConf, true));
+    esp_wifi_scan_start(&scanConf, true);
     esp_wifi_scan_get_ap_num(&ap_num);
     
     json_init();

@@ -17,7 +17,7 @@ export class RebootPage extends Component {
                 const name = settings.get('unit.name');
                 loader.hide();
                 window.location.href = `http://${name}.local`;
-            }, 10000)
+            }, window.location.href.includes('local') ? 2000: 10000)
         })
     }
 }

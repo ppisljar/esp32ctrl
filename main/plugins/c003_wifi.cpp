@@ -169,33 +169,41 @@ bool WiFiPlugin::init(JsonObject &params) {
 
     wifi_init_config_t cfgw = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfgw));
-    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+    ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_FLASH));
 
-    if (mode == 0) { // AP
-        inet_pton(AF_INET, "192.168.4.1", &status.local_ip);
-        dnsServer.start(53, "*", &status.local_ip);
-        ssid = (char*)params["ap_ssid"].as<char*>();
-        pass = (char*)params["ap_pass"].as<char*>();
-        strcpy((char*)wifi_config.ap.ssid, ssid == nullptr ? "ESP32Ctrl" : ssid);
-        strcpy((char*)wifi_config.ap.password, pass == nullptr ? "" : pass);
-        wifi_config.ap.ssid_len = strlen((char*)wifi_config.ap.ssid);
-        wifi_config.ap.max_connection = 5;
-        wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
-        
-        if (strlen((char*)wifi_config.ap.password) == 0) {
-            wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+
+    if (ESP_OK == esp_wifi_get_config(WIFI_IF_STA, &wifi_config) && wifi_config.sta.ssid[0] != 0) {
+        ESP_LOGI(TAG, "Connect to stored Wi-Fi SSID:%s", wifi_config.sta.ssid);
+    } 
+    else {
+        ESP_LOGW(TAG, "No wifi SSID stored!");
+        if (mode == 0) { // AP
+            inet_pton(AF_INET, "192.168.4.1", &status.local_ip);
+            dnsServer.start(53, "*", &status.local_ip);
+            ssid = (char*)params["ap_ssid"].as<char*>();
+            pass = (char*)params["ap_pass"].as<char*>();
+            strcpy((char*)wifi_config.ap.ssid, ssid == nullptr ? "ESP32Ctrl" : ssid);
+            strcpy((char*)wifi_config.ap.password, pass == nullptr ? "" : pass);
+            wifi_config.ap.ssid_len = strlen((char*)wifi_config.ap.ssid);
+            wifi_config.ap.max_connection = 5;
+            wifi_config.ap.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+            
+            if (strlen((char*)wifi_config.ap.password) == 0) {
+                wifi_config.ap.authmode = WIFI_AUTH_OPEN;
+            }
+            ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
+            ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
+        } else { // STA
+            
+            strcpy((char*)wifi_config.sta.ssid, ssid);
+            strcpy((char*)wifi_config.sta.password, pass);
+            secondarySSID = params["ssid2"].as<char*>() != nullptr && strlen(params["ssid2"].as<char*>()) > 0;
+
+            ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+            ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
         }
-        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
-        ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &wifi_config));
-    } else { // STA
-        
-        strcpy((char*)wifi_config.sta.ssid, ssid);
-        strcpy((char*)wifi_config.sta.password, pass);
-        secondarySSID = params["ssid2"].as<char*>() != nullptr && strlen(params["ssid2"].as<char*>()) > 0;
-
-        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-        ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     }
+
 
     initialise_mdns();
     
