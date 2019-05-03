@@ -24,7 +24,8 @@ void register_command(uint8_t cmd_id, std::function<uint8_t(uint8_t*)> handler);
 
 void fire_system_event(uint16_t evt_id, uint8_t evt_data_len, uint8_t *evt_data);
 
-ESP_EVENT_DECLARE_BASE(RULE_EVENTS)
+ESP_EVENT_DECLARE_BASE(RULE_EVENTS);
+
 enum {
     RULE_USER_EVENT
 };

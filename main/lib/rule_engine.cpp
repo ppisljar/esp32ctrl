@@ -28,7 +28,7 @@ extern Plugin *active_plugins[10];
 extern TimersPlugin *timers_plugin;
 extern CronPlugin *cron_plugin;
 
-ESP_EVENT_DEFINE_BASE(RULE_EVENTS)
+ESP_EVENT_DEFINE_BASE(RULE_EVENTS);
 esp_event_loop_handle_t rule_event_loop;
 esp_event_loop_handle_t system_event_loop;
 
