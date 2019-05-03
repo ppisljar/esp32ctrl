@@ -1,6 +1,6 @@
 #include "c010_lcd.h"
 
-//extern Config *cfg;
+//extern Config *g_cfg;
 extern Plugin *active_plugins[10];
 
 static const char *TAG = "LcdPlugin";

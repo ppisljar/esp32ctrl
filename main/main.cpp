@@ -48,7 +48,7 @@ static const char *TAG = "MAIN";
 
 
 // global config object
-Config *cfg;
+Config *g_cfg;
 Plugin *active_plugins[10];
 NTPPlugin *ntp_plugin;
 WiFiPlugin *wifi_plugin;
@@ -143,8 +143,8 @@ extern "C" void app_main()
     ESP_ERROR_CHECK(start_file_server("/spiffs"));
 
     // load configuration
-    cfg = new Config();
-    JsonObject& cfgObject = cfg->getConfig();
+    g_cfg = new Config();
+    JsonObject& cfgObject = g_cfg->getConfig();
     ESP_LOGI(TAG, "loaded configuration");
 
     uint8_t resetPin = cfgObject["hardware"]["reset"]["pin"] | 255;

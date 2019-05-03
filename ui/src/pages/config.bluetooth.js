@@ -134,6 +134,8 @@ export class ConfigBluetoothPage extends Component {
             settings.set('bluetooth', this.config);
         }
 
+        if (!this.config.beacon) this.config.beacon = { values: [] };
+
         this.addTrigger = () => {
             this.config.server.values.push({
                 name: 'New Value',

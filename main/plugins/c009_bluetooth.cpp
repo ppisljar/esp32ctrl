@@ -1,5 +1,6 @@
 #include "c009_bluetooth.h"
 #include "../lib/rule_engine.h"
+#include "../lib/config.h"
 
 #include "esp_bt.h"
 
@@ -10,6 +11,9 @@
 #include "esp_gatt_common_api.h"
 
 static const char *TAG = "BlueToothPlugin";
+
+extern Plugin* active_plugins[10];
+extern Config* g_cfg;
 
 PLUGIN_CONFIG(BlueToothPlugin, t1_enabled, t2_enabled, t3_enabled, t4_enabled)
 PLUGIN_STATS(BlueToothPlugin, state, state)
@@ -30,7 +34,6 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
 // #define GATTS_DESCR_UUID_TEST_B     0x2222
 // #define GATTS_NUM_HANDLE_TEST_B     4
 
-#define TEST_DEVICE_NAME            "ESP32CTRL"
 #define TEST_MANUFACTURER_DATA_LEN  17
 
 #define PREPARE_BUF_MAX_SIZE 255
@@ -43,10 +46,10 @@ static uint8_t adv_config_done = 0;
 #define scan_rsp_config_flag (1 << 1)
 
 // #ifdef CONFIG_SET_RAW_ADV_DATA
-// static uint8_t raw_adv_data[] = {
-//         0x02, 0x01, 0x06,
-//         0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd
-// };
+static uint8_t raw_adv_data[] = {
+        0x02, 0x01, 0x06,
+        0x02, 0x0a, 0xeb, 0x03, 0x03, 0xab, 0xcd
+};
 // static uint8_t raw_scan_rsp_data[] = {
 //         0x0f, 0x09, 0x45, 0x53, 0x50, 0x5f, 0x47, 0x41, 0x54, 0x54, 0x53, 0x5f, 0x44,
 //         0x45, 0x4d, 0x4f
@@ -148,31 +151,31 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
 {
     switch (event) {
 // #ifdef CONFIG_SET_RAW_ADV_DATA
-//     case ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT:
-//         adv_config_done &= (~adv_config_flag);
-//         if (adv_config_done==0){
-//             esp_ble_gap_start_advertising(&adv_params);
-//         }
-//         break;
-//     case ESP_GAP_BLE_SCAN_RSP_DATA_RAW_SET_COMPLETE_EVT:
-//         adv_config_done &= (~scan_rsp_config_flag);
-//         if (adv_config_done==0){
-//             esp_ble_gap_start_advertising(&adv_params);
-//         }
-//         break;
-// #else
-    case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
+    case ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT:
         adv_config_done &= (~adv_config_flag);
-        if (adv_config_done == 0){
+        if (adv_config_done==0){
             esp_ble_gap_start_advertising(&adv_params);
         }
         break;
-    case ESP_GAP_BLE_SCAN_RSP_DATA_SET_COMPLETE_EVT:
+    case ESP_GAP_BLE_SCAN_RSP_DATA_RAW_SET_COMPLETE_EVT:
         adv_config_done &= (~scan_rsp_config_flag);
-        if (adv_config_done == 0){
+        if (adv_config_done==0){
             esp_ble_gap_start_advertising(&adv_params);
         }
         break;
+// #else
+    // case ESP_GAP_BLE_ADV_DATA_SET_COMPLETE_EVT:
+    //     adv_config_done &= (~adv_config_flag);
+    //     if (adv_config_done == 0){
+    //         esp_ble_gap_start_advertising(&adv_params);
+    //     }
+    //     break;
+    // case ESP_GAP_BLE_SCAN_RSP_DATA_SET_COMPLETE_EVT:
+    //     adv_config_done &= (~scan_rsp_config_flag);
+    //     if (adv_config_done == 0){
+    //         esp_ble_gap_start_advertising(&adv_params);
+    //     }
+    //     break;
 // #endif
     case ESP_GAP_BLE_ADV_START_COMPLETE_EVT:
         //advertising start complete event to indicate advertising start successfully or failed
@@ -297,7 +300,7 @@ static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_i
     case ESP_GATTS_REG_EVT: {
         ESP_LOGI(GATTS_TAG, "REGISTER_APP_EVT, status %d, app_id %d\n", param->reg.status, param->reg.app_id);
         
-        esp_err_t set_dev_name_ret = esp_ble_gap_set_device_name(TEST_DEVICE_NAME);
+        esp_err_t set_dev_name_ret = esp_ble_gap_set_device_name(g_cfg->getUnitName());
         if (set_dev_name_ret){
             ESP_LOGE(GATTS_TAG, "set device name failed, error code = %x", set_dev_name_ret);
         }
@@ -565,6 +568,23 @@ bool BlueToothPlugin::init(JsonObject &params) {
     adv_params.channel_map = ADV_CHNL_ALL;
     adv_params.adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY;
 
+    if ((*cfg)["beacon"]["type"] == "custom") {
+        JsonArray &vals = params["server"]["values"];// service["chars"];
+        if (vals.size() == 0) {
+            ESP_LOGW(GATTS_TAG, "no beacon info defined");
+            return false;
+        }
+
+        strncpy((char*)raw_adv_data, g_cfg->getUnitName(), 12);
+        raw_adv_data[11] = 0;
+        uint8_t b = 12;
+        for (auto v : vals) {
+            uint8_t device = v["device"];
+            uint8_t value = v["value"];
+            uint8_t* ptr = (uint8_t*)active_plugins[device]->getStatePtr(value);
+            raw_adv_data[b++] = *ptr;
+        }
+    }
 
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
 

@@ -36,7 +36,7 @@ struct file_server_data {
     char scratch[SCRATCH_BUFSIZE];
 };
 
-extern Config *cfg;
+extern Config *g_cfg;
 extern Plugin *active_plugins[10];
 extern uint8_t event_triggers[8];
 extern int averagerun;
@@ -98,7 +98,7 @@ char* _getRandomHexString(char *buffer) {
 #define USER_VIEW "view"
 
 bool authenticate(httpd_req_t *req){
-  JsonObject& params = cfg->getConfig();
+  JsonObject& params = g_cfg->getConfig();
   //char *username = (char*)(params["security"]["user"] | "admin");
   char password[32];
   strlcpy(password, params["security"]["pass"] | "", 32);
@@ -220,7 +220,7 @@ void requestAuthentication(httpd_req_t *req) {
 
 bool isAuthenticated(httpd_req_t *req, bool force = true) {
     ESP_LOGD(TAG, "checking if its authenticted");
-    JsonObject& params = cfg->getConfig();
+    JsonObject& params = g_cfg->getConfig();
     if (params.containsKey("security") && params["security"]["ip_block"]["enabled"]) {
         uint32_t startIp = params["security"]["ip_block"]["start"];
         uint32_t endIp = params["security"]["ip_block"]["end"];
@@ -833,7 +833,7 @@ static esp_err_t plugins_handler(httpd_req_t *req)
 
     if (strlen(filename) == 0 || filename[strlen(filename) - 1] == '/') {
         // return list of all plugins
-        JsonObject& cfgObject = cfg->getConfig();
+        JsonObject& cfgObject = g_cfg->getConfig();
         JsonArray& plugins = cfgObject["plugins"];
         len = plugins.printTo(buf, 512);
         httpd_resp_send_chunk(req, buf, len);
@@ -842,7 +842,7 @@ static esp_err_t plugins_handler(httpd_req_t *req)
     }
 
     int plugin_id = atoi(filename);
-    JsonObject& plugin = (cfg->getConfig())["plugins"][plugin_id];
+    JsonObject& plugin = (g_cfg->getConfig())["plugins"][plugin_id];
     // JsonObject& cfgObject = active_plugins[plugin_id]->getConfig();
     // JsonObject& varObject = active_plugins[plugin_id]->getState();
     // plugin.set("config", cfgObject);
@@ -979,7 +979,7 @@ static esp_err_t plugin_handler(httpd_req_t *req) {
             updateCfg[val] = value;
             active_plugins[deviceId]->setConfig(updateCfg);
         } else {
-            JsonObject& var = (cfg->getConfig())["plugins"][deviceId][(const char*)val];
+            JsonObject& var = (g_cfg->getConfig())["plugins"][deviceId][(const char*)val];
             char buf[256];
 
             int len = var.printTo(buf, 256);

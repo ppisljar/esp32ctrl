@@ -34,6 +34,10 @@ class Config
         JsonObject& getConfig() {
             return *configuration;
         }
+        const char* getUnitName() {
+            return (*configuration)["unit"]["name"].as<char*>();
+        }
+
 };
 
 #endif
