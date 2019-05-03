@@ -16,10 +16,7 @@ export class RebootPage extends Component {
             setTimeout(() => {
                 const name = settings.get('unit.name');
                 loader.hide();
-                debugger;
                 window.location.href = `http://${name}.local`;
-                // window.location.hash = '';
-                // window.location.href = 'http://www.google.com';
             }, 10000)
         })
     }

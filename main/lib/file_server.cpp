@@ -14,6 +14,7 @@
 #include "../plugins/plugin.h"
 #include "rule_engine.h"
 #include "logging.h"
+#include "esp_wifi.h"
 
 /* Max length a file path can have on storage */
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
@@ -1100,6 +1101,8 @@ static esp_err_t index_redirect(httpd_req_t *req)
     return ESP_OK;
 }
 
+
+
 static esp_err_t reset_handler(httpd_req_t *req)
 {
     if (!isAuthenticated(req, true)) return ESP_OK;
@@ -1130,6 +1133,14 @@ static void json_quote_name(httpd_req_t *req, const char* val) {
     httpd_resp_sendstr_chunk(req, "\"");
     httpd_resp_sendstr_chunk(req, ":");
   }
+}
+
+static void json_quote_val_prop(httpd_req_t *req, const char* val) {
+  if (lastLevel == level) httpd_resp_sendstr_chunk(req, ",");
+  httpd_resp_sendstr_chunk(req, "\"");
+  httpd_resp_sendstr_chunk(req, val);
+  httpd_resp_sendstr_chunk(req, "\"");
+  lastLevel = level;
 }
 
 static void json_quote_val(httpd_req_t *req, const char* val) {
@@ -1185,6 +1196,37 @@ static esp_err_t cmd_handler(httpd_req_t *req)
     json_prop(req, "response", "OK");
     json_close(req);
     httpd_resp_sendstr_chunk(req, NULL);
+    return ESP_OK;
+}
+
+static esp_err_t wifiscan_handler(httpd_req_t *req)
+{   
+    wifi_scan_config_t scanConf = {
+        .ssid = NULL,
+        .bssid = NULL,
+        .channel = 0,
+        .show_hidden = false
+    };
+    uint16_t ap_num;
+    
+    ESP_ERROR_CHECK(esp_wifi_scan_start(&scanConf, true));
+    esp_wifi_scan_get_ap_num(&ap_num);
+    
+    json_init();
+    json_open(req, true);
+
+    if (ap_num) {
+        wifi_ap_record_t *results = (wifi_ap_record_t*)malloc(sizeof(wifi_ap_record_t)*ap_num);
+        esp_wifi_scan_get_ap_records(&ap_num, results);
+        for (uint8_t i = 0; i < ap_num; i++) {
+            json_quote_val_prop(req, (const char*)results[i].ssid);
+        }
+        free(results);
+    }
+    
+    json_close(req, true);
+    httpd_resp_sendstr_chunk(req, NULL);
+    
     return ESP_OK;
 }
 
@@ -1262,6 +1304,8 @@ esp_err_t start_file_server(const char *base_path)
     http_quick_register("/plugin_state/*", HTTP_GET, plugins_state_handler, server_data);
     http_quick_register("/plugin_state/*", HTTP_POST, plugin_state_post_handler, server_data);
     http_quick_register("/plugin/*", HTTP_GET, plugin_handler, server_data);
+
+    http_quick_register("/wifi_scan", HTTP_GET, wifiscan_handler, server_data);
 
     http_quick_register("/event/*", HTTP_GET, event_handler, server_data);
     http_quick_register("/cmd/*", HTTP_POST, cmd_handler, server_data);
