@@ -17,7 +17,7 @@ export class Widget extends Component {
         const className = `node group-${item.group}`;
 
         return (
-          <div style={{ ...style }} className={className} onDblClick={() => { this.props.onClickHandler(item) }}>
+          <div style={{ ...style }} className={className} onClick={() => { this.props.onClickHandler(item) }}>
             <div className="node-inputs">
               {[...new Array(this.node.inputs)].map(() => {
                 return (<WidgetInput node={item} />);
