@@ -53,10 +53,10 @@ class IO_PINS {
             if (i2c["sda"]) allPins.find(ap => ap.value == i2c["sda"]).disabled = "I2C";
         }
 
-        const sdcard = settings.get('hardware.sdcard');
+        const sdcard = settings.get('hardware.spi');
         if (sdcard && sdcard['enabled']) {
             [2, 4, 12, 13, 14, 15].forEach(x => {
-                allPins.find(ap => ap.value == x).disabled = "SDCARD";
+                allPins.find(ap => ap.value == x).disabled = "SPI";
             });
         }
         const plugins = settings.get('plugins');
