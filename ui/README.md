@@ -137,27 +137,24 @@ TODO:
 - uporaba hw interruptov/hw timerjev iz drugih pluginov
 
 - motor driver
-- wifi scanner
 - svetlobni senzor k je na stekarju
 - ojacevalc k je na stekarju
 - microphone
 - speaker
 
-- ota (0.7mb ota, 0.5mb data, 1.8mb app)
-- locit nepotreben config v svoj config file
+- ota (0.8mb ota, 0.7mb data, 2.5mb app)
 
--- v9:
-- pimp up
-- bug hunting
-- cleanup
+- login: it na 'custom digest' : https://github.com/mozilla/node-srp
+-- ali pa https
 
--- v10:
+
+
+-- v10: comercial
 - redundancy plugin
 --- master/slave mode selection
 --- slave: watchdog master (i2c)
-- prominiextender
---- support ZC detection
---- support remote one wire protocols
---- external watchdog
+- ModBus
+- HMC
+- elasticsearch connector
 
 -- v1.0beta  (publish github)

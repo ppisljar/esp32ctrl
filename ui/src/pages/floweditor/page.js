@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
-import { Controlbox } from '../common/controlbox';
-import { DropPage } from '../common/DropPage';
-import { Toolbox } from '../common/toolbox';
+import { Controlbox } from './controlbox';
+import { DropPage } from './DropPage';
+import { Toolbox } from './toolbox';
 import { getNodes } from './nodes';
 
 const containerStyle = {

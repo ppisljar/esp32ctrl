@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { DropTarget } from 'preact-dnd'
-import { WidgetConnection } from '../floweditor/nodes/widget_connection';
+import { WidgetConnection } from './nodes/widget_connection';
 
 class DropPageComponent extends Component {
     constructor(props) {
