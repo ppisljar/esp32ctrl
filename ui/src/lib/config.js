@@ -1,6 +1,6 @@
 import { settings } from './settings';
 import { storeFile, storeRule } from './espeasy';
-import { nodes } from '../pages/floweditor/nodes';
+import { getNodes } from '../pages/floweditor/nodes';
 
 const prepareAlerts = () => {
     const alerting = settings.get('alerting');
@@ -51,6 +51,7 @@ const prepareRules = () => {
         eventMap[event.name] = event.value;
     });
 
+    const nodes = getNodes();
     let result = '';
     // for each initial node walk the tree and produce one 'rule'
     triggers.map(trigger => {

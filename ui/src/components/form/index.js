@@ -159,7 +159,7 @@ export class Form extends Component {
 
                     if (conf.if) {
                         let val;
-                        if (typeof conf.if === 'fucnction') {
+                        if (typeof conf.if === 'function') {
                             if (!conf.if(values)) return (null);
                         }
                         else {

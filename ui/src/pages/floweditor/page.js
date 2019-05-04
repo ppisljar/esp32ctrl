@@ -1,13 +1,8 @@
 import { h, Component } from 'preact';
-import { DropTarget } from 'preact-dnd'
-import { settings } from '../../lib/settings';
 import { Controlbox } from '../common/controlbox';
 import { DropPage } from '../common/DropPage';
-import { getNodes } from '../../lib/node_definitions';
-import { getConfigNodes } from '../../lib/espeasy';
 import { Toolbox } from '../common/toolbox';
-import { Label } from '../lcdscreen/widgets/label';
-import { nodes } from './nodes';
+import { getNodes } from './nodes';
 
 const containerStyle = {
     height: 'calc(100vh - 52px)',
@@ -23,6 +18,8 @@ export class Page extends Component {
             selected: null,
             nodes: null,
         }
+
+        this.nodes = getNodes();
     }
 
     onClickHandler = (item) => {
@@ -30,12 +27,8 @@ export class Page extends Component {
     }
 
     getItemComponent = (item) => {
-        const node = nodes.find(n => n.name == item.name);
+        const node = this.nodes.find(n => n.name == item.name);
         return node.getComponent();
-    }
-
-    getNodes = () => {
-        return getConfigNodes(this.props.devices);
     }
 
     render() {
@@ -65,11 +58,11 @@ export class Page extends Component {
 
         return (
             <div id='canvas' style={containerStyle}>
-                <Toolbox style={toolboxStyle} itemStyle={toolboxItemStyle} nodes={nodes} />
+                <Toolbox style={toolboxStyle} itemStyle={toolboxItemStyle} nodes={this.nodes} />
                 <DropPage  style={pageStyle} rules={this.props.rules} grid="5"
                     getComponent={this.getItemComponent}
                     onSelect={this.onClickHandler}  />
-                <Controlbox style={controlStyle} item={this.state.selected} nodes={nodes} />
+                <Controlbox style={controlStyle} item={this.state.selected} nodes={this.nodes} />
             </div>
         )
     }
