@@ -48,8 +48,11 @@ bool DHTPlugin::init(JsonObject &params) {
 
     if (gpio != 255) {
         setDHTgpio( gpio );
-        xTaskCreatePinnedToCore(this->task, P002_TAG, 4096, this, 5, NULL, 1);
+        xTaskCreatePinnedToCore(this->task, P002_TAG, 4096, this, 5, &task_h, 1);
     }
     return true;
 }
 
+DHTPlugin::~DHTPlugin() {
+    vTaskDelete(task_h);
+}

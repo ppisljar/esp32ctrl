@@ -62,3 +62,7 @@ void DummyPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
         if (shouldNotify) notify(this, n, val, 1);
     }
 }
+
+DummyPlugin::~DummyPlugin() {
+    
+}

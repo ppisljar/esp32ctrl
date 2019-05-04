@@ -54,3 +54,7 @@ bool ADS111xPlugin::init(JsonObject &params) {
 
     return true;
 }
+
+ADS111xPlugin::~ADS111xPlugin() {
+    
+}

@@ -11,6 +11,7 @@ class VEML6040Plugin: public Plugin {
         int16_t b = 0;
         int16_t w = 0;
         float l = 0;
+        TaskHandle_t task_h;
     public:
         DEFINE_PPLUGIN(VEML6040Plugin, 17);
 

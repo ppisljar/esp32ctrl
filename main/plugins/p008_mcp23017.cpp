@@ -64,3 +64,7 @@ bool MCP23017Plugin::init(JsonObject &params) {
 
     return true;
 }
+
+MCP23017Plugin::~MCP23017Plugin() {
+    
+}

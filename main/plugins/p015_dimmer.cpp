@@ -144,3 +144,8 @@ void DimmerPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
         ESP_LOGW(TAG, "invalid state id: %d", n);
     }
 }
+
+
+DimmerPlugin::~DimmerPlugin() {
+    
+}

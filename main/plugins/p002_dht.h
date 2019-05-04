@@ -11,6 +11,7 @@ class DHTPlugin: public Plugin {
         float humidity = 0;
 
         float temp[2];
+        TaskHandle_t task_h;
     public:
         DEFINE_PPLUGIN(DHTPlugin, 2);
 

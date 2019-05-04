@@ -11,6 +11,7 @@ class BMP280Plugin: public Plugin {
         float humidity = 0;
         int type = 0;
         float temp[3];
+        TaskHandle_t task_h;
     public:
         DEFINE_PPLUGIN(BMP280Plugin, 3);
 

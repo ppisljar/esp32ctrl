@@ -41,6 +41,10 @@ bool RegulatorPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]);
 
-    xTaskCreatePinnedToCore(this->task, P005_TAG, 4096, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore(this->task, P005_TAG, 4096, this, 5, &task_h, 1);
     return true;
+}
+
+RegulatorPlugin::~RegulatorPlugin() {
+    vTaskDelete(task_h);
 }

@@ -43,8 +43,12 @@ bool AnalogPlugin::init(JsonObject &params) {
             ESP_LOGE(P006_TAG, "error initializing adc");
             return false;
         }
-        xTaskCreatePinnedToCore(this->task, P006_TAG, 4096, this, 5, NULL, 1);
+        xTaskCreatePinnedToCore(this->task, P006_TAG, 4096, this, 5, &task_h, 1);
     }
 
     return true;
+}
+
+AnalogPlugin::~AnalogPlugin() {
+    vTaskDelete(task_h);
 }

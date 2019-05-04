@@ -130,6 +130,32 @@ void btfunc(uint16_t packet_id, void* devices, uint16_t len) {
     ESP_LOGI(TAG, "bluetooth done");
 }
 
+void init_plugins() {
+    JsonObject& cfgObject = g_cfg->getConfig();
+    JsonArray &plugins = cfgObject["plugins"];
+    for (auto plugin : plugins){
+        if (!plugin["enabled"]) continue;
+        uint8_t pid = plugin["id"];
+        ESP_LOGI(TAG, "initializing plugin '%s' type: %i", plugin["name"].as<char*>(), (int)plugin["type"]);
+        if (!Plugin::hasType((int)plugin["type"])) {
+            ESP_LOGI(TAG, "invalid plugin type, skipping ...");
+            continue;
+        }
+        active_plugins[pid] = Plugin::getPluginInstance((int)plugin["type"]);
+        active_plugins[pid]->name = plugin["name"].as<char*>();
+        active_plugins[pid]->id = pid;
+        active_plugins[pid]->init(plugin);
+    }
+}
+
+void deinit_plugins() {
+    for (int i = 0; i < 10; i++) {
+        if (active_plugins[i] != nullptr) {
+            free(active_plugins[i]);
+        }
+    }
+}
+
 extern "C" void app_main()
 {
     //initArduino();
@@ -139,6 +165,13 @@ extern "C" void app_main()
 
     /* Initialize file storage */
     ESP_ERROR_CHECK(spiffs_init());
+
+    struct IO_DIGITAL_PINS pins;
+    pins.set_direction = new ESP_set_direction();
+    pins.digital_read = new ESP_digital_read();
+    pins.digital_write = new ESP_digital_write();
+    pins.analog_read = new ESP_analog_read();
+    io.addDigitalPins(40, &pins);
 
     /* Start the web server */
     ESP_ERROR_CHECK(start_file_server("/spiffs"));
@@ -152,6 +185,10 @@ extern "C" void app_main()
     ledPin = cfgObject["hardware"]["led"]["gpio"] | 255;
     ledInverted = cfgObject["hardware"]["led"]["inverted"] | false;
 
+    JsonObject &wifi_config = cfgObject["wifi"];
+    wifi_plugin = new WiFiPlugin();
+    wifi_plugin->init(wifi_config);
+
     if (cfgObject["hardware"]["spi"]["enabled"]) {
         JsonObject &spi_config = cfgObject["hardware"]["spi"];
         if (cfgObject["hardware"]["sdcard"]["enabled"]) {
@@ -160,10 +197,6 @@ extern "C" void app_main()
             }
         }
     }
-
-    JsonObject &wifi_config = cfgObject["wifi"];
-    wifi_plugin = new WiFiPlugin();
-    wifi_plugin->init(wifi_config);
 
     JsonObject &timer_config = cfgObject["hardware"];
     timers_plugin = new TimersPlugin();
@@ -179,14 +212,6 @@ extern "C" void app_main()
         // bluetooth->init();
         // bluetooth->getDevices(btfunc, 0);
     }
-
-    //JsonObject &io_cfg = cfgObject["io"];
-    struct IO_DIGITAL_PINS pins;
-    pins.set_direction = new ESP_set_direction();
-    pins.digital_read = new ESP_digital_read();
-    pins.digital_write = new ESP_digital_write();
-    pins.analog_read = new ESP_analog_read();
-    io.addDigitalPins(40, &pins);
 
     touch_plugin = new TouchPlugin();
     touch_plugin->init(cfgObject);
@@ -220,22 +245,7 @@ extern "C" void app_main()
     }
     #endif
 
-    //vTaskDelay( 2000 / portTICK_PERIOD_MS);
-
-    JsonArray &plugins = cfgObject["plugins"];
-    for (auto plugin : plugins){
-        if (!plugin["enabled"]) continue;
-        uint8_t pid = plugin["id"];
-        ESP_LOGI(TAG, "initializing plugin '%s' type: %i", plugin["name"].as<char*>(), (int)plugin["type"]);
-        if (!Plugin::hasType((int)plugin["type"])) {
-            ESP_LOGI(TAG, "invalid plugin type, skipping ...");
-            continue;
-        }
-        active_plugins[pid] = Plugin::getPluginInstance((int)plugin["type"]);
-        active_plugins[pid]->name = plugin["name"].as<char*>();
-        active_plugins[pid]->id = pid;
-        active_plugins[pid]->init(plugin);
-    }
+    init_plugins();
 
     long rule_length;
     uint8_t *rules = (uint8_t*)read_file("/spiffs/rules.dat", &rule_length);
@@ -250,7 +260,7 @@ extern "C" void app_main()
 
     fire_system_event(1024, 0, nullptr);
 
-    //i2c_plugin->scan();
+    
 
     for(;;) {
         // if (resetPin < 32 && gpio_get_level((gpio_num_t)resetPin) == 0) {

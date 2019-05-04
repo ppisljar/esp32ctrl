@@ -37,7 +37,11 @@ bool VEML6040Plugin::init(JsonObject &params) {
 
     if (addr != 255) {
         dev = iot_veml6040_create(i2c_plugin->i2c_bus, addr);
-        xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, NULL, 1);
+        xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, &task_h, 1);
     }
     return true;
+}
+
+VEML6040Plugin::~VEML6040Plugin() {
+    vTaskDelete(task_h);
 }

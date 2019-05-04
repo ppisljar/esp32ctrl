@@ -93,6 +93,11 @@ bool PCF8574Plugin::init(JsonObject &params) {
     return true;
 }
 
+PCF8574Plugin::~PCF8574Plugin() {
+    
+}
+
+
 // adds pins, this pins can then be used as any other
 // plugin config allows us to precisely define what this pins are doing
 // - input/output

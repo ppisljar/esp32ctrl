@@ -42,7 +42,7 @@ bool SwitchPlugin::init(JsonObject &params) {
         io.setDirection(gpio, GPIO_MODE_INPUT_OUTPUT);
     }
 
-    xTaskCreatePinnedToCore(this->task, P001_TAG, 4096, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore(this->task, P001_TAG, 4096, this, 5, &task_h, 1);
     return true;
 }
 
@@ -59,4 +59,8 @@ void SwitchPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
     } else if (n != 0) {
         ESP_LOGW(P001_TAG, "invalid state id: %d", n);
     }
+}
+
+SwitchPlugin::~SwitchPlugin() {
+    vTaskDelete(task_h);
 }

@@ -12,3 +12,7 @@ bool RotaryEncoderPlugin::init(JsonObject &params) {
 
     return true;
 }
+
+RotaryEncoderPlugin::~RotaryEncoderPlugin() {
+    
+}

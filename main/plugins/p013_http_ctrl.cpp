@@ -68,3 +68,7 @@ void HTTPCtrlPlugin::request(const char *uri, esp_http_client_method_t method, c
             esp_http_client_get_content_length(client));
     }
 }
+
+HTTPCtrlPlugin::~HTTPCtrlPlugin() {
+    
+}

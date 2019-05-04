@@ -40,6 +40,10 @@ bool DS18x20Plugin::init(JsonObject &params) {
         sensor_count = ds18x20_scan_devices((gpio_num_t)(*cfg)["gpio"].as<int>(), addrs, 16);
     }
 
-    xTaskCreatePinnedToCore(this->task, P004_TAG, 4096, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore(this->task, P004_TAG, 4096, this, 5, &task_h, 1);
     return true;
+}
+
+DS18x20Plugin::~DS18x20Plugin() {
+    vTaskDelete(task_h);
 }

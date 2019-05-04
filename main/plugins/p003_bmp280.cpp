@@ -57,8 +57,11 @@ bool BMP280Plugin::init(JsonObject &params) {
     // type = dev.id == BME280_CHIP_ID ? 1 : 2;
     // ESP_LOGI(P003_TAG, "BMP280: found %s\n", type == 1 ? "BME280" : "BMP280");
 
-    xTaskCreatePinnedToCore(this->task, P003_TAG, 4096, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore(this->task, P003_TAG, 4096, this, 5, &task_h, 1);
     return true;
 }
 
+BMP280Plugin::~BMP280Plugin() {
+    vTaskDelete(task_h);
+}
 

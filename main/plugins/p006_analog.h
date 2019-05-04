@@ -8,6 +8,7 @@
 class AnalogPlugin: public Plugin {
     private:
         int value = 0;
+        TaskHandle_t task_h;
     public:
         DEFINE_PPLUGIN(AnalogPlugin, 6);
 

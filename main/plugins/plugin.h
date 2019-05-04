@@ -113,6 +113,7 @@ void* TYPE::getStatePtr(uint8_t val) { \
     bool getState(JsonObject& ); \
     bool getConfig(JsonObject& ); \
     void* getStatePtr(uint8_t ); \
+    ~TYPE(); \
     static const uint8_t p_type = TYPENR;
 
 #define SET_STATE(plugin, var, var_index, shouldNotify, value, value_type) plugin->var = value; \

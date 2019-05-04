@@ -9,6 +9,7 @@ class DS18x20Plugin: public Plugin {
         float temperature[16];
         ds18x20_addr_t addrs[16];
         int sensor_count = 0;
+        TaskHandle_t task_h;
     public:
         DEFINE_PPLUGIN(DS18x20Plugin, 4);
         static void task(void *pvParameters);

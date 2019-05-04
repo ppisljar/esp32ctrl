@@ -89,7 +89,11 @@ bool UdpServerPlugin::init(JsonObject &params) {
     // calculate total package length
     // should we need packet header and tail defined ?
 
-    xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, NULL, 1);
+    xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, &task_h, 1);
 
     return true;
+}
+
+UdpServerPlugin::~UdpServerPlugin() {
+    vTaskDelete(task_h);
 }

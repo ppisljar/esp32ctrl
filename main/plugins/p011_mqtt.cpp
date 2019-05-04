@@ -277,3 +277,7 @@ void MQTTPlugin::subscribe(char *topic, std::function<void(char*,char*)> handler
     int msg_id = esp_mqtt_client_subscribe(client, topic, 0);
     ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 }
+
+MQTTPlugin::~MQTTPlugin() {
+    
+}

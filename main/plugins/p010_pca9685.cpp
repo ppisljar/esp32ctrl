@@ -33,3 +33,9 @@ bool PCA9685Plugin::init(JsonObject &params) {
 
     return true;
 }
+
+PCA9685Plugin::~PCA9685Plugin() {
+    // remove registered pins ?
+    // what happens to devices using them ?
+
+}
