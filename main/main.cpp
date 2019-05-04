@@ -246,14 +246,8 @@ extern "C" void app_main()
     #endif
 
     init_plugins();
-
-    long rule_length;
-    uint8_t *rules = (uint8_t*)read_file("/spiffs/rules.dat", &rule_length);
     init_rules();
-    if (rules != NULL && rule_length > 0) {
-        ESP_LOGI(TAG, "parsing rule file of size: %ld", rule_length);
-        parse_rules(rules, rule_length);
-    }
+    
 
     http_server_ready();
     init_logging();

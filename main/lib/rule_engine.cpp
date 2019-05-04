@@ -3,6 +3,7 @@
 #include "../plugins/c004_timers.h"
 #include "../plugins/c008_cron.h"
 #include "../plugins/utils.h"
+#include "spiffs.h"
 #include <map>
 
 #define byte uint8_t
@@ -54,7 +55,19 @@ static void user_event_handler(void* handler_args, esp_event_base_t base, int32_
 
 }
 
+uint8_t *rules = nullptr;
+void load_rules() {
+    long rule_length;
+    rules = (uint8_t*)read_file("/spiffs/rules.dat", &rule_length);
+    if (rules != NULL && rule_length > 0) {
+        ESP_LOGI(TAG_RE, "parsing rule file of size: %ld", rule_length);
+        parse_rules(rules, rule_length);
+    }
+}
+
 void init_rules() {
+    load_rules();
+
     esp_event_loop_args_t rule_event_loop_args = {
         .queue_size = 50,
         .task_name = "rule_loop_task", // task will be created
@@ -66,6 +79,28 @@ void init_rules() {
     ESP_ERROR_CHECK(esp_event_loop_create(&rule_event_loop_args, &rule_event_loop));
 
     ESP_ERROR_CHECK(esp_event_handler_register_with(rule_event_loop, RULE_EVENTS, RULE_USER_EVENT, user_event_handler, rule_event_loop));
+}
+
+void reload_rules() {
+    for (int i = 0; i < 20; i++) {
+        rule_list[i] = nullptr;
+        alert_list[i] = nullptr;
+        event_list[i] = nullptr;
+        if (i < 16) {
+            rule_engine_hwinterrupts[i] = nullptr;
+            timers[i] = 0;
+        }
+        if (i < 10) {
+            rule_engine_alexa_triggers[i] = nullptr;
+            rule_engine_touch_triggers[i] = nullptr;
+            rule_engine_bluetooth_triggers[i] = nullptr;
+        }
+        if (i < 4) {
+            rule_engine_hwtimers[i] = nullptr;
+        }
+    }
+    free(rules);
+    load_rules();
 }
 
 
