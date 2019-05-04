@@ -52,7 +52,6 @@ const prepareRules = () => {
     });
 
     let result = '';
-    debugger;
     // for each initial node walk the tree and produce one 'rule'
     triggers.map(trigger => {
         
@@ -104,18 +103,16 @@ export const loadConfig = async () => {
     settings.editor.init(editor_cfg);
 };
 
-export const saveConfig = async () => {
-    await storeFile('config.json', JSON.stringify(settings.get()));
-    await storeFile('editor_config.json', JSON.stringify(settings.editor.get()));
-    await prepareRules();
-    await prepareAlerts();
+export const saveConfig = async (config = true, editor = true, rules = true, alerts = true) => {
+    if (config) await storeFile('config.json', JSON.stringify(settings.get()));
+    if (editor) await storeFile('editor_config.json', JSON.stringify(settings.editor.get()));
+    if (rules) await prepareRules();
+    if (alerts) await prepareAlerts();
 }
 
 export const loadRules = async () => {
-    const r1 =await fetch('/r1.txt').then(r=>r.json()).catch(r => []);
     const events = await fetch('/events.json').then(r => r.json()).catch(r => []);
     const pins = [];    // report on used pins
     settings.events = events;
-    settings.rules = r1;
     settings.r1pins = pins;
 }

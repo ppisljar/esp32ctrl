@@ -735,6 +735,11 @@ static esp_err_t upload_post_handler(httpd_req_t *req)
     fclose(fd);
     ESP_LOGD(TAG, "File reception complete");
 
+    if (strcmp(filepath, "/spiffs/rules.dat") == 0) {
+        ESP_LOGI(TAG, "reloading rules ...");
+        reload_rules();
+    }
+
     /* Redirect onto root to see the updated file list */
     httpd_resp_set_status(req, "200 OK");
     httpd_resp_sendstr(req, "File uploaded successfully");

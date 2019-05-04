@@ -19,6 +19,7 @@ int parse_rules(unsigned char *rules, long len);
 uint8_t run_rule(unsigned char* start, unsigned char* start_val, uint8_t start_val_length, uint8_t len);
 void run_rules();
 void init_rules();
+void reload_rules();
 
 void register_command(uint8_t cmd_id, std::function<uint8_t(uint8_t*)> handler);\
 

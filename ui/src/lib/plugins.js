@@ -58,7 +58,7 @@ export const firePageLoad = () => {
 }
 
 export const loadPlugins = async () => {
-    return Promise.all(settings.get('ui_plugins', []).filter(p => p.enabled).map(async plugin => {
+    return Promise.all(settings.editor.get('ui_plugins', []).filter(p => p.enabled).map(async plugin => {
         return dynamicallyLoadScript(plugin.url);
     }));
 }

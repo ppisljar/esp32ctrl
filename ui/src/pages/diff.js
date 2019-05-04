@@ -27,10 +27,17 @@ export class DiffPage extends Component {
                 }
             });
             settings.editor.apply();
+
+            const rulesChanged = this.editorDiff.filter(r => r.path.includes('rules')).length;
             
             loader.show();
-            saveConfig().then(() => {
-                window.location.href='#config/reboot';
+            saveConfig(this.diff.length, this.editorDiff.length, rulesChanged).then(() => {
+                if (this.diff.length) window.location.href='#config/reboot';
+                else if (rulesChanged) window.location.href='#rules';
+                else {
+                    window.location.href='#devices';
+                    window.location.reload();
+                }
             });
             
         };

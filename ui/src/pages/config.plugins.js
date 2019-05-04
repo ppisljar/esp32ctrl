@@ -5,16 +5,16 @@ export class ConfigPluginsPage extends Component {
     constructor(props) {
         super(props);
 
-        this.plugins = settings.get('ui_plugins');
+        this.plugins = settings.editor.get('ui_plugins');
         if (!this.plugins) {
             this.plugins = [
                 { name: 'IconSelector', enabled: false, url: 'http://localhost:8080/build/iconpicker.js' },
             ];
-            settings.set('ui_plugins', this.plugins);
+            settings.editor.set('ui_plugins', this.plugins);
         }
 
         this.handleEnableToggle = (e) => {
-            settings.set(e.currentTarget.dataset.prop, e.currentTarget.checked ? 1 : 0);
+            settings.editor.set(e.currentTarget.dataset.prop, e.currentTarget.checked ? 1 : 0);
         }
 
         this.addDevice = () => {

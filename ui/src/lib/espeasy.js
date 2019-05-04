@@ -130,14 +130,6 @@ export const loadDashboardConfig = async (nodes) => {
     return await fetch('/d1.txt').then(response => response.json());
 }
 
-export const storeRuleConfig = async (config) => {
-    storeFile('r1.txt', config);
-}
-
-export const loadRuleConfig = async () => {
-    return await fetch('/r1.txt').then(response => response.json()).catch(r => []);
-}
-
 export const storeRule = async (data) => {
     await storeFile('events.json', JSON.stringify(data.events));
     await storeFile('rules.dat', new Uint8Array(data.rules));
@@ -149,5 +141,5 @@ export const getEvents = async (data) => {
 }
 
 export default {
-    getJsonStat, loadDevices, getConfigNodes, getDashboardConfigNodes, getVariables, storeFile, deleteFile, storeDashboardConfig, loadDashboardConfig, storeRuleConfig, loadRuleConfig, storeRule
+    getJsonStat, loadDevices, getConfigNodes, getDashboardConfigNodes, getVariables, storeFile, deleteFile, storeDashboardConfig, loadDashboardConfig, storeRule
 }
