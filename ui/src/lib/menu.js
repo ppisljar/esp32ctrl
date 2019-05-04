@@ -27,7 +27,6 @@ import {
     ConfigLCDPage,
     ConfigLCDScreenPage,
     ConfigLCDWidgetPage,
-    RulesEditor1Page,
 } from '../pages';
 
 import { deleteFile } from './espeasy';
@@ -64,7 +63,7 @@ const menus = [
     { title: 'Devices', href: 'devices', component: DevicesPage, children: [] },
     //{ title: 'Controllers', href: 'controllers', component: ControllersPage, children: [] },
     //{ title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [] },
-    { title: 'Automation', href: 'rules', component: RulesEditor1Page, class: 'full', children: [] },
+    { title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [] },
     { title: 'Alexa', href: 'alexa', component: ControllerAlexaPage, children: [] },
     { title: 'Alerts', href: 'alerts', component: AlertsPage, children: [] },
     { title: 'Config', adminOnly: true, href: 'config', component: ConfigPage, children: [
