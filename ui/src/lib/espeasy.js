@@ -1,6 +1,5 @@
 import miniToastr from 'mini-toastr';
 import { loader } from './loader';
-import { getNodes } from './node_definitions';
 
 export const getJsonStat = async (url = '') => {
     return await fetch(`${url}/plugin_state/`).then(response => response.json())
@@ -8,54 +7,6 @@ export const getJsonStat = async (url = '') => {
 
 export const loadDevices = async (url) => {
     return getJsonStat(url); //.then(response => response.Sensors);
-}
-// check if we correctly set ids here!!!! <--------------------------
-export const getConfigNodes = async (devices) => {
-    const vars = [];
-    const deviceNodes = devices.map((device, i) => {
-        if (!device) return [];
-        const taskValues = device.state ? device.state.values || [] : [];
-        taskValues.map((value, j) => vars.push({ value: `${device.id}-${j}`, name: `${device.name}#${value.name}` }));
-        // todo: remove
-        const taskValues1 = device.settings ? device.settings.values || [] : [];
-        taskValues1.map((value, j) => vars.push({ value: `${device.id}-${j}`, name: `${device.name}#${value.name}` }));
-        if (!vars.length) return [];
-        const result = [{
-            group: 'TRIGGERS',
-            type: device.name || `${i}-${device.type}`,
-            inputs: [],
-            outputs: [1],
-            config: [{
-                name: 'variable',
-                type: 'select',
-                values: taskValues.map(value => value.name),
-                value: taskValues.length ? taskValues[0].name : '',
-            }, {
-                name: 'euqality',
-                type: 'select',
-                values: [{ name: '', value: 0 }, { name: '=', value: 1 }, { name: '<', value: 2 }, { name: '>', value: 3 }, { name: '<=', value: 4 }, { name: '>=', value: 5 }, { name: '!=', value: 6 }],
-                value: '',
-            }, {
-                name: 'value',
-                type: 'number',
-            }],
-            indent: true,
-            toString: function () { 
-                const comparison = this.config[1].value === '' ? 'changes' : `${this.config[1].values.find(v => v.value == this.config[1].value).name} ${this.config[2].value}`;
-                return `when ${this.type}.${this.config[0].value} ${comparison}`; 
-            },
-            toDsl: function () { 
-                const comparison = this.config[1].value === '' ? `\x00\x01` : `${String.fromCharCode(this.config[1].value)}\x01${String.fromCharCode(this.config[2].value)}`;
-                return [`\xFF\xFE\x00\xFF\x00${String.fromCharCode(device.id)}${String.fromCharCode(this.config[0].value)}${comparison}%%output%%\xFF`]; 
-            }
-        }];
-
-        return result;
-    }).flat();
-
-    const mainNodes = getNodes(deviceNodes, vars);
-
-    return [...mainNodes, ...deviceNodes];
 }
 
 export const getVariables = async () => {
@@ -141,5 +92,5 @@ export const getEvents = async (data) => {
 }
 
 export default {
-    getJsonStat, loadDevices, getConfigNodes, getDashboardConfigNodes, getVariables, storeFile, deleteFile, storeDashboardConfig, loadDashboardConfig, storeRule
+    getJsonStat, loadDevices, getDashboardConfigNodes, getVariables, storeFile, deleteFile, storeDashboardConfig, loadDashboardConfig, storeRule
 }

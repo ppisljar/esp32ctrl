@@ -41,19 +41,35 @@ static void user_event_handler(void* handler_args, esp_event_base_t base, int32_
     // the memory location it points to is still valid when the handler executes.
     //
     // The event-specific data (event_data) is a pointer to a deep copy of the original data, and is managed automatically.
-    uint16_t event_id = ((uint16_t*) event_data)[0];
-    ESP_LOGI(TAG_RE, "user event triggered: %p : %i", event_data, event_id);
+    uint8_t *data =  (uint8_t*)event_data;
+    uint16_t event_id = *((uint16_t*)data);
+    uint8_t data_len = data[2];
+    ESP_LOGD(TAG_RE, "user event triggered: %p : %d with %d bytes of data", data, event_id, data_len);
     if (event_id < 1024) {
         auto event = event_list[event_id];
-        uint8_t data_len = ((uint8_t*)event_data)[2];
-        if (event != nullptr) run_rule(event_list[event_id], ((uint8_t*)event_data) + 3, data_len, 255);
+        if (event != nullptr) {
+            ESP_LOGD(TAG_RE, "running rule %p", event_list[event_id]);
+            run_rule(event_list[event_id], nullptr, 0, 255);
+        } else {
+            ESP_LOGW(TAG_RE, "invalid event");
+        }
     } else {
+        ESP_LOGD(TAG_RE, "sytem event");
         if (system_events[event_id] != nullptr) {
-            run_rule(system_events[event_id], nullptr, 0, 255);
+            run_rule(system_events[event_id], data + 3, data_len, 255);
         }
     }
 
 }
+
+void fire_system_event(uint16_t evt_id, uint8_t evt_data_len, uint8_t *evt_data) {
+    uint8_t *data = (uint8_t*)malloc(evt_data_len + 3);
+    ((uint16_t*)data)[0] = evt_id;
+    data[2] = evt_data_len;
+    memcpy(data+3, evt_data, evt_data_len);
+    TRIGGER_EVENT(data);
+}
+
 
 uint8_t *rules = nullptr;
 void load_rules() {
@@ -72,7 +88,7 @@ void init_rules() {
         .queue_size = 50,
         .task_name = "rule_loop_task", // task will be created
         .task_priority = uxTaskPriorityGet(NULL),
-        .task_stack_size = 2048,
+        .task_stack_size = 4048,
         .task_core_id = tskNO_AFFINITY
     };
 
@@ -199,8 +215,9 @@ int parse_rules(byte *rules, long len) {
         if (rules[i] == 0xff && rules[i+1] == 0xfe && rules[i+2] == 0x00 && rules[i+3] == 0xff) {
             switch (rules[i+4]) {
                 case TRIG_EVENT:
-                    ESP_LOGI(TAG_RE, "found an event on address: %p", (void*)(rules + i + 4 + 2));
-                    event_list[events_found++] = rules + i + 5; // type needs to be included
+                    // 2 byte eventid
+                    ESP_LOGI(TAG_RE, "found an event on address: %p", (void*)(rules + i + 6));
+                    event_list[events_found++] = rules + i + 6; // ??type needs to be included
                     break;
                 case TRIG_VAR:
                     ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 5));
@@ -208,7 +225,7 @@ int parse_rules(byte *rules, long len) {
                     break;
                 case TRIG_TIMER:
                     ESP_LOGI(TAG_RE, "found a timer trigger %d, on address: %p", rules[i+5], (void*)(rules + i + 6));
-                    rule_list[rules_found++] = rules + i + 5; // type needs to be included
+                    rule_list[rules_found++] = rules + i + 4; // type needs to be included
                     break;
                 case TRIG_HWTIMER:
                     ESP_LOGI(TAG_RE, "found hw timer %d on address: %p", rules[i+5], (void*)(rules + i + 6));
@@ -271,6 +288,7 @@ void check_alerts() {
 int averagerun = 1000;
 int lastrun = 0;
 uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t len = 255) {
+    ESP_LOGI(TAG_RE, "run_rule %p %d", start, start[0]);
     byte* cmd = start;
     byte* state_val = start_val;
     byte* x = nullptr;
@@ -297,11 +315,14 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 cmd += 2;
                 break;
             case CMD_EVENT:
-                ESP_LOGI(TAG_RE, "cmd triggering event %d", cmd[1]);
-                TRIGGER_EVENT(cmd+1);
-                cmd += 4 + cmd[3];
+                // CMD_EVENT EVENT_ID (2 bytes) DATA_LEN DATA
+                cmd++;
+                ESP_LOGI(TAG_RE, "cmd triggering event %d %p with %d bytes of data", *((uint16_t*)cmd), cmd, cmd[2]);
+                TRIGGER_EVENT(cmd);
+                cmd += 3 + cmd[2];
                 break;
             case CMD_TIMER:
+                // CMD_TIMER TIMER_ID TIME
                 ESP_LOGI(TAG_RE, "cmd triggering timer %d time: %d", cmd[1], cmd[2]*100);
                 TRIGGER_TIMER(cmd[1], cmd[2]*100);
                 cmd += 3;
@@ -415,14 +436,6 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
         }
     }
     return (uint8_t)(cmd-start);
-}
-
-void fire_system_event(uint16_t evt_id, uint8_t evt_data_len, uint8_t *evt_data) {
-    uint8_t *data = (uint8_t*)malloc(evt_data_len + 3);
-    data[0] = evt_id;
-    data[2] = evt_data_len;
-    memcpy(data+3, evt_data, evt_data_len);
-    TRIGGER_EVENT(data);
 }
 
 void run_rules() {

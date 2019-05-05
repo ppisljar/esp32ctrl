@@ -1,14 +1,12 @@
 import { 
     ConfigPage, 
+    DashboardPage,
     DevicesPage, 
     DevicesEditPage, 
-    ControllersPage, 
-    ControllerEditPage, 
     ConfigAdvancedPage, 
     ConfigHardwarePage, 
     RebootPage, 
     LoadPage, 
-    RulesPage, 
     UpdatePage, 
     ToolsPage, 
     FSPage, 
@@ -29,8 +27,6 @@ import {
     ConfigLCDWidgetPage,
 } from '../pages';
 
-import { deleteFile } from './espeasy';
-import { DashboardPage } from '../pages/dashboard';
 
 const saveConfig = () => {
     window.location.href='/config.json';
@@ -86,7 +82,6 @@ const menus = [
 ];
 
 const routes = [
-    { title: 'Edit Controller', href:'controllers/edit', component: ControllerEditPage },
     { title: 'Edit Device', href:'devices/edit', component: DevicesEditPage },
     { title: 'Edit Alert', href:'alerts/edit', component: AlertsEditPage },
     { title: 'Edit Screen', href:'config/lcdscreen', component: ConfigLCDScreenPage },

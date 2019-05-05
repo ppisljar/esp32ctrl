@@ -1058,7 +1058,10 @@ static esp_err_t event_handler(httpd_req_t *req)
         httpd_resp_sendstr(req, "EVENT NOT FOUND"); // todo: json response
         return ESP_OK;
     }
-    uint8_t event = events[eventName];
+    uint8_t event[3];
+    ((uint16_t*)event)[0] = events[eventName];
+    event[2] = 0;
+
     TRIGGER_EVENT(event);
     httpd_resp_set_status(req, "200 OK");
     httpd_resp_sendstr(req, "OK");
@@ -1183,13 +1186,6 @@ static esp_err_t cmd_handler(httpd_req_t *req)
 {
     if (!isAuthenticated(req, false)) return ESP_OK;
 
-    const char *eventName = req->uri + sizeof("/cmd/") - 1;
-    if (strlen(eventName) == 0 || eventName[strlen(eventName) - 1] == '/') {
-        // return list of all plugins
-        httpd_resp_send_404(req);
-        return ESP_OK;
-    }
-
     char buf[255];
     int len = req->content_len;
     httpd_req_recv(req, buf, MIN(len, 255));
@@ -1313,7 +1309,7 @@ esp_err_t start_file_server(const char *base_path)
     http_quick_register("/wifi_scan", HTTP_GET, wifiscan_handler, server_data);
 
     http_quick_register("/event/*", HTTP_GET, event_handler, server_data);
-    http_quick_register("/cmd/*", HTTP_POST, cmd_handler, server_data);
+    http_quick_register("/cmd", HTTP_POST, cmd_handler, server_data);
     http_quick_register("/system", HTTP_GET, system_handler, server_data);
     http_quick_register("/logs", HTTP_GET, logs_handler, server_data);
 

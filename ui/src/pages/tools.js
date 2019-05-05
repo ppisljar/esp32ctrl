@@ -1,6 +1,7 @@
 import { h, Component } from 'preact';
 import { settings } from '../lib/settings';
 import { getEvents, loadDevices } from '../lib/espeasy';
+import { toByteArray } from './floweditor/nodes/helper';
 
 const CMD = {
   SET     : 0xf0,
@@ -65,7 +66,10 @@ export class ToolsPage extends Component {
             
             cmdArray.push(this.state.cmd);
             if (this.state.cmd === 242) { // event
-                cmdArray.push(this.state.event);
+                const event = toByteArray(this.state.event, 2);
+                cmdArray.push(event[1]);
+                cmdArray.push(event[0]);
+                cmdArray.push(0);
             } else {
                 cmdArray.push(this.state.device);
                 cmdArray.push(this.state.state);
@@ -74,7 +78,7 @@ export class ToolsPage extends Component {
                     cmdArray.push(this.state.val);
             }
 
-            fetch(`/cmd/3`, {
+            fetch(`/cmd`, {
                 method: 'POST',
                 body: new Uint8Array(cmdArray),
             }).then(response => response.text()).then(response => {

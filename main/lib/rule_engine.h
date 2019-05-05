@@ -38,7 +38,7 @@ extern esp_event_loop_handle_t rule_event_loop;
 // #define TRIGGER_EVENT(x) event_triggers[x/8] |= 1 << (x%8)
 // #define CLEAR_EVENT(x) event_triggers[x/8] &= ~(1 << (x%8))
 // #define IS_EVENT_TRIGGERED(x) (event_triggers[x/8] >> (x%8) & 1) > 0
-#define TRIGGER_EVENT(evt) ESP_ERROR_CHECK(esp_event_post_to(rule_event_loop, RULE_EVENTS, RULE_USER_EVENT, (void*)evt, 1, portMAX_DELAY));
+#define TRIGGER_EVENT(event) ESP_ERROR_CHECK(esp_event_post_to(rule_event_loop, RULE_EVENTS, RULE_USER_EVENT, event, 3 + event[2], portMAX_DELAY));
 
 #define TRIGGER_TIMER(x, time) timers[x] = time; timer_triggers[x/8] |= 1 << (x%8)
 #define CLEAR_TIMER(x) timers[x] = 0; timer_triggers[x/8] &= ~(1 << (x%8))

@@ -1,4 +1,5 @@
 export * from './controllers';
+export * from './dashboard';
 export * from './devices';
 export * from './config';
 export * from './config.advanced';
@@ -16,7 +17,6 @@ export * from './tools';
 export * from './fs';
 export * from './factory_reset';
 export * from './discover';
-export * from './controllers.edit';
 export * from './controllers.alexa';
 export * from './controllers.alerts';
 export * from './alerts';

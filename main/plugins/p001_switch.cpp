@@ -51,9 +51,10 @@ void SwitchPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
     bool invert = (*cfg)["invert"] | false;
     
     if (n == 0 && state != *val) {
-        SET_STATE(this, state, 0, shouldNotify, val, 1);
-        ESP_LOGI(P001_TAG, "updating state %d (%p) [%d]", n, &state, state);
+        SET_STATE(this, state, 0, shouldNotify, *val, 1);
+        ESP_LOGI(P001_TAG, "updating state %d (%p) [%d] to %d", n, &state, state, *val);
         if (gpio != 255) {
+            ESP_LOGI(P001_TAG, "writting digital out to %d", state);
             io.digitalWrite(gpio, invert ? !state : state);
         }
     } else if (n != 0) {

@@ -1,4 +1,4 @@
-import { generateWidgetComponent } from "../helper";
+import { generateWidgetComponent, getString, toByteArray } from "../helper";
 
 const eventNode = {
     group: 'TRIGGERS',
