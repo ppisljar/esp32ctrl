@@ -1,3 +1,11 @@
 [submodule "components/espmqtt"]
 	path = components/espmqtt
 	url = https://github.com/tuanpmt/espmqtt.git
+
+[submodule "components/espmqtt"]
+	path = components/espmqtt
+	url = https://github.com/tuanpmt/espmqtt.git
+
+[submodule "components/hmi/lvgl_gui/lvgl"]
+	path = components/hmi/lvgl_gui/lvgl
+	url = https://github.com/littlevgl/lvgl.git
