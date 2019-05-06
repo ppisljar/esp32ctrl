@@ -1,10 +1,10 @@
 
 UI for esp32ctrl
 
-- [form component](components/form/README.md)
-- [services](lib/README.md)
-- [devices](devices/README.md)
-- [rule editor](pages/floweditor/README.md)
+- [form component](src/components/form/README.md)
+- [services](src/lib/README.md)
+- [devices](src/devices/README.md)
+- [rule editor](src/pages/floweditor/README.md)
 
 
 ...... old docs
