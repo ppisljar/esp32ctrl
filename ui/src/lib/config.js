@@ -1,6 +1,7 @@
 import { settings } from './settings';
-import { storeFile, storeRule } from './espeasy';
+import { storeFile } from './espeasy';
 import { getNodes } from '../pages/floweditor/nodes';
+import { stringToAsciiByteArray } from './utils';
 
 const prepareAlerts = () => {
     const alerting = settings.get('alerting');
@@ -18,22 +19,9 @@ const prepareAlerts = () => {
     return storeFile('alerts.bin', alerts);
 }
 
-function stringToAsciiByteArray(str)
-{
-    var bytes = [];
-   for (var i = 0; i < str.length; ++i)
-   {
-       var charCode = str.charCodeAt(i);
-      if (charCode > 0xFF)  // char > 1 byte since charCodeAt returns the UTF-16 value
-      {
-          throw new Error('Character ' + String.fromCharCode(charCode) + ' can\'t be represented by a US-ASCII byte.');
-      }
-       bytes.push(charCode);
-   }
-    return bytes;
-}
 
-const prepareRules = () => {
+
+const prepareRules = async () => {
     const rules = settings.editor.get('rules[0]', {});
     const renderedNodes = rules.nodes || [];
     const { connections } = rules;
@@ -89,7 +77,8 @@ const prepareRules = () => {
 
     const bytes = stringToAsciiByteArray(result);
 
-    return storeRule({ rules: bytes, events: eventMap });
+    await storeFile('events.json', JSON.stringify(eventMap));
+    await storeFile('rules.dat', new Uint8Array(bytes));
 }
 
 export const loadConfig = async () => {
@@ -100,6 +89,9 @@ export const loadConfig = async () => {
 
     settings.init(cfg);
 
+    settings.events = await fetch('/events.json').then(r => r.json()).catch(r => []);
+    settings.r1pins = pins;
+
     const editor_cfg = await fetch('/editor_config.json').then(r => r.ok ? r.json() : {});
     settings.editor.init(editor_cfg);
 };
@@ -109,11 +101,4 @@ export const saveConfig = async (config = true, editor = true, rules = true, ale
     if (editor) await storeFile('editor_config.json', JSON.stringify(settings.editor.get()));
     if (rules) await prepareRules();
     if (alerts) await prepareAlerts();
-}
-
-export const loadRules = async () => {
-    const events = await fetch('/events.json').then(r => r.json()).catch(r => []);
-    const pins = [];    // report on used pins
-    settings.events = events;
-    settings.r1pins = pins;
 }

@@ -28,3 +28,18 @@ export const getTaskValueType = (taskPath, valuePath, type) => {
         return value.type == type;
     };
 };
+
+export function stringToAsciiByteArray(str)
+{
+    var bytes = [];
+   for (var i = 0; i < str.length; ++i)
+   {
+       var charCode = str.charCodeAt(i);
+      if (charCode > 0xFF)  // char > 1 byte since charCodeAt returns the UTF-16 value
+      {
+          throw new Error('Character ' + String.fromCharCode(charCode) + ' can\'t be represented by a US-ASCII byte.');
+      }
+       bytes.push(charCode);
+   }
+    return bytes;
+}
