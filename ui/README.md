@@ -1,5 +1,7 @@
 
-UI for esp32ctrl
+# UI for esp32ctrl
+
+## description
 
 - [form component](src/components/form/README.md)
 - [services](src/lib/README.md)
@@ -7,10 +9,9 @@ UI for esp32ctrl
 - [rule editor](src/pages/floweditor/README.md)
 
 
-...... old docs
-### adding plugins
+## tutorial
 
-## devices
+### adding devices
 
 To add new devices follow this steps:
 
