@@ -146,15 +146,3 @@ TODO:
 
 - login: it na 'custom digest' : https://github.com/mozilla/node-srp
 -- ali pa https
-
-
-
--- v10: comercial
-- redundancy plugin
---- master/slave mode selection
---- slave: watchdog master (i2c)
-- ModBus
-- HMC
-- elasticsearch connector
-
--- v1.0beta  (publish github)
