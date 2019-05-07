@@ -1,3 +1,4 @@
+#ifdef CONFIG_LVGL_GUI_ENABLE
 #include "c010_lcd.h"
 
 //extern Config *g_cfg;
@@ -221,3 +222,4 @@ void update_lcd_f(void* ptr)
 	}
 
 }
+#endif

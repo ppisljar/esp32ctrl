@@ -59,7 +59,7 @@ LoggingPlugin *logging_plugin;
 CronPlugin *cron_plugin;
 BlueToothPlugin *bluetooth_plugin;
 
-#ifdef LVGL_GUI_ENABLE
+#ifdef CONFIG_LVGL_GUI_ENABLE
 #include "plugins/c010_lcd.h"
 LcdPlugin *lcd_plugin;
 #endif
@@ -237,7 +237,7 @@ extern "C" void app_main()
         hue_plugin->init(hue_conf);
     }
 
-    #ifdef LVGL_GUI_ENABLE
+    #ifdef CONFIG_LVGL_GUI_ENABLE
     if (cfgObject["lcd"]["enabled"]) {
         JsonObject &lcd_config = cfgObject["lcd"];
         lcd_plugin = new LcdPlugin();

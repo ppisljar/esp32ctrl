@@ -139,7 +139,7 @@ menu "MyESP32 CTRL"
 
     menu "LCD Settings"
 
-        config LVGL_GUI_ENABLE
+        config CONFIG_LVGL_GUI_ENABLE
             bool "Enable"
             default n
             
