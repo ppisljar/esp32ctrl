@@ -16,48 +16,59 @@ static const char *TAG = "MAIN";
 #include "lib/io.h"
 #include "lib/global_state.h"
 #include "plugins/plugin.h"
-#include "plugins/c001_i2c.h"
-#include "plugins/c002_ntp.h"
+
+
 #include "plugins/c003_wifi.h"
-#include "plugins/c004_timers.h"
-#include "plugins/c005_hue.h"
-#include "plugins/c006_touch.h"
-#include "plugins/c007_logging.h"
-#include "plugins/c008_cron.h"
-
-
-#include "plugins/p001_switch.h"
-#include "plugins/p002_dht.h"
-#include "plugins/p003_bmp280.h"
-#include "plugins/p004_ds18x20.h"
-#include "plugins/p005_regulator.h"
-#include "plugins/p006_analog.h"
-#include "plugins/p007_ads111x.h"
-#include "plugins/p008_mcp23017.h"
-#include "plugins/p009_pcf8574.h"
-#include "plugins/p010_pca9685.h"
-#include "plugins/p011_mqtt.h"
-#include "plugins/p012_rotary_encoder.h"
-#include "plugins/p013_http_ctrl.h"
-#include "plugins/p014_dummy.h"
-#include "plugins/p015_dimmer.h"
-#include "plugins/p016_udp_server.h"
-
-#include "bluetooth.h"
-#include "plugins/c009_bluetooth.h"
-
 
 // global config object
 Config *g_cfg;
 Plugin *active_plugins[10];
-NTPPlugin *ntp_plugin;
 WiFiPlugin *wifi_plugin;
+
+
+#ifdef ENABLE_C001_I2C
+#include "plugins/c001_i2c.h"
+#endif
+
+#ifdef ENABLE_C002_NTP
+#include "plugins/c002_ntp.h"
+NTPPlugin *ntp_plugin;
+#endif
+
+// #ifdef ENABLE_C003
+// #endif
+
+//#ifdef ENABLE_C004_TIMERS
+#include "plugins/c004_timers.h"
 TimersPlugin *timers_plugin;
+//#endif
+
+#ifdef ENABLE_C005_HUE
+#include "plugins/c005_hue.h"
 HueEmulatorPlugin *hue_plugin;
+#endif
+
+#ifdef ENABLE_C006
+#include "plugins/c006_touch.h"
 TouchPlugin *touch_plugin;
+#endif
+
+#ifdef ENABLE_C007
+#include "plugins/c007_logging.h"
 LoggingPlugin *logging_plugin;
+#endif
+
+//#ifdef ENABLE_C008
+#include "plugins/c008_cron.h"
 CronPlugin *cron_plugin;
+//#endif
+
+#ifdef ENABLE_C009
+#include "bluetooth.h"
+#include "plugins/c009_bluetooth.h"
 BlueToothPlugin *bluetooth_plugin;
+BlueTooth* bluetooth;
+#endif
 
 #ifdef CONFIG_LVGL_GUI_ENABLE
 #include "plugins/c010_lcd.h"
@@ -67,59 +78,73 @@ LcdPlugin *lcd_plugin;
 IO io;
 
 #ifdef CONFIG_ENABLE_P001_SWITCH 
+#include "plugins/p001_switch.h"
 Plugin* SwitchPlugin_myProtoype = Plugin::addPrototype(SwitchPlugin::p_type, new SwitchPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P002_DHT 
+#include "plugins/p002_dht.h"
 Plugin* DHTPlugin_myProtoype = Plugin::addPrototype(2, new DHTPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P003_BMP 
+#include "plugins/p003_bmp280.h"
 Plugin* BMP280Plugin_myProtoype = Plugin::addPrototype(3, new BMP280Plugin);
 #endif
 #ifdef CONFIG_ENABLE_P004_DS18x20
+#include "plugins/p004_ds18x20.h"
 Plugin* DS18x20Plugin_myProtoype = Plugin::addPrototype(4, new DS18x20Plugin);
 #endif
 #ifdef CONFIG_ENABLE_P005_REGULATOR
+#include "plugins/p005_regulator.h"
 Plugin* RegulatorPlugin_myProtoype = Plugin::addPrototype(5, new RegulatorPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P006_ANALOG 
+#include "plugins/p006_analog.h"
 Plugin* AnalogPlugin_myProtoype = Plugin::addPrototype(6, new AnalogPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P007_ADS1115 
+#include "plugins/p007_ads111x.h"
 Plugin* ADS111xPlugin_myProtoype = Plugin::addPrototype(7, new ADS111xPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P008_MCP23017
+#include "plugins/p008_mcp23017.h"
 Plugin* MCP23017Plugin_myProtoype = Plugin::addPrototype(8, new MCP23017Plugin);
 #endif
 #ifdef CONFIG_ENABLE_P009_PCF8574
+#include "plugins/p009_pcf8574.h"
 Plugin* PCF8574Plugin_myProtoype = Plugin::addPrototype(9, new PCF8574Plugin);
 #endif
 #ifdef CONFIG_ENABLE_P010_PCA9685
+#include "plugins/p010_pca9685.h"
 Plugin* PCA9685Plugin_myProtoype = Plugin::addPrototype(10, new PCA9685Plugin);
 #endif
 #ifdef CONFIG_ENABLE_P011_MQTT
+#include "plugins/p011_mqtt.h"
 Plugin* MQTTPlugin_myProtoype = Plugin::addPrototype(11, new MQTTPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P012_ROTARY 
+#include "plugins/p012_rotary_encoder.h"
 Plugin* RotaryEncoderPlugin_myProtoype = Plugin::addPrototype(12, new RotaryEncoderPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P013_HTTP 
+#include "plugins/p013_http_ctrl.h"
 Plugin* HTTPCtrlPlugin_myProtoype = Plugin::addPrototype(13, new HTTPCtrlPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P014_DUMMY
+#include "plugins/p014_dummy.h"
 Plugin* DummyPlugin_myProtoype = Plugin::addPrototype(14, new DummyPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P015_DIMMER
+#include "plugins/p015_dimmer.h"
 Plugin* DimmerPlugin_myProtoype = Plugin::addPrototype(15, new DimmerPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P016_UDPSERVER
+#include "plugins/p016_udp_server.h"
 Plugin* UdpServerPlugin_myProtoype = Plugin::addPrototype(16, new UdpServerPlugin);
 #endif
 #ifdef CONFIG_ENABLE_P017
 #include "plugins/p017_vml6040.h"
 Plugin* VEML6040Plugin_myProtoype = Plugin::addPrototype(17, new VEML6040Plugin);
 #endif
-
-BlueTooth* bluetooth;
 
 uint8_t ledPin;
 bool ledInverted;
@@ -198,10 +223,13 @@ extern "C" void app_main()
         }
     }
 
+    #ifdef ENABLE_C004_TIMERS
     JsonObject &timer_config = cfgObject["hardware"];
     timers_plugin = new TimersPlugin();
     timers_plugin->init(timer_config);
+    #endif
 
+    #ifdef ENABLE_C009
     JsonObject &bluetooth_config = cfgObject["bluetooth"];
     if (bluetooth_config["enabled"]) {
         if (bluetooth_config["server"]["enabled"]) {
@@ -212,10 +240,14 @@ extern "C" void app_main()
         // bluetooth->init();
         // bluetooth->getDevices(btfunc, 0);
     }
+    #endif
 
+    #ifdef ENABLE_C006
     touch_plugin = new TouchPlugin();
     touch_plugin->init(cfgObject);
+    #endif
 
+    #ifdef ENABLE_C001_I2C
     if (cfgObject["hardware"]["i2c"]["enabled"]) {
         JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];
         i2c_plugin = new I2CPlugin();
@@ -224,18 +256,23 @@ extern "C" void app_main()
             ESP_LOGE(TAG, "i2c init: error %x", i2cerr);
         };
     }
+    #endif
 
+    #ifdef ENABLE_C002_NTP
     if (cfgObject["ntp"]["enabled"]) {
         JsonObject &ntp_conf = cfgObject["ntp"];
         ntp_plugin = new NTPPlugin();
         ntp_plugin->init(ntp_conf);
     }
+    #endif
 
+    #ifdef ENABLE_C005_HUE
     if (cfgObject["alexa"]["enabled"]) {
         JsonObject &hue_conf = cfgObject["alexa"];
         hue_plugin = new HueEmulatorPlugin();
         hue_plugin->init(hue_conf);
     }
+    #endif
 
     #ifdef CONFIG_LVGL_GUI_ENABLE
     if (cfgObject["lcd"]["enabled"]) {
@@ -250,7 +287,10 @@ extern "C" void app_main()
     
 
     http_server_ready();
+
+    #ifdef ENABLE_C007
     init_logging();
+    #endif
 
     fire_system_event(1024, 0, nullptr);
 
