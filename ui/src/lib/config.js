@@ -57,7 +57,7 @@ const prepareRules = async () => {
                 if (out) {
                     let match = out.to.match(/node-(.*)-i-.*/);
                     let outNode = renderedNodes.find(n => n.id == match[1]);
-                    subrule += walkRule(outNode);
+                    if (outNode) subrule += walkRule(outNode);
                 } 
                 if (rule.includes('%%output%%')) {
                     rule = rule.replace('%%output%%', subrule);
