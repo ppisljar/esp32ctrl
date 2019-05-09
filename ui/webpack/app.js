@@ -12901,7 +12901,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "firePageLoad", function() { return firePageLoad; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "loadPlugins", function() { return loadPlugins; });
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./settings */ "./src/lib/settings.js");
-/* harmony import */ var _esp__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./esp */ "./src/lib/esp.js");
+/* harmony import */ var _esp__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./esp */ "./src/lib/esp.js");
 /* harmony import */ var _loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./loader */ "./src/lib/loader.js");
 /* harmony import */ var _menu__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./menu */ "./src/lib/menu.js");
 
@@ -12953,7 +12953,7 @@ const getPluginAPI = () => {
     settings: _settings__WEBPACK_IMPORTED_MODULE_0__["settings"],
     loader: _loader__WEBPACK_IMPORTED_MODULE_2__["loader"],
     menu: _menu__WEBPACK_IMPORTED_MODULE_3__["menu"],
-    esp: _esp__WEBPACK_IMPORTED_MODULE_4__["default"],
+    esp: _esp__WEBPACK_IMPORTED_MODULE_1__["default"],
     page
   };
 };
@@ -18319,7 +18319,7 @@ class FSPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 /*!****************************!*\
   !*** ./src/pages/index.js ***!
   \****************************/
-/*! exports provided: ControllersPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, RulesPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, DashboardPage, DevicesPage, LoadPage, UpdatePage, ToolsPage, FSPage, AlertsPage */
+/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
