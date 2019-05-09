@@ -65,7 +65,7 @@ gulp.task('styles', function () {
 gulp.task('pagesinline', function() {
     return gulp.src(['./src/index.htm'])
       .pipe(replace('http://localhost:8080/src/styles.css', '/styles.css.gz'))
-      .pipe(replace('http://localhost:8080/build/app.js', '/app.js.gz'))
+      .pipe(replace('http://localhost:8080/webpack/app.js', '/app.js.gz'))
       .pipe(htmlmin({
         collapseWhitespace: true,
         removeComments: true
