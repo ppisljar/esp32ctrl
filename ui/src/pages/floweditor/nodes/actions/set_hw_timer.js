@@ -1,5 +1,5 @@
 import { Component, h } from "preact";
-import { generateWidgetComponent } from "../helper";
+import { generateWidgetComponent, getString, toByteArray } from "../helper";
 import { getTasks, getTaskValues, getTaskValueType } from "../../../../lib/utils";
 import { settings } from "../../../../lib/settings";
 

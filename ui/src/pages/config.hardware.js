@@ -103,15 +103,15 @@ const getFormConfig = () => {
             gpio: {
                 name: 'GPIO boot states',
                 configs: 
-                    pins().map((pin, i) => {
-                        if (pin.disabled || i > 40) return;
+                    pins().map((pin) => {
+                        if (pin.disabled || pin.value > 40) return;
                         const isTouchPin = (pin) => [4, 0, 2, 15, 13, 12, 14, 27, 33, 32].includes(pin);
                         const pinStateOptions = [...pinState];
-                        if (isTouchPin(i)) pinStateOptions.push({ name: 'Touch', value: 4 });
+                        if (isTouchPin(pin.value)) pinStateOptions.push({ name: 'Touch', value: 4 });
                         return [
-                            { name: `Pin Mode GPIO-${i}`, type: 'select', options: pinStateOptions, var: `gpio.${i}.mode` }, 
-                            { name: 'interrupt', type: 'checkbox', if: `gpio.${i}.mode`, ifval:3, var: `gpio.${i}.interrupt` },
-                            { name: 'threshold', type: 'number', if: `gpio.${i}.mode`, ifval: 4, var: `gpio.${i}.threshold` },
+                            { name: `Pin Mode GPIO-${pin.value}`, type: 'select', options: pinStateOptions, var: `gpio.${pin.value}.mode` }, 
+                            { name: 'interrupt', type: 'checkbox', if: `gpio.${pin.value}.mode`, ifval:3, var: `gpio.${pin.value}.interrupt` },
+                            { name: 'threshold', type: 'number', if: `gpio.${pin.value}.mode`, ifval: 4, var: `gpio.${pin.value}.threshold` },
                         ];
                     }).filter(p => p),
                     

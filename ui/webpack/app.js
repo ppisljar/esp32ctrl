@@ -12791,6 +12791,8 @@ class IO_PINS {
     }];
 
     for (let i = 0; i < 40; i++) {
+      if ([6, 7, 8, 9, 10, 11].includes(i)) continue; // SPI flash pins
+
       const pin = {
         name: `ESP32 GPIO${i}`,
         value: i,
@@ -13974,33 +13976,33 @@ const getFormConfig = () => {
       },
       gpio: {
         name: 'GPIO boot states',
-        configs: pins().map((pin, i) => {
-          if (pin.disabled || i > 40) return;
+        configs: pins().map(pin => {
+          if (pin.disabled || pin.value > 40) return;
 
           const isTouchPin = pin => [4, 0, 2, 15, 13, 12, 14, 27, 33, 32].includes(pin);
 
           const pinStateOptions = [...pinState];
-          if (isTouchPin(i)) pinStateOptions.push({
+          if (isTouchPin(pin.value)) pinStateOptions.push({
             name: 'Touch',
             value: 4
           });
           return [{
-            name: `Pin Mode GPIO-${i}`,
+            name: `Pin Mode GPIO-${pin.value}`,
             type: 'select',
             options: pinStateOptions,
-            var: `gpio.${i}.mode`
+            var: `gpio.${pin.value}.mode`
           }, {
             name: 'interrupt',
             type: 'checkbox',
-            if: `gpio.${i}.mode`,
+            if: `gpio.${pin.value}.mode`,
             ifval: 3,
-            var: `gpio.${i}.interrupt`
+            var: `gpio.${pin.value}.interrupt`
           }, {
             name: 'threshold',
             type: 'number',
-            if: `gpio.${i}.mode`,
+            if: `gpio.${pin.value}.mode`,
             ifval: 4,
-            var: `gpio.${i}.threshold`
+            var: `gpio.${pin.value}.threshold`
           }];
         }).filter(p => p)
       }
@@ -16521,7 +16523,7 @@ const setHwTimerNode = {
     }
 
     const wait = freq * time;
-    return [`\xE2${String.fromCharCode(timer)}${getString(toByteArray(wait, 8))}`];
+    return [`\xE2${String.fromCharCode(timer)}${Object(_helper__WEBPACK_IMPORTED_MODULE_1__["getString"])(Object(_helper__WEBPACK_IMPORTED_MODULE_1__["toByteArray"])(wait, 8))}`];
   }
 };
 const component = Object(_helper__WEBPACK_IMPORTED_MODULE_1__["generateWidgetComponent"])(setHwTimerNode);

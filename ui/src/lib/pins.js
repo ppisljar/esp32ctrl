@@ -22,6 +22,7 @@ class IO_PINS {
     constructor() {
         this.digitalPins = [{ name: '-- select --', value: 255, capabilities: ['digital_in', 'analog_in', 'digital_out', 'analog_out'], configs: {}}];
         for (let i = 0; i < 40; i++) {
+            if ([6,7,8,9,10,11].includes(i)) continue; // SPI flash pins
             const pin = {
                 name: `ESP32 GPIO${i}`,
                 value: i,
