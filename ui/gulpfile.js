@@ -46,7 +46,7 @@ gulp.task('styles', function () {
   });
 
   gulp.task('scripts', function () {
-    return gulp.src('./build/dash.js')
+    return gulp.src('./webpack/*.js')
       .pipe(gzip())
       .pipe(gulp.dest('./build'))
   });
