@@ -1,5 +1,5 @@
 import { settings } from './settings';
-import { storeFile } from './espeasy';
+import { storeFile } from './esp';
 import { getNodes } from '../pages/floweditor/nodes';
 import { stringToAsciiByteArray } from './utils';
 

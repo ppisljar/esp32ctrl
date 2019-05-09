@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import { deleteFile, storeFile } from '../lib/espeasy';
+import { deleteFile, storeFile } from '../lib/esp';
 import { loader } from '../lib/loader';
 
 export class FSPage extends Component {

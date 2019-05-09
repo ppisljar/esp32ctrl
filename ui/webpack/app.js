@@ -12322,7 +12322,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "loadConfig", function() { return loadConfig; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "saveConfig", function() { return saveConfig; });
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./settings */ "./src/lib/settings.js");
-/* harmony import */ var _espeasy__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./espeasy */ "./src/lib/espeasy.js");
+/* harmony import */ var _esp__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./esp */ "./src/lib/esp.js");
 /* harmony import */ var _pages_floweditor_nodes__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../pages/floweditor/nodes */ "./src/pages/floweditor/nodes/index.js");
 /* harmony import */ var _utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils */ "./src/lib/utils.js");
 
@@ -12341,7 +12341,7 @@ const prepareAlerts = () => {
     });
     return trigger;
   }).join('\xFF') + '\xFF';
-  return Object(_espeasy__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('alerts.bin', alerts);
+  return Object(_esp__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('alerts.bin', alerts);
 };
 
 const prepareRules = async () => {
@@ -12403,8 +12403,8 @@ const prepareRules = async () => {
     result += rule + "\xFF";
   });
   const bytes = Object(_utils__WEBPACK_IMPORTED_MODULE_3__["stringToAsciiByteArray"])(result);
-  await Object(_espeasy__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('events.json', JSON.stringify(eventMap));
-  await Object(_espeasy__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('rules.dat', new Uint8Array(bytes));
+  await Object(_esp__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('events.json', JSON.stringify(eventMap));
+  await Object(_esp__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('rules.dat', new Uint8Array(bytes));
 };
 
 const loadConfig = async () => {
@@ -12419,29 +12419,29 @@ const loadConfig = async () => {
   _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].editor.init(editor_cfg);
 };
 const saveConfig = async (config = true, editor = true, rules = true, alerts = true) => {
-  if (config) await Object(_espeasy__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('config.json', JSON.stringify(_settings__WEBPACK_IMPORTED_MODULE_0__["settings"].get()));
-  if (editor) await Object(_espeasy__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('editor_config.json', JSON.stringify(_settings__WEBPACK_IMPORTED_MODULE_0__["settings"].editor.get()));
+  if (config) await Object(_esp__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('config.json', JSON.stringify(_settings__WEBPACK_IMPORTED_MODULE_0__["settings"].get()));
+  if (editor) await Object(_esp__WEBPACK_IMPORTED_MODULE_1__["storeFile"])('editor_config.json', JSON.stringify(_settings__WEBPACK_IMPORTED_MODULE_0__["settings"].editor.get()));
   if (rules) await prepareRules();
   if (alerts) await prepareAlerts();
 };
 
 /***/ }),
 
-/***/ "./src/lib/espeasy.js":
-/*!****************************!*\
-  !*** ./src/lib/espeasy.js ***!
-  \****************************/
-/*! exports provided: storeFile, deleteFile, loadDevices */
+/***/ "./src/lib/esp.js":
+/*!************************!*\
+  !*** ./src/lib/esp.js ***!
+  \************************/
+/*! exports provided: fetchProgress, storeFile, deleteFile, loadDevices, default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fetchProgress", function() { return fetchProgress; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "storeFile", function() { return storeFile; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "deleteFile", function() { return deleteFile; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "loadDevices", function() { return loadDevices; });
 /* harmony import */ var mini_toastr__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! mini-toastr */ "./node_modules/mini-toastr/mini-toastr.js");
 /* harmony import */ var _loader__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./loader */ "./src/lib/loader.js");
-
 
 
 const fetchProgress = (url, opts = {}) => {
@@ -12459,7 +12459,6 @@ const fetchProgress = (url, opts = {}) => {
     xhr.send(opts.body);
   });
 };
-
 const storeFile = async (filename, data, onProgress) => {
   _loader__WEBPACK_IMPORTED_MODULE_1__["loader"].show();
   const file = data ? new File([new Blob([data])], filename) : filename;
@@ -12487,6 +12486,12 @@ const deleteFile = async filename => {
 const loadDevices = async url => {
   return fetch(`${url}/plugin_state/`).then(response => response.json()); //.then(response => response.Sensors);
 };
+/* harmony default export */ __webpack_exports__["default"] = ({
+  fetchProgress,
+  storeFile,
+  deleteFile,
+  loadDevices
+});
 
 /***/ }),
 
@@ -12896,7 +12901,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "firePageLoad", function() { return firePageLoad; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "loadPlugins", function() { return loadPlugins; });
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./settings */ "./src/lib/settings.js");
-/* harmony import */ var _espeasy__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./espeasy */ "./src/lib/espeasy.js");
+/* harmony import */ var _esp__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./esp */ "./src/lib/esp.js");
 /* harmony import */ var _loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./loader */ "./src/lib/loader.js");
 /* harmony import */ var _menu__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./menu */ "./src/lib/menu.js");
 
@@ -12948,7 +12953,7 @@ const getPluginAPI = () => {
     settings: _settings__WEBPACK_IMPORTED_MODULE_0__["settings"],
     loader: _loader__WEBPACK_IMPORTED_MODULE_2__["loader"],
     menu: _menu__WEBPACK_IMPORTED_MODULE_3__["menu"],
-    espeasy: _espeasy__WEBPACK_IMPORTED_MODULE_1__["default"],
+    esp: _esp__WEBPACK_IMPORTED_MODULE_4__["default"],
     page
   };
 };
@@ -13285,7 +13290,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
 /* harmony import */ var _lib_settings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/settings */ "./src/lib/settings.js");
 /* harmony import */ var _devices__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../devices */ "./src/devices/index.js");
-/* harmony import */ var _lib_espeasy__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/espeasy */ "./src/lib/espeasy.js");
+/* harmony import */ var _lib_esp__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/esp */ "./src/lib/esp.js");
 /* harmony import */ var mini_toastr__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! mini-toastr */ "./node_modules/mini-toastr/mini-toastr.js");
 
 
@@ -14972,7 +14977,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DashboardPage", function() { return DashboardPage; });
 /* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
 /* harmony import */ var _lib_settings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/settings */ "./src/lib/settings.js");
-/* harmony import */ var _lib_espeasy__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/espeasy */ "./src/lib/espeasy.js");
+/* harmony import */ var _lib_esp__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/esp */ "./src/lib/esp.js");
 
 
 
@@ -15121,7 +15126,7 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
   }
 
   fetchDevices() {
-    Object(_lib_espeasy__WEBPACK_IMPORTED_MODULE_2__["loadDevices"])().then(deviceState => {
+    Object(_lib_esp__WEBPACK_IMPORTED_MODULE_2__["loadDevices"])().then(deviceState => {
       this.setState({
         deviceState
       });
@@ -15354,7 +15359,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
 /* harmony import */ var _lib_settings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/settings */ "./src/lib/settings.js");
 /* harmony import */ var _devices__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../devices */ "./src/devices/index.js");
-/* harmony import */ var _lib_espeasy__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/espeasy */ "./src/lib/espeasy.js");
+/* harmony import */ var _lib_esp__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/esp */ "./src/lib/esp.js");
 /* harmony import */ var mini_toastr__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! mini-toastr */ "./node_modules/mini-toastr/mini-toastr.js");
 
 
@@ -15537,7 +15542,7 @@ class DevicesPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
   }
 
   fetchDevices() {
-    Object(_lib_espeasy__WEBPACK_IMPORTED_MODULE_3__["loadDevices"])().then(devices => {
+    Object(_lib_esp__WEBPACK_IMPORTED_MODULE_3__["loadDevices"])().then(devices => {
       this.setState({
         devices
       });
@@ -18240,7 +18245,7 @@ const ToolboxItem = Object(preact_dnd__WEBPACK_IMPORTED_MODULE_1__["DragSource"]
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "FSPage", function() { return FSPage; });
 /* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
-/* harmony import */ var _lib_espeasy__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/espeasy */ "./src/lib/espeasy.js");
+/* harmony import */ var _lib_esp__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/esp */ "./src/lib/esp.js");
 /* harmony import */ var _lib_loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/loader */ "./src/lib/loader.js");
 
 
@@ -18254,13 +18259,13 @@ class FSPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 
     this.saveForm = async () => {
       _lib_loader__WEBPACK_IMPORTED_MODULE_2__["loader"].show();
-      await Object(_lib_espeasy__WEBPACK_IMPORTED_MODULE_1__["storeFile"])(this.file.files[0]);
+      await Object(_lib_esp__WEBPACK_IMPORTED_MODULE_1__["storeFile"])(this.file.files[0]);
       await this.fetch();
     };
 
     this.deleteFile = e => {
       const fileName = e.currentTarget.dataset.name;
-      Object(_lib_espeasy__WEBPACK_IMPORTED_MODULE_1__["deleteFile"])(fileName).then(() => this.fetch());
+      Object(_lib_esp__WEBPACK_IMPORTED_MODULE_1__["deleteFile"])(fileName).then(() => this.fetch());
     };
   }
 
@@ -18314,7 +18319,7 @@ class FSPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 /*!****************************!*\
   !*** ./src/pages/index.js ***!
   \****************************/
-/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage */
+/*! exports provided: ControllersPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, RulesPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, DashboardPage, DevicesPage, LoadPage, UpdatePage, ToolsPage, FSPage, AlertsPage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -19371,7 +19376,7 @@ class WidgetComponent extends _widget__WEBPACK_IMPORTED_MODULE_1__["Widget"] {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LoadPage", function() { return LoadPage; });
 /* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
-/* harmony import */ var _lib_espeasy__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/espeasy */ "./src/lib/espeasy.js");
+/* harmony import */ var _lib_esp__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/esp */ "./src/lib/esp.js");
 
 
 class LoadPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
@@ -19379,7 +19384,7 @@ class LoadPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
     super(props);
 
     this.saveForm = () => {
-      Object(_lib_espeasy__WEBPACK_IMPORTED_MODULE_1__["storeFile"])(this.file.files[0]);
+      Object(_lib_esp__WEBPACK_IMPORTED_MODULE_1__["storeFile"])(this.file.files[0]);
     };
   }
 
@@ -19679,7 +19684,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ToolsPage", function() { return ToolsPage; });
 /* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
 /* harmony import */ var _lib_settings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/settings */ "./src/lib/settings.js");
-/* harmony import */ var _lib_espeasy__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/espeasy */ "./src/lib/espeasy.js");
+/* harmony import */ var _lib_esp__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/esp */ "./src/lib/esp.js");
 /* harmony import */ var _floweditor_nodes_helper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./floweditor/nodes/helper */ "./src/pages/floweditor/nodes/helper.js");
 
 
@@ -19866,8 +19871,8 @@ class ToolsPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
   }
 
   async componentDidMount() {
-    this.device_state = await Object(_lib_espeasy__WEBPACK_IMPORTED_MODULE_2__["loadDevices"])();
-    this.events = await Object(_lib_espeasy__WEBPACK_IMPORTED_MODULE_2__["getEvents"])();
+    this.device_state = await Object(_lib_esp__WEBPACK_IMPORTED_MODULE_2__["loadDevices"])();
+    this.events = _lib_settings__WEBPACK_IMPORTED_MODULE_1__["settings"].events;
     this.forceUpdate();
     this.interval = setInterval(() => {
       this.fetch();
@@ -19948,7 +19953,7 @@ class SysVarsPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "UpdatePage", function() { return UpdatePage; });
 /* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
-/* harmony import */ var _lib_espeasy__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/espeasy */ "./src/lib/espeasy.js");
+/* harmony import */ var _lib_esp__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/esp */ "./src/lib/esp.js");
 /* harmony import */ var _lib_loader__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/loader */ "./src/lib/loader.js");
 
 
@@ -19962,7 +19967,7 @@ class UpdatePage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 
     this.saveForm = () => {
       _lib_loader__WEBPACK_IMPORTED_MODULE_2__["loader"].show();
-      Object(_lib_espeasy__WEBPACK_IMPORTED_MODULE_1__["fetchProgress"])('/update', {
+      Object(_lib_esp__WEBPACK_IMPORTED_MODULE_1__["fetchProgress"])('/update', {
         method: 'POST',
         body: this.file.files[0],
         onProgress: e => {

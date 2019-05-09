@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import { fetchProgress } from '../lib/espeasy';
+import { fetchProgress } from '../lib/esp';
 import { loader } from '../lib/loader';
 
 export class UpdatePage extends Component {

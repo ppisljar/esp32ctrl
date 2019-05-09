@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { settings } from '../lib/settings';
-import { loadDevices } from '../lib/espeasy';
+import { loadDevices } from '../lib/esp';
 
 export class DashboardPage extends Component {
     constructor(props) {

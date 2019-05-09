@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 import { settings } from '../lib/settings';
 import { devices } from '../devices';
-import { loadDevices } from '../lib/espeasy';
+import { loadDevices } from '../lib/esp';
 import { ICON_CLASS } from 'mini-toastr';
 
 const user = "admin";

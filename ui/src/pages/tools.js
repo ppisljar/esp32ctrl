@@ -1,6 +1,6 @@
 import { h, Component } from 'preact';
 import { settings } from '../lib/settings';
-import { getEvents, loadDevices } from '../lib/espeasy';
+import { loadDevices } from '../lib/esp';
 import { toByteArray } from './floweditor/nodes/helper';
 
 const CMD = {
@@ -175,7 +175,7 @@ export class ToolsPage extends Component {
 
     async componentDidMount() {
         this.device_state = await loadDevices();
-        this.events = await getEvents();
+        this.events = settings.events;
         this.forceUpdate();
         this.interval = setInterval(() => {
             this.fetch();

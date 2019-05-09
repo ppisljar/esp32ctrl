@@ -1,5 +1,5 @@
 import { settings } from './settings';
-import espeasy from './espeasy';
+import esp from './esp';
 import { loader } from './loader';
 import { menu } from './menu';
 
@@ -46,7 +46,7 @@ const getPluginAPI = () => {
         settings,
         loader,
         menu,
-        espeasy,
+        esp,
         page,
     }
 }

@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import { storeFile } from '../lib/espeasy';
+import { storeFile } from '../lib/esp';
 
 export class LoadPage extends Component {
     constructor(props) {

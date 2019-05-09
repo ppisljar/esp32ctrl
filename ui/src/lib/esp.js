@@ -2,7 +2,7 @@ import miniToastr from 'mini-toastr';
 import { loader } from './loader';
 
 
-const fetchProgress = (url, opts={}) => {
+export const fetchProgress = (url, opts={}) => {
     return new Promise( (res, rej)=>{
         var xhr = new XMLHttpRequest();
         xhr.open(opts.method || 'get', url);
@@ -44,3 +44,5 @@ export const deleteFile = async (filename) => {
 export const loadDevices = async (url) => {
     return fetch(`${url}/plugin_state/`).then(response => response.json()); //.then(response => response.Sensors);
 }
+
+export default { fetchProgress, storeFile, deleteFile, loadDevices };
