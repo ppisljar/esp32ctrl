@@ -453,7 +453,7 @@ static esp_err_t index_get_handler(httpd_req_t *req)
 {
     char filepath[FILE_PATH_MAX];
     strcpy(filepath, ((struct file_server_data *)req->user_ctx)->base_path);
-    strcpy(filepath + strlen(filepath), "/index.dev.htm");
+    strcpy(filepath + strlen(filepath), "/index.htm.gz");
     ESP_LOGI(TAG, "getting index %s", filepath);
     http_resp_file(req, filepath);
     return ESP_OK;

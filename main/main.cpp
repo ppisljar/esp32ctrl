@@ -145,6 +145,10 @@ Plugin* UdpServerPlugin_myProtoype = Plugin::addPrototype(16, new UdpServerPlugi
 #include "plugins/p017_vml6040.h"
 Plugin* VEML6040Plugin_myProtoype = Plugin::addPrototype(17, new VEML6040Plugin);
 #endif
+#ifdef CONFIG_ENABLE_P018
+#include "plugins/p018_digital_input.h"
+Plugin* DigitalInputPlugin_myProtoype = Plugin::addPrototype(18, new DigitalInputPlugin);
+#endif
 
 uint8_t ledPin;
 bool ledInverted;

@@ -1,6 +1,6 @@
 import { Device } from './_defs';
 
-class InputSwitch extends Device {
+class DigitalInput extends Device {
     constructor() {
         super();
 
@@ -9,6 +9,7 @@ class InputSwitch extends Device {
             configs: {
                 gpio: { name: 'GPIO', type: 'gpio' },
                 invert: { name: 'Invert', type: 'checkbox' },
+                interval: { name: 'Interval', type: 'number' },
             }
         };
 
@@ -32,4 +33,4 @@ class InputSwitch extends Device {
     }
 }
 
-export const inputSwitch = new InputSwitch();
+export const digital_input = new DigitalInput();

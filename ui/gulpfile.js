@@ -11,6 +11,8 @@ var inlinesource = require('gulp-inline-source');
 var gzip = require('gulp-gzip');
 const urlPrefixer = require('gulp-url-prefixer');
 var gutil = require('gulp-util');
+var rename = require('gulp-rename');
+var replace = require('gulp-string-replace');
 
 // Set the browser that you want to support
 const AUTOPREFIXER_BROWSERS = [
@@ -27,17 +29,18 @@ const AUTOPREFIXER_BROWSERS = [
 
   // Gulp task to minify CSS files
 gulp.task('styles', function () {
-    return gulp.src('./src/styles.css')
+    return gulp.src(['./src/styles.css'])
       // Auto-prefix css styles for cross browser compatibility
       .pipe(autoprefixer({browsers: AUTOPREFIXER_BROWSERS}))
       // Minify the file
       .pipe(csso())
+      .pipe(gzip())
       // Output
       .pipe(gulp.dest('./build'))
   });
 
   gulp.task('styles_ext', function () {
-    return gulp.src(['./src/pure-min.css', './src/bulma.min.css'])
+    return gulp.src(['./src/bulma.min.css'])
       .pipe(gzip())
       .pipe(gulp.dest('./build'));
   });
@@ -50,27 +53,29 @@ gulp.task('styles', function () {
 
   gulp.task('pages', function() {
     return gulp.src(['./src/index.htm'])
+      .pipe(rename('index.dev.htm'))
       .pipe(htmlmin({
         collapseWhitespace: true,
         removeComments: true
       }))
       .pipe(gzip())
-      .pipe(gulp.dest('./build/dev'));
+      .pipe(gulp.dest('./build'));
   });
 
 gulp.task('pagesinline', function() {
     return gulp.src(['./src/index.htm'])
+      .pipe(replace('http://localhost:8080/src/styles.css', '/styles.css.gz'))
+      .pipe(replace('http://localhost:8080/build/app.js', '/app.js.gz'))
       .pipe(htmlmin({
         collapseWhitespace: true,
         removeComments: true
       }))
-      .pipe(inlinesource())
       .pipe(gzip())
       .pipe(gulp.dest('./build'));
   });
 
 gulp.task('copytospiffs', function () {
-  gulp.src(['./src/index.dev.htm', './build/app.js.gz', './build/bulma.min.css.gz', './build/iconpicker.js']).pipe(gulp.dest('../data/'))
+  gulp.src(['./build/index.htm.gz', './build/index.dev.htm.gz', './build/app.js.gz', './build/styles.css.gz', './build/bulma.min.css.gz', './build/iconpicker.js.gz']).pipe(gulp.dest('../data/'))
 });
 
 // Gulp task to minify all files

@@ -10,7 +10,7 @@ module.exports = env => ({
         iconpicker: './src/plugins/iconpicker/index.js',
     },
     output: {
-        path: path.resolve(__dirname, 'build'),
+        path: path.resolve(__dirname, 'webpack'),
     },
     plugins: [
         new LiveReloadPlugin(),

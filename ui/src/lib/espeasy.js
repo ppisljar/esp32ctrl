@@ -40,3 +40,7 @@ export const deleteFile = async (filename) => {
         miniToastr.error(e.message, '', 5000);
     });
 }
+
+export const loadDevices = async (url) => {
+    return fetch(`${url}/plugin_state/`).then(response => response.json()); //.then(response => response.Sensors);
+}

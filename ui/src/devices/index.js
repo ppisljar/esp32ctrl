@@ -14,6 +14,7 @@ import { http } from './13_http';
 import { dummy } from './14_dummy';
 import { dimmer } from './15_dimmer';
 import { udp_server } from './16_udp_server';
+import { digital_input } from './18_digital_input';
 
 // import { bmp085 } from './6_bmp085';
 // import { pcf8591 } from './7_pcf8591';
@@ -59,7 +60,7 @@ import { udp_server } from './16_udp_server';
 
 export const devices = [
     { name: '- None -', value: 0, fields: [] },
-    { name: 'Generic - Switch', value: 1, fields: inputSwitch },
+    { name: 'Generic - Digital Output', value: 1, fields: inputSwitch },
     { name: 'Environment - DHT11/12/22  SONOFF2301/7021', value: 2, fields: dht },
     { name: 'Environment - BME280/BMP280', value: 3, fields: bmx280 },
     { name: 'Environment - DS18b20', value: 4, fields: ds18b20 },
@@ -75,6 +76,7 @@ export const devices = [
     { name: 'Generic - Dummy Device', value: 14, fields: dummy },
     { name: 'Generic - Dimmer', value: 15, fields: dimmer },
     { name: 'Generic - UDP Server', value: 16, fields: udp_server },
+    { name: 'Generic - Digital Input', value: 18, fields: digital_input },
     //{ name: 'Light/Lux - BH1750', value: 10, fields: bh1750 },
     // { name: 'Extra IO - ProMini Extender', value: 11, fields: pme },
     // { name: 'Display - LCD2004', value: 12, fields: lcd2004 },
