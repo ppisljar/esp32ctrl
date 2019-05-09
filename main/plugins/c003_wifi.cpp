@@ -181,7 +181,9 @@ bool WiFiPlugin::init(JsonObject &params) {
     } 
     else {
         ESP_LOGW(TAG, "No wifi SSID stored!");
+        
         if (mode == 0) { // AP
+            ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
             inet_pton(AF_INET, "192.168.4.1", &status.local_ip);
             dnsServer.start(53, "*", &status.local_ip);
             ssid = (char*)params["ap_ssid"].as<char*>();
