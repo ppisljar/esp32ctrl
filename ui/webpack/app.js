@@ -12484,7 +12484,7 @@ const deleteFile = async filename => {
   });
 };
 const loadDevices = async url => {
-  return fetch(`${url}/plugin_state/`).then(response => response.json()); //.then(response => response.Sensors);
+  return fetch(`${url || ''}/plugin_state/`).then(response => response.json()); //.then(response => response.Sensors);
 };
 /* harmony default export */ __webpack_exports__["default"] = ({
   fetchProgress,

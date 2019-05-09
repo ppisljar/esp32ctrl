@@ -42,7 +42,7 @@ export const deleteFile = async (filename) => {
 }
 
 export const loadDevices = async (url) => {
-    return fetch(`${url}/plugin_state/`).then(response => response.json()); //.then(response => response.Sensors);
+    return fetch(`${url || ''}/plugin_state/`).then(response => response.json()); //.then(response => response.Sensors);
 }
 
 export default { fetchProgress, storeFile, deleteFile, loadDevices };
