@@ -27,10 +27,13 @@ class DropPageComponent extends Component {
     }
 
     onRightClickHandler = (item) => {
-        // delete input and output connections
-        this.state.connections = this.state.connections.filter(c => {
-            return !c.to.startsWith(`node-${item.id}-`) && !c.from.startsWith(`node-${item.id}-`);
-        })
+        for (let i = this.state.connections.length - 1; i >= 0; i--) {
+            const c = this.state.connections[i];
+            if (c.to.startsWith(`node-${item.id}-`) || c.from.startsWith(`node-${item.id}-`)) {
+                this.state.connections.splice(i, 1);
+            }
+        }
+       
         const index = this.state.items.findIndex(i => i.id == item.id);
         this.state.items.splice(index, 1);
         this.forceUpdate();
