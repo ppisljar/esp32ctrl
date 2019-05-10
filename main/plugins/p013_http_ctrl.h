@@ -8,7 +8,7 @@
 class HTTPCtrlPlugin: public Plugin {
     private:
         int value = 0;
-        
+        Type value_t = Type::integer;
     public:
         bool connected = false;
         esp_http_client_config_t http_cfg = {};

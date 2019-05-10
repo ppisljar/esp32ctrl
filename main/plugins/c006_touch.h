@@ -17,6 +17,7 @@ class TouchPlugin: public Plugin {
     
     public:
         uint8_t state;
+        Type state_t = Type::byte;
         DEFINE_PLUGIN(TouchPlugin);
 
         static void task(void *pvParameters);

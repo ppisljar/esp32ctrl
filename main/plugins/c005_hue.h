@@ -14,6 +14,7 @@ class HueEmulatorPlugin: public Plugin {
     
     public:
         uint8_t state;
+        Type state_t = Type::byte;
         Espalexa *alexa;
         DEFINE_PLUGIN(HueEmulatorPlugin);
 

@@ -7,7 +7,6 @@
 static const char *TAG = "DimmerPlugin";
 
 PLUGIN_CONFIG(DimmerPlugin, interval, gpio_zc, outputs)
-PLUGIN_STATS(DimmerPlugin, state[0], state[1], state[2], state[3], state[4], state[5], state[6], state[7]);
 
 #define MIN(x, y) ((x > y) ? y : x);
 #define MAX(x, y) ((x > y) ? x : y);
@@ -87,7 +86,7 @@ bool DimmerPlugin::init(JsonObject &params) {
 
     gpio_zc = (*cfg)["gpio_zc"] | 255;
     JsonArray &outputs = (*cfg)["outputs"];
-    
+
     if (gpio_zc != 255) {
         io.setDirection(gpio_zc, GPIO_MODE_INPUT);
         gpio_set_intr_type((gpio_num_t)gpio_zc, GPIO_INTR_POSEDGE);
@@ -134,6 +133,29 @@ bool DimmerPlugin::init(JsonObject &params) {
     return true;
 }
 
+bool DimmerPlugin::getState(JsonObject &params) {
+    char *stateName;
+    for (int n = 0; n < 8; n++) {
+        stateName = (char*)(*state_cfg)[n]["name"].as<char*>();
+        params[stateName] = state[n];
+    }
+    return true;
+}
+
+bool DimmerPlugin::setState(JsonObject &params) {
+    char *stateName;
+    for (int n = 0; n < 8; n++) {
+        stateName = (char*)(*state_cfg)[n]["name"].as<char*>();
+        state[n] = params[stateName];
+    }
+    return true;
+}
+
+void* DimmerPlugin::getStatePtr(uint8_t n) {
+    if (n > 8) return nullptr;
+    return &state[n];
+}
+
 void DimmerPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
     ESP_LOGI(TAG, "setting dimmer state %d to %d", n, *val);
     if (n < 8 && state[n] != *val) {
@@ -143,6 +165,18 @@ void DimmerPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
     } else {
         ESP_LOGW(TAG, "invalid state id: %d", n);
     }
+}
+
+void* DimmerPlugin::getStateVarPtr(int n, Type *t) { 
+    if (n > 8) return NULL;    
+    if (t != nullptr) *t = Type::byte; 
+    return &state[n]; 
+} 
+
+void DimmerPlugin::setStateVarPtr_(int n, void* val, Type t, bool shouldNotify) {
+    if (n > 8) return;
+    convert(&state[n], Type::byte, val, t);
+    if (shouldNotify) notify(this, n, &state[n], Type::byte); 
 }
 
 

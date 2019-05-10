@@ -9,6 +9,8 @@ class DHTPlugin: public Plugin {
     private:
         float temperature = 0;
         float humidity = 0;
+        Type temperature_t = Type::decimal;
+        Type humidity_t = Type::decimal;
 
         float temp[2];
         TaskHandle_t task_h;

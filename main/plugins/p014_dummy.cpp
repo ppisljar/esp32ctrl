@@ -63,6 +63,20 @@ void DummyPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
     }
 }
 
+void* DummyPlugin::getStateVarPtr(int n, Type *t) { 
+    if (n > values_len || values[n] == nullptr) return nullptr;
+    if (t != nullptr) *t = (Type)values[n]->type; 
+    return values[n]->value; 
+} 
+
+void DummyPlugin::setStateVarPtr_(int n, void* val, Type t, bool shouldNotify) {
+    if (n < values_len && values[n] != nullptr && values[n]->name != nullptr) {
+        convert(values[n]->value, (Type)values[n]->type, val, t);
+        if (shouldNotify) notify(this, n, values[n]->value, values[n]->type); 
+    }
+}
+
+
 DummyPlugin::~DummyPlugin() {
     
 }

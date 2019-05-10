@@ -10,6 +10,7 @@ class CronPlugin: public Plugin {
     
     public:
         uint8_t state;
+        Type state_t = Type::byte;
         DEFINE_PLUGIN(CronPlugin);
 
         void addCron(unsigned char *expr_string, void* callback);

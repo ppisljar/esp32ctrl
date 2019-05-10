@@ -13,6 +13,7 @@ class NTPPlugin: public Plugin {
     private:
         bool state;
         time_t current_time;
+        Type current_time_t = Type::integer;
     public:
         DEFINE_PLUGIN(NTPPlugin);
         void getTime(const char *);

@@ -13,6 +13,7 @@ class UdpServerPlugin: public Plugin {
         int port = 5000;
         uint8_t packet_len = 0;
         uint8_t state;
+        Type state_t = Type::byte;
         TaskHandle_t task_h;
     public:
         DEFINE_PPLUGIN(UdpServerPlugin, 16);

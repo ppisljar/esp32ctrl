@@ -5,7 +5,9 @@
 
 class RegulatorPlugin: public Plugin {
     private:
-        bool output = 0;
+        uint8_t output = 0;
+        Type output_t = Type::byte;
+        
         StaticJsonBuffer<JSON_OBJECT_SIZE(3)> jb;
         TaskHandle_t task_h;
     public:

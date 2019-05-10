@@ -2,10 +2,10 @@ import {Device} from './_defs';
 
 const valueTypes = [
     { name: 'Bit', value: 0 },
-    { name: 'Byte', value: 1 },
-    { name: 'Int16', value: 2 },
-    { name: 'Int32', value: 4 },
-    { name: 'String', value: 5 },
+    { name: 'Byte', value: 0 },
+    { name: 'Integer', value: 1 },
+    { name: 'Decimal', value: 2 },
+    { name: 'String', value: 3 },
 ]
 
 class Dummy extends Device {

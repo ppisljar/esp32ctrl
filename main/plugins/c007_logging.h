@@ -10,6 +10,7 @@ class LoggingPlugin: public Plugin {
     public:
         FILE *f;
         uint8_t state;
+        Type state_t = Type::byte;
         DEFINE_PLUGIN(LoggingPlugin);
 };
 

@@ -8,7 +8,9 @@ class TemplatePlugin: public Plugin {
         uint8_t setting_1 = 60;     // your plugin settings
         bool setting_2 = true;
         uint8_t state_1 = 0;        // your plugin state (variables that are not stored)
-        bool state_2 = false;
+        Type state_1_t = Type::byte;
+        int state_2 = false;
+        Type state_2_t = Type::integer;
     public:
         DEFINE_PLUGIN(TemplatePlugin);
 

@@ -18,6 +18,7 @@ struct subscribe_info {
 class MQTTPlugin: public Plugin {
     private:
         int value = 0;
+        Type value_t = Type::integer;
         
     public:
         bool connected = false;

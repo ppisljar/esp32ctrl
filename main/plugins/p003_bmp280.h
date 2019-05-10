@@ -9,6 +9,10 @@ class BMP280Plugin: public Plugin {
         float temperature = 0;
         float pressure = 0;
         float humidity = 0;
+        Type temperature_t = Type::decimal;
+        Type pressure_t = Type::decimal;
+        Type humidity_t = Type::decimal;
+
         int type = 0;
         float temp[3];
         TaskHandle_t task_h;

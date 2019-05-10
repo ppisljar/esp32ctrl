@@ -4,7 +4,59 @@
 #include "ArduinoJson.h"
 #include "esp_log.h"
 #include "esp_system.h"
+#include "../lib/controller.h"
 #include <map>
+
+enum Type : uint8_t { byte, integer, decimal, string };
+
+// gets a pointer, type of variable at pointer, pointer to source and type of source
+// template is used so we get correct destination pointer in (instead of void*) and
+// type conversions (float to int) works correctly
+template <typename T>
+void convert(T ptr, Type to, void* val, Type from) {
+    if (to < Type::string) {
+        if (from == Type::string) {
+            double d = atof((const char *)val);
+            *ptr = d;
+        } else if (from == Type::integer) {
+            *ptr = *(int*)val;
+        } else if (from == Type::decimal) {
+            *ptr = *(float*)val;
+        } else if (from == Type::byte) {
+            *ptr = *(unsigned char*)val;
+        } else {
+            if (to == Type::byte) *ptr = *(unsigned char*)val;
+            else if (to == Type::integer) *ptr = *(int*)val;
+            else if (to == Type::decimal) *ptr = *(float*)val;
+        }
+    } else if (to == Type::string) {
+        if (from == Type::string) {
+            strcpy((char*)ptr, (const char*)val);   // this is a problem, we don't know the maximum size of destination string here
+        } else if (from == Type::integer) {
+            //itoa(*(int*)val, (char*)ptr, 10);
+        } else if (from == Type::decimal) {
+           // dtoa(*(float*)val, (char*)ptr, 10);   
+        } else if (from == Type::byte) {
+            //itoa(*(uint8_t)val, (char*)ptr, 10);
+        }
+    } else {    // bytes, minimum 4, the actual number in type tells us the length
+        if (from == Type::string) {
+            strncpy((char*)ptr, (const char*)val, to);
+        } else if (from > Type::string) {
+            memcpy(ptr, val, to);
+        } else if (from == Type::byte) {
+            memcpy(ptr, val, 1);
+        } else {
+            memcpy(ptr, val, 4);
+        }
+    }
+}
+
+#define SET_STATE(plugin, var, var_index, shouldNotify, value, value_type) plugin->var = value; \
+    if (shouldNotify) notify(plugin, var_index, &plugin->var, value_type)            
+
+#define NOTIFY_CONTROLLER(shouldNotify, plugin, var, var_index, value_type) if (shouldNotify) notify(plugin, var_index, &plugin->var, value_type)
+
 
 #define __CONCATENATE(arg1, arg2) __CONCATENATE2(arg1, arg2)
 #define __CONCATENATE1(arg1, arg2) __CONCATENATE2(arg1, arg2)
@@ -76,6 +128,11 @@ bool TYPE::getConfig(JsonObject &params) { \
     VARIABLE = params[stateName];
 #define PLUGIN___STATS_GETPTR(VARIABLE, I) if (val == I) return &VARIABLE;
 #define PLUGIN___STATS_SETPTR(VARIABLE, I) if (n == I) VARIABLE = *val;
+#define PLUGIN___STATS_GETVARPTR(VARIABLE, I) if (n == I) { if (t != nullptr) *t = VARIABLE ## _t; return &VARIABLE; }
+#define PLUGIN___STATS_SETVARPTR(VARIABLE, I) if (n == I) { \
+  convert(&VARIABLE, VARIABLE ## _t, val, t); \
+  if (shouldNotify) notify(this, I, &VARIABLE, VARIABLE ## _t); \
+}
 #define PLUGIN_STATS(TYPE, ...) \
 bool TYPE::getState(JsonObject &params) { \
     char *stateName; \
@@ -90,6 +147,13 @@ bool TYPE::setState(JsonObject &params) { \
 void* TYPE::getStatePtr(uint8_t val) { \
     FOREACH_MACRO(PLUGIN___STATS_GETPTR, __VA_ARGS__) \
     return NULL; \
+} \
+void* TYPE::getStateVarPtr(int n, Type *t) { \
+    FOREACH_MACRO(PLUGIN___STATS_GETVARPTR, __VA_ARGS__) \
+    return NULL; \
+} \
+void TYPE::setStateVarPtr_(int n, void* val, Type t, bool shouldNotify) { \
+    FOREACH_MACRO(PLUGIN___STATS_SETVARPTR, __VA_ARGS__) \
 }
 
 #define DEFINE_PLUGIN(TYPE) \
@@ -101,7 +165,9 @@ void* TYPE::getStatePtr(uint8_t val) { \
     bool setConfig(JsonObject &params); \
     bool getState(JsonObject& ); \
     bool getConfig(JsonObject& ); \
-    void* getStatePtr(uint8_t ); 
+    void* getStatePtr(uint8_t ); \
+    void* getStateVarPtr(int, Type*); \
+    void setStateVarPtr_(int, void*, Type, bool)
 
 #define DEFINE_PPLUGIN(TYPE, TYPENR) \
     Plugin* clone() const { \
@@ -113,11 +179,11 @@ void* TYPE::getStatePtr(uint8_t val) { \
     bool getState(JsonObject& ); \
     bool getConfig(JsonObject& ); \
     void* getStatePtr(uint8_t ); \
+    void* getStateVarPtr(int, Type*); \
+    void setStateVarPtr_(int, void*, Type, bool); \
     ~TYPE(); \
     static const uint8_t p_type = TYPENR;
 
-#define SET_STATE(plugin, var, var_index, shouldNotify, value, value_type) plugin->var = value; \
-            if (shouldNotify) notify(plugin, var_index, &plugin->var, value_type)
 
 class Plugin
 {
@@ -135,6 +201,12 @@ class Plugin
         void setStatePtr(uint8_t var, uint8_t* val, bool notify = true) {
             setStatePtr_(var, val, notify);
         };
+
+        virtual void* getStateVarPtr(int, Type*) = 0;
+        virtual void setStateVarPtr_(int, void*, Type, bool notify) = 0;
+        void setStateVarPtr(int n, void* v, Type t, bool notify = true) {
+            setStateVarPtr_(n, v, t, notify);
+        }
 
         static bool hasType(int type);
         static Plugin* getPluginInstance(int type);

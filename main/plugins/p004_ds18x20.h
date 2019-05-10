@@ -7,6 +7,7 @@
 class DS18x20Plugin: public Plugin {
     private:
         float temperature[16];
+        Type temperature_t[16];
         ds18x20_addr_t addrs[16];
         int sensor_count = 0;
         TaskHandle_t task_h;

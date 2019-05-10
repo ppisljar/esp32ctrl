@@ -7,6 +7,7 @@
 class ADS111xPlugin: public Plugin {
     private:
         int value = 0;
+        Type value_t = Type::integer;
         ADS1115 *adc0;
         uint8_t addr;
         struct IO_DIGITAL_PINS pins;

@@ -25,7 +25,8 @@ extern IO io;
 
 
 struct wifi_status_struct {
-    bool wifi_connected;
+    uint8_t wifi_connected;
+    Type wifi_connected_t = Type::byte;
     in_addr_t local_ip;
     uint8_t mac[6];
 };

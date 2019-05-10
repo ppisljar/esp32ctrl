@@ -17,6 +17,7 @@
 class I2CPlugin: public Plugin {
     private:
         bool state;
+        Type state_t = Type::byte;
     public:
         DEFINE_PLUGIN(I2CPlugin);
         void setStatePtr_(uint8_t n, uint8_t *val, bool notify);

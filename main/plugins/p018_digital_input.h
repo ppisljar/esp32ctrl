@@ -7,7 +7,8 @@ class DigitalInputPlugin: public Plugin {
     private:
         int interval = 60;
         int gpio = 255;
-        bool state = 0;
+        uint8_t state = 0;
+        Type state_t = Type::byte;
         TaskHandle_t task_h;
     public:
         DEFINE_PPLUGIN(DigitalInputPlugin, 18);

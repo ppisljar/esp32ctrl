@@ -7,7 +7,8 @@
 class SwitchPlugin: public Plugin {
     private:
         int gpio = 255;
-        bool state = 0;
+        uint8_t state = 0;
+        Type state_t = Type::byte;
         
     public:
         DEFINE_PPLUGIN(SwitchPlugin, 1);

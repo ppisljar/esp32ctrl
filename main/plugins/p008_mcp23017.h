@@ -7,6 +7,7 @@
 class MCP23017Plugin: public Plugin {
     private:
         int value = 0;
+        Type value_t = Type::integer;
         uint8_t addr;
         struct IO_DIGITAL_PINS pins;
     public:

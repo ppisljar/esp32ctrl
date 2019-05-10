@@ -29,6 +29,7 @@ class TimersPlugin: public Plugin {
     
     public:
         uint8_t state;
+        Type state_t = Type::byte;
         
         DEFINE_PLUGIN(TimersPlugin);
 

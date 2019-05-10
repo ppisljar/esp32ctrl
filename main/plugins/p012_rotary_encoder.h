@@ -6,7 +6,7 @@
 class RotaryEncoderPlugin: public Plugin {
     private:
         int value = 0;
-        
+        Type value_t = Type::integer;
     public:
         DEFINE_PPLUGIN(RotaryEncoderPlugin, 12);
 
