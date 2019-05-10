@@ -14,7 +14,9 @@ bool SwitchPlugin::init(JsonObject &params) {
         ESP_LOGI(P001_TAG, "setting gpio %d to OUTPUT", gpio);
         io.setDirection(gpio, GPIO_MODE_INPUT_OUTPUT);
     }
+
     
+
     return true;
 }
 
@@ -33,6 +35,28 @@ void SwitchPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
         ESP_LOGW(P001_TAG, "invalid state id: %d", n);
     }
 }
+
+// all numbers double ? state could also be a string or a byte array
+// integer, decimal, bytes
+// 
+// convert(T* val, Type out) {
+//    if (to == number) { if (from == string) str_to_num(); else return *val; }
+//    if (to == string) { if (from == string) strncpy(); else num_to_str(); }
+// }
+
+// template <typename T>
+// setStatePtr(uint n, T* val, Type t) {
+//     if (n == 0) state = convert<int32_t>(val, t); // should work for numbers
+// }
+
+// cdiggins::any SwitchPlugin::getStateVal(uint8_t n) {
+//     if (n == 0) return state;
+//     return nullptr;
+// }
+
+// void SwitchPlugin::setStateVal(uint8_t n, cdiggins::any val) {
+//     if (n == 0) state = val ;
+// }
 
 SwitchPlugin::~SwitchPlugin() {
 }
