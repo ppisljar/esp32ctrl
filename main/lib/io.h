@@ -95,11 +95,25 @@ class ESP_digital_write : public IO_digital_write {
 };
 
 class ESP_analog_read : public IO_analog_read {
+    private:
+        uint8_t ch[8] = { 4, 5, 6, 7, 0, 1, 2, 3 };
+        bool ch_enabled[8] = {};
     public:
         ESP_analog_read() { };
         uint16_t operator()(uint8_t pin) {
             if (pin < 32) return 0;
-            return adc1_get_raw((adc1_channel_t)(pin-32));
+            else {
+                adc1_channel_t channel = (adc1_channel_t)ch[pin-32];
+                if (!ch_enabled[channel]) {
+                    esp_err_t err = adc1_config_channel_atten(channel, ADC_ATTEN_0db /*(adc_atten_t)atten*/);
+                    if (err != ESP_OK) {
+                        ESP_ERROR_CHECK(err);
+                        return 0;
+                    }
+                    ch_enabled[channel] = true;
+                }
+                return adc1_get_raw(channel);
+            }
         }
 };
 

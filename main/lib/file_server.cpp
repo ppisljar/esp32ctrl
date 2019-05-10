@@ -1172,7 +1172,7 @@ static void json_close(httpd_req_t *req, bool arr = false) {
 
 static void json_number(httpd_req_t *req, const char* name, const char* value) {
   json_quote_name(req, name);
-  json_quote_val(req, value);
+  httpd_resp_sendstr_chunk(req, value);
   lastLevel = level;
 }
 
