@@ -1231,6 +1231,42 @@ static esp_err_t wifiscan_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+#define TRUE_S "true"
+static esp_err_t capabilities_handler(httpd_req_t *req)
+{   
+    json_init();
+    json_open(req);
+    #ifdef CONFIG_ENABLE_C001_I2C 
+    json_number(req, "i2c", TRUE_S); 
+    #endif
+    #ifdef CONFIG_ENABLE_C002_NTP 
+    json_number(req, "ntp", TRUE_S); 
+    #endif
+    #ifdef CONFIG_ENABLE_C004_TIMERS 
+    json_number(req, "timers", TRUE_S); 
+    #endif
+    #ifdef CONFIG_ENABLE_C005_HUE 
+    json_number(req, "hue", TRUE_S); 
+    #endif
+    #ifdef CONFIG_ENABLE_C006 
+    json_number(req, "touch", TRUE_S); 
+    #endif
+    #ifdef CONFIG_ENABLE_C007
+    json_number(req, "logging", TRUE_S); 
+    #endif
+    #ifdef CONFIG_ENABLE_C008
+    json_number(req, "cron", TRUE_S); 
+    #endif
+    #ifdef CONFIG_ENABLE_C009
+    json_number(req, "bluetooth", TRUE_S); 
+    #endif
+    
+    json_close(req, true);
+    httpd_resp_sendstr_chunk(req, NULL);
+    
+    return ESP_OK;
+}
+
 httpd_handle_t server = NULL;
 
 void http_quick_register(const char * uri, httpd_method_t method,  esp_err_t handler(httpd_req_t *req), void *ctx) {
@@ -1312,6 +1348,7 @@ esp_err_t start_file_server(const char *base_path)
     http_quick_register("/cmd", HTTP_POST, cmd_handler, server_data);
     http_quick_register("/system", HTTP_GET, system_handler, server_data);
     http_quick_register("/logs", HTTP_GET, logs_handler, server_data);
+    http_quick_register("/capabilities", HTTP_GET, capabilities_handler, server_data);
 
     http_quick_register("/filelist", HTTP_GET, http_resp_dir_html, server_data);
     http_quick_register("/reboot", HTTP_GET, reboot_handler, server_data);

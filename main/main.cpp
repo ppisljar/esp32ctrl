@@ -26,34 +26,34 @@ Plugin *active_plugins[10];
 WiFiPlugin *wifi_plugin;
 
 
-#ifdef ENABLE_C001_I2C
+#ifdef CONFIG_ENABLE_C001_I2C
 #include "plugins/c001_i2c.h"
 #endif
 
-#ifdef ENABLE_C002_NTP
+#ifdef CONFIG_ENABLE_C002_NTP
 #include "plugins/c002_ntp.h"
 NTPPlugin *ntp_plugin;
 #endif
 
-// #ifdef ENABLE_C003
+// #ifdef CONFIG_ENABLE_C003
 // #endif
 
-//#ifdef ENABLE_C004_TIMERS
+//#ifdef CONFIG_ENABLE_C004_TIMERS
 #include "plugins/c004_timers.h"
 TimersPlugin *timers_plugin;
 //#endif
 
-#ifdef ENABLE_C005_HUE
+#ifdef CONFIG_ENABLE_C005_HUE
 #include "plugins/c005_hue.h"
 HueEmulatorPlugin *hue_plugin;
 #endif
 
-#ifdef ENABLE_C006
+#ifdef CONFIG_ENABLE_C006
 #include "plugins/c006_touch.h"
 TouchPlugin *touch_plugin;
 #endif
 
-#ifdef ENABLE_C007
+#ifdef CONFIG_ENABLE_C007
 #include "plugins/c007_logging.h"
 LoggingPlugin *logging_plugin;
 #endif
@@ -63,7 +63,7 @@ LoggingPlugin *logging_plugin;
 CronPlugin *cron_plugin;
 //#endif
 
-#ifdef ENABLE_C009
+#ifdef CONFIG_ENABLE_C009
 #include "bluetooth.h"
 #include "plugins/c009_bluetooth.h"
 BlueToothPlugin *bluetooth_plugin;
@@ -227,13 +227,13 @@ extern "C" void app_main()
         }
     }
 
-    #ifdef ENABLE_C004_TIMERS
+    #ifdef CONFIG_ENABLE_C004_TIMERS
     JsonObject &timer_config = cfgObject["hardware"];
     timers_plugin = new TimersPlugin();
     timers_plugin->init(timer_config);
     #endif
 
-    #ifdef ENABLE_C009
+    #ifdef CONFIG_ENABLE_C009
     JsonObject &bluetooth_config = cfgObject["bluetooth"];
     if (bluetooth_config["enabled"]) {
         if (bluetooth_config["server"]["enabled"]) {
@@ -246,12 +246,13 @@ extern "C" void app_main()
     }
     #endif
 
-    #ifdef ENABLE_C006
+    #ifdef CONFIG_ENABLE_C006
+    ESP_LOGI(TAG, "starting touch");
     touch_plugin = new TouchPlugin();
     touch_plugin->init(cfgObject);
     #endif
 
-    #ifdef ENABLE_C001_I2C
+    #ifdef CONFIG_ENABLE_C001_I2C
     if (cfgObject["hardware"]["i2c"]["enabled"]) {
         JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];
         i2c_plugin = new I2CPlugin();
@@ -262,7 +263,7 @@ extern "C" void app_main()
     }
     #endif
 
-    #ifdef ENABLE_C002_NTP
+    #ifdef CONFIG_ENABLE_C002_NTP
     if (cfgObject["ntp"]["enabled"]) {
         JsonObject &ntp_conf = cfgObject["ntp"];
         ntp_plugin = new NTPPlugin();
@@ -270,7 +271,7 @@ extern "C" void app_main()
     }
     #endif
 
-    #ifdef ENABLE_C005_HUE
+    #ifdef CONFIG_ENABLE_C005_HUE
     if (cfgObject["alexa"]["enabled"]) {
         JsonObject &hue_conf = cfgObject["alexa"];
         hue_plugin = new HueEmulatorPlugin();

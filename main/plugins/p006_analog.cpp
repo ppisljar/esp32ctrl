@@ -39,8 +39,9 @@ bool AnalogPlugin::init(JsonObject &params) {
     if (gpio != 255) {
         // todo: we need init on IO pins (setDirection for digital, something for analog)
         // io.init(gpio, options);
-        if (adc1_config_channel_atten((adc1_channel_t)gpio, (adc_atten_t)atten) != ESP_OK) {
-            ESP_LOGE(P006_TAG, "error initializing adc");
+        esp_err_t err = adc1_config_channel_atten((adc1_channel_t)gpio, (adc_atten_t)atten);
+        if (err != ESP_OK) {
+            ESP_ERROR_CHECK(err);
             return false;
         }
         xTaskCreatePinnedToCore(this->task, P006_TAG, 4096, this, 5, &task_h, 1);
