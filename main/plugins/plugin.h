@@ -33,11 +33,12 @@ void convert(T ptr, Type to, void* val, Type from) {
         if (from == Type::string) {
             strcpy((char*)ptr, (const char*)val);   // this is a problem, we don't know the maximum size of destination string here
         } else if (from == Type::integer) {
-            //itoa(*(int*)val, (char*)ptr, 10);
+            itoa(*(int*)val, (char*)ptr, 10);
         } else if (from == Type::decimal) {
-           // dtoa(*(float*)val, (char*)ptr, 10);   
+            strcpy((char*)ptr, std::to_string(*(float*)val).c_str()); // this is a problem, we don't know the maximum size of dest string
+            //dtostrf(*(float*)val, 10, 4, (char*)ptr);   
         } else if (from == Type::byte) {
-            //itoa(*(uint8_t)val, (char*)ptr, 10);
+            itoa(*(uint8_t*)val, (char*)ptr, 10);
         }
     } else {    // bytes, minimum 4, the actual number in type tells us the length
         if (from == Type::string) {
