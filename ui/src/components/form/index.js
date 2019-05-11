@@ -79,7 +79,7 @@ export class Form extends Component {
                 );
             case 'number':
                 return (
-                    <input id={id} type="number" value={value} min={config.min} max={config.max} onChange={this.onChange(id, varName, config)}/>
+                    <input id={id} type="number" value={value} step={config.step} min={config.min} max={config.max} onChange={this.onChange(id, varName, config)}/>
                 ) ;
             case 'ip':
                 const ip = value ? longToByteArray(value): [0,0,0,0];

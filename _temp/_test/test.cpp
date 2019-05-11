@@ -115,6 +115,9 @@ int main()
     float f2 = 0;
     convert(&f2, Type::decimal, state_ptr, state_type); 
 
+    // read and convert state from plugin
+    float f3 = p1_2->getState(0, Type::decimal);
+
     cout << f1 << "\n" << f2 << "\n";
 
     return 0;

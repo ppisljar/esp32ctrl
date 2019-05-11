@@ -339,12 +339,10 @@ uint8_t run_rule(byte* start, void* start_val, uint8_t start_val_length, uint8_t
                         case 0:
                             state_val = p->getStateVarPtr(cmd[3], &state_type);                            break;
                         case 1:
-                            temp_v = p->getStateVarPtr(cmd[3], &temp_t);
-                            convert(&x, Type::decimal, temp_v, temp_t);
+                            CONVERT_STATE(x, Type::decimal, p, cmd[3]);
                             break;
                         case 2:
-                            temp_v = p->getStateVarPtr(cmd[3], &temp_t);  
-                            convert(&y, Type::decimal, temp_v, temp_t);
+                            CONVERT_STATE(y, Type::decimal, p, cmd[3]);
                             break;
                     }
                 }

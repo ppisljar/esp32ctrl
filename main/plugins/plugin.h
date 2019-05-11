@@ -53,6 +53,13 @@ void convert(T ptr, Type to, void* val, Type from) {
     }
 }
 
+#define CONVERT_STATE(var, type, plugin, state) { \
+    void* temp_convert_state_val; \
+    Type temp_convert_state_type; \
+    temp_convert_state_val = plugin->getStateVarPtr(state, &temp_convert_state_type); \
+    convert(&var, type, temp_convert_state_val, temp_convert_state_type); \
+}
+
 #define SET_STATE(plugin, var, var_index, shouldNotify, value, value_type) plugin->var = value; \
     if (shouldNotify) notify(plugin, var_index, &plugin->var, value_type)            
 
