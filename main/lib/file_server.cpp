@@ -969,12 +969,13 @@ static esp_err_t plugin_handler(httpd_req_t *req) {
                 return ESP_OK;
             }
             ESP_LOGD("FFFF", "setting state of %d:%d to %d", deviceId, valueId, valueByte);
-            active_plugins[deviceId]->setStatePtr_((uint8_t)valueId, (uint8_t*)&valueByte, true);
+            active_plugins[deviceId]->setStateVarPtr_((uint8_t)valueId, &valueByte, Type::integer, true);
         } else {
             ESP_LOGD("FFFF", "getting state of %d:%d", deviceId, valueId);
-            int valueByte = *((uint8_t*)active_plugins[deviceId]->getStatePtr((uint8_t)valueId));
+            Type valt;
+            void * val = ((uint8_t*)active_plugins[deviceId]->getStateVarPtr((uint8_t)valueId, &valt));
             char valueStr[10] = {};
-            itoa(valueByte, valueStr, 10);
+            convert(valueStr, Type::string, val, valt);
             httpd_resp_sendstr(req, valueStr);
         }
     } else if (strcmp(action, "config") == 0) {

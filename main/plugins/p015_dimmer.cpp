@@ -151,22 +151,6 @@ bool DimmerPlugin::setState(JsonObject &params) {
     return true;
 }
 
-void* DimmerPlugin::getStatePtr(uint8_t n) {
-    if (n > 8) return nullptr;
-    return &state[n];
-}
-
-void DimmerPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
-    ESP_LOGI(TAG, "setting dimmer state %d to %d", n, *val);
-    if (n < 8 && state[n] != *val) {
-        SET_STATE(this, state[n], n, shouldNotify, *val, 1);
-        dimmer_pins[n]->delay = 4 * (*val);
-        //ESP_LOGI(TAG, "updating state %d (%p) [%d]", n, &state, state);
-    } else {
-        ESP_LOGW(TAG, "invalid state id: %d", n);
-    }
-}
-
 void* DimmerPlugin::getStateVarPtr(int n, Type *t) { 
     if (n > 8) return NULL;    
     if (t != nullptr) *t = Type::byte; 
@@ -176,6 +160,7 @@ void* DimmerPlugin::getStateVarPtr(int n, Type *t) {
 void DimmerPlugin::setStateVarPtr_(int n, void* val, Type t, bool shouldNotify) {
     if (n > 8) return;
     convert(&state[n], Type::byte, val, t);
+    dimmer_pins[n]->delay = 4 * state[n];
     if (shouldNotify) notify(this, n, &state[n], Type::byte); 
 }
 

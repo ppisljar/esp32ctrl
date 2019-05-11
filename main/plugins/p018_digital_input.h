@@ -12,7 +12,6 @@ class DigitalInputPlugin: public Plugin {
         TaskHandle_t task_h;
     public:
         DEFINE_PPLUGIN(DigitalInputPlugin, 18);
-        void setStatePtr_(uint8_t, uint8_t*, bool);
         static void task(void *pvParameters);
 };
 

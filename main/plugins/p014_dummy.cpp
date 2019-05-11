@@ -51,18 +51,6 @@ bool DummyPlugin::setState(JsonObject &params) {
     return true;
 }
 
-void* DummyPlugin::getStatePtr(uint8_t n) {
-    if (n > values_len || values[n] == nullptr) return nullptr;
-    return values[n]->value;
-}
-
-void DummyPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {
-    if (n < values_len && values[n] != nullptr && values[n]->name != nullptr) {
-        memcpy(values[n]->value, val, 1);
-        if (shouldNotify) notify(this, n, val, 1);
-    }
-}
-
 void* DummyPlugin::getStateVarPtr(int n, Type *t) { 
     if (n > values_len || values[n] == nullptr) return nullptr;
     if (t != nullptr) *t = (Type)values[n]->type; 

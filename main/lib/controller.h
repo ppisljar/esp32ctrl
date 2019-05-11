@@ -13,7 +13,7 @@ class Controller_Notify_Handler {
 
 
 void notify(Plugin *p, uint8_t var_id, void *val, uint8_t val_type);
-void update(uint8_t device_id, uint8_t var_id, uint8_t value);
+void update(uint8_t device_id, uint8_t var_id, void *val, uint8_t val_type);
 
 int8_t findVarIdByName(Plugin *p, char *var_name);
 int8_t findVarIdByName(int8_t device_id, char *var_name);

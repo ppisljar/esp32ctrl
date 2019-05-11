@@ -17,7 +17,6 @@ class DummyPlugin: public Plugin {
     public:
 
         DEFINE_PPLUGIN(DummyPlugin, 14);
-        void setStatePtr_(uint8_t, uint8_t*, bool);
 };
 
 #endif

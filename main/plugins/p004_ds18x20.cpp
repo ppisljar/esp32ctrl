@@ -62,13 +62,6 @@ bool DS18x20Plugin::setState(JsonObject &params) {
     return true;
 }
 
-void* DS18x20Plugin::getStatePtr(uint8_t n) {
-    if (n > 16) return nullptr;
-    return &temperature[n];
-}
-
-//void DS18x20Plugin::setStatePtr_(uint8_t n, uint8_t *val, bool shouldNotify) {}
-
 void* DS18x20Plugin::getStateVarPtr(int n, Type *t) { 
     if (n > 16) return NULL;    
     if (t != nullptr) *t = temperature_t[n]; 

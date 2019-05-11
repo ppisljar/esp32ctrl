@@ -144,10 +144,6 @@ bool TYPE::setState(JsonObject &params) { \
     FOREACH_MACRO(PLUGIN___STATS_SET, __VA_ARGS__) \
     return true; \
 } \
-void* TYPE::getStatePtr(uint8_t val) { \
-    FOREACH_MACRO(PLUGIN___STATS_GETPTR, __VA_ARGS__) \
-    return NULL; \
-} \
 void* TYPE::getStateVarPtr(int n, Type *t) { \
     FOREACH_MACRO(PLUGIN___STATS_GETVARPTR, __VA_ARGS__) \
     return NULL; \
@@ -165,7 +161,6 @@ void TYPE::setStateVarPtr_(int n, void* val, Type t, bool shouldNotify) { \
     bool setConfig(JsonObject &params); \
     bool getState(JsonObject& ); \
     bool getConfig(JsonObject& ); \
-    void* getStatePtr(uint8_t ); \
     void* getStateVarPtr(int, Type*); \
     void setStateVarPtr_(int, void*, Type, bool)
 
@@ -178,7 +173,6 @@ void TYPE::setStateVarPtr_(int n, void* val, Type t, bool shouldNotify) { \
     bool setConfig(JsonObject &params); \
     bool getState(JsonObject& ); \
     bool getConfig(JsonObject& ); \
-    void* getStatePtr(uint8_t ); \
     void* getStateVarPtr(int, Type*); \
     void setStateVarPtr_(int, void*, Type, bool); \
     ~TYPE(); \
@@ -196,11 +190,6 @@ class Plugin
         virtual bool setConfig(JsonObject &params) = 0;
         virtual bool getState(JsonObject& ) = 0;
         virtual bool getConfig(JsonObject& ) = 0;
-        virtual void* getStatePtr(uint8_t var) = 0;
-        virtual void setStatePtr_(uint8_t var, uint8_t* val, bool notify) {};
-        void setStatePtr(uint8_t var, uint8_t* val, bool notify = true) {
-            setStatePtr_(var, val, notify);
-        };
 
         virtual void* getStateVarPtr(int, Type*) = 0;
         virtual void setStateVarPtr_(int, void*, Type, bool notify) = 0;

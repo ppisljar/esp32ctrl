@@ -188,19 +188,19 @@ bool multi_compare(byte **ptr) {
 
         Plugin *p = active_plugins[cmd[0]];
         if (p == nullptr) return false;
-        byte *var = (byte*)p->getStatePtr(cmd[1]);
+        void *var = p->getStateVarPtr(cmd[1], nullptr);
         ESP_LOGI(TAG_RE, "reading plugin %d (%p) variable %d (%p)", cmd[0], p, cmd[1], var);
 
         uint16_t oldId = *cmd;
         if (!rule_data_ptrs[oldId]) {
             rule_data_ptrs[oldId] = old_values + old_values_free_ptr;
-            old_values_free_ptr += cmd[4];
+            old_values_free_ptr += cmd[3];
         }
         old = (byte*)rule_data_ptrs[oldId];
         ESP_LOGI(TAG_RE, "getting ptr to old data (%p)", old);
         cmd+=2;
         ESP_LOGI(TAG_RE, "comparing");
-        if (!compare(&cmd, var, old)) match = false;
+        if (!compare(&cmd, (uint8_t*)var, old)) match = false;
 
     }
     *ptr = cmd;
@@ -287,12 +287,13 @@ void check_alerts() {
 
 int averagerun = 1000;
 int lastrun = 0;
-uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t len = 255) {
+uint8_t run_rule(byte* start, void* start_val, uint8_t start_val_length, uint8_t len = 255) {
     ESP_LOGI(TAG_RE, "run_rule %p %d", start, start[0]);
     byte* cmd = start;
-    byte* state_val = start_val;
-    byte* x = nullptr;
-    byte* y = nullptr;
+    void* state_val = start_val;
+    Type state_type = (Type)start_val_length;
+    float x = 0;
+    float y = 0;
     double state_val_value = 0;
     uint8_t state_val_length = start_val_length;
 
@@ -332,16 +333,18 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 ESP_LOGI(TAG_RE, "cmd get p:%d v:%d l:%d", cmd[1], cmd[2], cmd[3]);
                 p = active_plugins[cmd[1]];
                 if (p != nullptr) {
+                    void* temp_v;
+                    Type temp_t;
                     switch(cmd[2]) {
                         case 0:
-                            state_val = (uint8_t*)p->getStatePtr(cmd[3]);
-                            state_val_length = cmd[4];
-                            break;
+                            state_val = p->getStateVarPtr(cmd[3], &state_type);                            break;
                         case 1:
-                            x = (uint8_t*)p->getStatePtr(cmd[3]);
+                            temp_v = p->getStateVarPtr(cmd[3], &temp_t);
+                            convert(&x, Type::decimal, temp_v, temp_t);
                             break;
                         case 2:
-                            y = (uint8_t*)p->getStatePtr(cmd[3]);  
+                            temp_v = p->getStateVarPtr(cmd[3], &temp_t);  
+                            convert(&y, Type::decimal, temp_v, temp_t);
                             break;
                     }
                 }
@@ -361,10 +364,10 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 // 2. we can allow setting variable name by index
                 if (p != nullptr) {
                     if (cmd[4] == 255) {
-                        ESP_LOGI(TAG_RE, "cmd set %d:%d to %d", cmd[1], cmd[2], *state_val);
-                        p->setStatePtr(cmd[2], state_val);
+                        ESP_LOGI(TAG_RE, "cmd set %d:%d to %d", cmd[1], cmd[2], *(int*)state_val); // TODO: state_var ptr
+                        p->setStateVarPtr(cmd[2], state_val, state_type);
                     } else {
-                        p->setStatePtr(cmd[2], cmd+4);
+                        p->setStateVarPtr(cmd[2], cmd+4, (Type)cmd[3]);
                     }
                 }
 
@@ -409,7 +412,7 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 std::string url((const char*)cmd);
                 cmd += url.length() + 1;
                 if (state_val != nullptr) {
-                    replace_string_in_place(url, "%state%", std::to_string(*state_val));
+                    replace_string_in_place(url, "%state%", std::to_string(*(int*)state_val));  // todo state_val ptr
                 }
                 ESP_LOGI(TAG_RE, "cmd http req to %s", url.c_str());
                 makeHttpRequest((char*)url.c_str());
@@ -419,7 +422,7 @@ uint8_t run_rule(byte* start, byte* start_val, uint8_t start_val_length, uint8_t
                 cmd++;
                 std::string expr_str((const char*)cmd);
                 cmd += expr_str.length() + 1;
-                te_variable vars_temp[] = {{"state", state_val}, {"x", x}, {"y", y}};
+                te_variable vars_temp[] = {{"state", state_val}, {"x", &x}, {"y", &y}};
                 te_expr *expr = te_compile(expr_str.c_str(), vars_temp, 1, 0);
                 state_val_value = te_eval(expr);
                 state_val = (uint8_t*)&state_val_value;
@@ -465,12 +468,12 @@ void run_rules() {
                 ESP_LOGD(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
                 p = active_plugins[cmd[1]];
                 if (p == nullptr) continue;
-                var = (byte*)p->getStatePtr(cmd[2]);
+                var = (uint8_t*)p->getStateVarPtr((int)cmd[2], nullptr);
 
                 oldId = *cmd;
                 if (!rule_data_ptrs[oldId]) {
                     rule_data_ptrs[oldId] = old_values + old_values_free_ptr;
-                    old_values_free_ptr += cmd[5];
+                    old_values_free_ptr += cmd[4];
                 }
                 old = (byte*)rule_data_ptrs[oldId];
                 cmd += 3;
@@ -493,7 +496,7 @@ void run_rules() {
         if (match) {
             ESP_LOGI(TAG_RE, "match! executing rule [%x %x %x %x]", cmd[0], cmd[1], cmd[2], cmd[3]);
             // for each command
-            cmd += run_rule(cmd, start_val, start_val_len);
+            cmd += run_rule(cmd, start_val, (Type)start_val_len);
         }
     }
 

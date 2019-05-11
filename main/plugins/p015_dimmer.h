@@ -14,7 +14,6 @@ class DimmerPlugin: public Plugin {
         uint8_t state[8] = {};
     public:
         DEFINE_PPLUGIN(DimmerPlugin, 15);
-        void setStatePtr_(uint8_t, uint8_t*, bool);
 };
 
 #endif

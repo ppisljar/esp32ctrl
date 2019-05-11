@@ -166,11 +166,11 @@ static void page_create()
  */
 static lv_res_t slider_action(lv_obj_t * slider)
 {
-    int16_t v = lv_slider_get_value(slider);
+    int v = lv_slider_get_value(slider);
 	lv_obj_t* element = lv_obj_get_parent(slider);
 	Plugin* p = (Plugin*)lv_obj_get_free_ptr(element);
 	uint8_t d = lv_obj_get_free_num(element);
-	p->setStatePtr(d, (uint8_t*)&v, true);
+	p->setStateVarPtr(d, &v, Type::integer, true);
     return LV_RES_OK;
 }
 
@@ -185,7 +185,7 @@ static lv_res_t btn_action(lv_obj_t * btn)
 	Plugin* p = (Plugin*)lv_obj_get_free_ptr(element);
 	uint8_t d = lv_obj_get_free_num(element);
 	uint8_t state = lv_sw_get_state(btn);
-	p->setStatePtr(d, (uint8_t*)&state, true);
+	p->setStateVarPtr(d, &state, Type::byte, true);
     return LV_RES_OK;
 }
 
@@ -204,20 +204,20 @@ void update_lcd_f(void* ptr)
 	lv_obj_t* element = (lv_obj_t*)ptr;
     Plugin* p = (Plugin*)lv_obj_get_free_ptr(element);
 	uint8_t d = lv_obj_get_free_num(element);
-	uint8_t* value = (uint8_t*)p->getStatePtr(d);
+	void* value = p->getStateVarPtr(d);
 	switch (p->p_type) {
 		case 1: // SWITCH
 			// pass pointer to value
-			if (*value) lv_sw_on(element);
+			if (*(uint8_t*)value) lv_sw_on(element);
 			else lv_sw_off(element);
 			break;
-		case 2: case 3: case 4: case 6: case 14:
+		case 2: case 3: case 4: case 6: case 14: // sensors
 			// walk over all states, get their names and their values
 			lv_label_set_text(element, "hello");
 			break;
 		case 5: // REGULATOR
 		case 15:// DIMMER
-			lv_slider_set_value(element, *value);
+			lv_slider_set_value(element, *(uint8_t*)value);
 			break;
 	}
 

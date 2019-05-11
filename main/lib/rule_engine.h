@@ -16,7 +16,7 @@ extern unsigned char *rule_engine_hwtimers[4];
 extern unsigned char *rule_engine_hwinterrupts[16];
 
 int parse_rules(unsigned char *rules, long len);
-uint8_t run_rule(unsigned char* start, unsigned char* start_val, uint8_t start_val_length, uint8_t len);
+uint8_t run_rule(unsigned char* start, void* start_val, uint8_t start_val_length, uint8_t len);
 void run_rules();
 void init_rules();
 void reload_rules();

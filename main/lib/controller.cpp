@@ -18,9 +18,9 @@ void notify(Plugin *p, uint8_t var_id, void *val, uint8_t val_type) {
     }
 }
 
-void update(uint8_t device_id, uint8_t var_id, uint8_t val) {
+void update(uint8_t device_id, uint8_t var_id, void *val, uint8_t val_type) {
     Plugin *p = active_plugins[device_id];
-    p->setStatePtr(var_id, &val, false);
+    p->setStateVarPtr(var_id, val, (Type)val_type, false);
 }
 
 int8_t findDeviceIdByName(char *device_name) {

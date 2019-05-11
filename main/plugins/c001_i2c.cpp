@@ -35,10 +35,6 @@ bool I2CPlugin::init(JsonObject &params) {
     //return i2c_driver_install((i2c_port_t)i2c_master_port, conf.mode, 0, 0, 0);
 }
 
-void I2CPlugin::setStatePtr_(uint8_t n, uint8_t *val, bool notify) {
-    if (n == 0) state = *val;
-}
-
 void I2CPlugin::scan() {
     uint8_t address;
     printf("     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f\r\n");

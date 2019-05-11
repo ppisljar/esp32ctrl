@@ -578,8 +578,11 @@ bool BlueToothPlugin::init(JsonObject &params) {
         for (auto v : vals) {
             uint8_t device = v["device"];
             uint8_t value = v["value"];
-            uint8_t* ptr = (uint8_t*)active_plugins[device]->getStatePtr(value);
-            raw_adv_data[b++] = *ptr;
+            Type t;
+            void* ptr = active_plugins[device]->getStateVarPtr(value, &t);
+            convert((char*)raw_adv_data + b, (Type)(t < 4 ? 4: t), ptr, t);
+            b += t < 4 ? (t == 0 ? 1 : 4)  : t;
+            //raw_adv_data[b++] = *ptr;
         }
     }
 

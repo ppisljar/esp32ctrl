@@ -260,10 +260,10 @@ void MQTTPlugin::handler(char* topic, int topic_len, char* msg) {
         ESP_LOGW(TAG, "value property not found");
         return;
     }
-    uint8_t value = obj[value_field];
+    const char* value = obj[value_field];
 
     ESP_LOGD(TAG, "updating device");
-    update(device_id, value_id, value);
+    update(device_id, value_id, (void*)value, Type::string);
 
 }
 
