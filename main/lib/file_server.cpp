@@ -43,8 +43,8 @@ extern uint8_t event_triggers[8];
 extern int averagerun;
 
 
-char _snonce[33];
-char _sopaque[33];
+char _snonce[33] = {};
+char _sopaque[33] = {};
 #define _srealm "authenticate"
 #define qop_auth "qop=auth"
 
@@ -209,8 +209,10 @@ bool authenticate(httpd_req_t *req){
 
 void requestAuthentication(httpd_req_t *req) {
     ESP_LOGD(TAG, "requesting authentication");
-    _getRandomHexString(_snonce);
-    _getRandomHexString(_sopaque);
+    strcpy(_snonce, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    strcpy(_sopaque, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    // _getRandomHexString(_snonce);
+    // _getRandomHexString(_sopaque);
     char digest_header[196];
     sprintf(digest_header, "Digest realm=\"%s\", qop=\"auth\", nonce=\"%s\", opaque=\"%s\"", _srealm, _snonce, _sopaque);
     httpd_resp_set_hdr(req, "WWW-Authenticate", digest_header);
