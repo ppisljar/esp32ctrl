@@ -16507,6 +16507,22 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+const units = [{
+  name: 'milliseconds',
+  value: 0
+}, {
+  name: 'seconds',
+  value: 1
+}, {
+  name: 'minutes',
+  value: 2
+}, {
+  name: 'hours',
+  value: 3
+}, {
+  name: 'days',
+  value: 4
+}];
 const setHwTimerNode = {
   group: 'ACTION',
   name: 'sethwtimer',
@@ -16514,23 +16530,6 @@ const setHwTimerNode = {
   inputs: 1,
   outputs: 1,
   getEditorConfig: () => {
-    const units = [{
-      name: 'milliseconds',
-      value: 0
-    }, {
-      name: 'seconds',
-      value: 1
-    }, {
-      name: 'minutes',
-      value: 2
-    }, {
-      name: 'hours',
-      value: 3
-    }, {
-      name: 'days',
-      value: 4
-    }];
-
     const getTimers = () => {
       return _lib_settings__WEBPACK_IMPORTED_MODULE_3__["settings"].get('hardware.timer', []).map((t, i) => ({
         name: `timer_${i}`,
@@ -16575,7 +16574,8 @@ const setHwTimerNode = {
       value,
       unit
     } = item.params;
-    return `set hwtimer${timer} = ${value}${unit}`;
+    const unitName = units.find(v => v.value == unit).name;
+    return `set hwtimer${timer} = ${value}${unitName}`;
   },
   toDsl: item => {
     const {

@@ -3,6 +3,14 @@ import { generateWidgetComponent, getString, toByteArray } from "../helper";
 import { getTasks, getTaskValues, getTaskValueType } from "../../../../lib/utils";
 import { settings } from "../../../../lib/settings";
 
+const units = [
+    { name: 'milliseconds', value: 0 },
+    { name: 'seconds', value: 1 },
+    { name: 'minutes', value: 2 },
+    { name: 'hours', value: 3 },
+    { name: 'days', value: 4 },
+];
+
 const setHwTimerNode = {
     group: 'ACTION',
     name: 'sethwtimer',
@@ -10,13 +18,6 @@ const setHwTimerNode = {
     inputs: 1,
     outputs: 1,  
     getEditorConfig: () => {
-        const units = [
-            { name: 'milliseconds', value: 0 },
-            { name: 'seconds', value: 1 },
-            { name: 'minutes', value: 2 },
-            { name: 'hours', value: 3 },
-            { name: 'days', value: 4 },
-        ];
 
         const getTimers = () => {
             return settings.get('hardware.timer', []).map((t, i) => ({ name: `timer_${i}`, value: i, enabled: t.enabled })).filter(t => t.enabled);
@@ -44,7 +45,8 @@ const setHwTimerNode = {
 
     getText: (item) => {
         const { timer, value, unit } = item.params;
-        return `set hwtimer${timer} = ${value}${unit}`;
+        const unitName = units.find(v => v.value == unit).name;
+        return `set hwtimer${timer} = ${value}${unitName}`;
     },
 
     toDsl: (item) => {

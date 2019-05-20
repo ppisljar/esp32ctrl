@@ -113,21 +113,27 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
                 bool ssid1 = true; //strcmp((char*)wifi_config.sta.ssid, (char*)params["ssid1"].as<char*>()) == 0;
                 if (ssid1) {
                     p.failed_1++;
-                    if (p.failed_1 > 1) {
+                    if (p.failed_1 > 2) {
                         if (p.secondarySSID) {
                             strcpy((char*)p.wifi_config.sta.ssid,  (char*)params["ssid2"].as<char*>());
                             strcpy((char*)p.wifi_config.sta.password, (char*)params["pass2"].as<char*>());
+                            esp_wifi_set_config(ESP_IF_WIFI_STA, &p.wifi_config);
                         } else {
                             params["mode"] = 0;
                             return ap_mode(p);
                         }
+                    } else {
+                        strcpy((char*)p.wifi_config.sta.ssid, (char*)params["ssid"].as<char*>());
+                        strcpy((char*)p.wifi_config.sta.password, (char*)params["pass"].as<char*>());
+                        esp_wifi_set_config(ESP_IF_WIFI_STA, &p.wifi_config);
                     }
                 } else {
                     p.failed_2++;
-                    if (p.failed_2 > 1) {
+                    if (p.failed_2 > 2) {
                         if (p.failed_1 == 0) {
                             strcpy((char*)p.wifi_config.sta.ssid,  (char*)params["ssid2"].as<char*>());
                             strcpy((char*)p.wifi_config.sta.password, (char*)params["pass2"].as<char*>());
+                            esp_wifi_set_config(ESP_IF_WIFI_STA, &p.wifi_config);
                         }  else {
                             params["mode"] = 0;
                             return ap_mode(p);
@@ -138,6 +144,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             ESP_ERROR_CHECK(esp_wifi_connect());
             break;
         default:
+            ESP_LOGI(TAG, "SYSTEM_EVENT_WifI_%d", event->event_id);
             break;
     }
     return ESP_OK;
@@ -179,6 +186,7 @@ bool WiFiPlugin::init(JsonObject &params) {
 
 
     if (ESP_OK == esp_wifi_get_config(WIFI_IF_STA, &wifi_config) && wifi_config.sta.ssid[0] != 0) {
+        ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
         ESP_LOGI(TAG, "Connect to stored Wi-Fi SSID:%s", wifi_config.sta.ssid);
     } 
     else {
