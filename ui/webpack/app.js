@@ -16548,11 +16548,24 @@ const setHwTimerNode = {
               type: 'select',
               options: getTimers
             },
+            val_type: {
+              name: 'Value',
+              type: 'select',
+              options: [{
+                name: 'state',
+                value: 0
+              }, {
+                name: 'custom',
+                value: 255
+              }]
+            },
             value: {
               name: 'Value',
+              if: 'params.val_type',
+              ifval: 255,
               type: 'number',
               min: 0,
-              max: 43243423
+              max: 43243422
             },
             unit: {
               name: 'Unit',
@@ -16572,23 +16585,25 @@ const setHwTimerNode = {
     const {
       timer,
       value,
-      unit
+      unit,
+      val_type
     } = item.params;
     const unitName = units.find(v => v.value == unit).name;
-    return `set hwtimer${timer} = ${value}${unitName}`;
+    const valueStr = val_type ? 'state' : `${value}${unitName}`;
+    return `set hwtimer${timer} = ${valueStr}`;
   },
   toDsl: item => {
     const {
       timer,
       value,
-      unit
+      unit,
+      val_type
     } = item.params;
     const timerCfg = _lib_settings__WEBPACK_IMPORTED_MODULE_3__["settings"].get(`hardware.timer.${timer}`);
     const freq = BigInt(80000 / timerCfg.divider);
     let time = BigInt(value);
 
     switch (unit) {
-      //case 'u': break;
       case 1:
         time *= BigInt(1000);
         break;
@@ -16606,7 +16621,7 @@ const setHwTimerNode = {
         break;
     }
 
-    const wait = freq * time;
+    const wait = val_type ? BigInt(43243423) : freq * time;
     return [`\xE2${String.fromCharCode(timer)}${Object(_helper__WEBPACK_IMPORTED_MODULE_1__["getString"])(Object(_helper__WEBPACK_IMPORTED_MODULE_1__["toByteArray"])(wait, 8))}`];
   }
 };

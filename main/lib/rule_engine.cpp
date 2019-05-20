@@ -403,6 +403,13 @@ uint8_t run_rule(byte* start, void* start_val, uint8_t start_val_length, uint8_t
                 ESP_LOGI(TAG_RE, "starting hw timer %d %llu", cmd[0], *(uint64_t*)(cmd+1));
                 if (*(uint64_t*)(cmd+1) == 0) {
                     timer_pause(cmd[0] > 1 ? TIMER_GROUP_1 : TIMER_GROUP_0, (timer_idx_t)(cmd[0]%2));
+                } else if (*(uint64_t*)(cmd+1) == 43243423) {
+                    if (state_type == Type::integer) {
+                        uint64_t ti = (*(int*)state_val) * 1000;
+                        timer_set_counter_value(cmd[0] > 1 ? TIMER_GROUP_1 : TIMER_GROUP_0, (timer_idx_t)(cmd[0]%2), 0);
+                        timer_set_alarm_value(cmd[0] > 1 ? TIMER_GROUP_1 : TIMER_GROUP_0, (timer_idx_t)(cmd[0]%2), ti);
+                        timer_start(cmd[0] > 1 ? TIMER_GROUP_1 : TIMER_GROUP_0, (timer_idx_t)(cmd[0]%2));
+                    }
                 } else {
                     timer_set_counter_value(cmd[0] > 1 ? TIMER_GROUP_1 : TIMER_GROUP_0, (timer_idx_t)(cmd[0]%2), 0);
                     timer_set_alarm_value(cmd[0] > 1 ? TIMER_GROUP_1 : TIMER_GROUP_0, (timer_idx_t)(cmd[0]%2), *(uint64_t*)(cmd+1));

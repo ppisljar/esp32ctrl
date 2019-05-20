@@ -29,7 +29,8 @@ const setHwTimerNode = {
                     name: 'Set Hw Timer',
                     configs: {
                         timer: { name: 'Timer', type: 'select', options: getTimers },
-                        value: { name: 'Value', type: 'number', min: 0, max: 43243423 },
+                        val_type: { name: 'Value', type: 'select', options: [{ name: 'state', value: 0 }, { name: 'custom', value: 255 }] },
+                        value: { name: 'Value', if: 'params.val_type', ifval: 255, type: 'number', min: 0, max: 43243422, },
                         unit: { name: 'Unit', type: 'select', options: units },
                     }
                 }
@@ -44,26 +45,26 @@ const setHwTimerNode = {
     },
 
     getText: (item) => {
-        const { timer, value, unit } = item.params;
+        const { timer, value, unit, val_type } = item.params;
         const unitName = units.find(v => v.value == unit).name;
-        return `set hwtimer${timer} = ${value}${unitName}`;
+        const valueStr = val_type ? 'state' : `${value}${unitName}`;
+        return `set hwtimer${timer} = ${valueStr}`;
     },
 
     toDsl: (item) => {
-        const { timer, value, unit } = item.params;
+        const { timer, value, unit, val_type } = item.params;
         const timerCfg = settings.get(`hardware.timer.${timer}`);
         const freq = BigInt(80000 / timerCfg.divider);
         let time = BigInt(value);
         
         switch (unit) {
-            //case 'u': break;
             case 1: time *= BigInt(1000); break;
             case 2: time *= BigInt(1000*60); break;
             case 3: time *= BigInt(1000*60*60); break;
             case 4: time *= BigInt(1000*60*60*24); break;
         }
 
-        const wait = freq * time;
+        const wait = val_type ? BigInt(43243423) : freq * time;
         
         return [`\xE2${String.fromCharCode(timer)}${getString(toByteArray(wait,8))}`];
     } ,     
