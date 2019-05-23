@@ -46,7 +46,8 @@ const setHwTimerNode = {
 
     getText: (item) => {
         const { timer, value, unit, val_type } = item.params;
-        const unitName = units.find(v => v.value == unit).name;
+        const unitObj = units.find(v => v.value == unit) || {};
+        const unitName = unitObj.name || '?';
         const valueStr = val_type ? 'state' : `${value}${unitName}`;
         return `set hwtimer${timer} = ${valueStr}`;
     },
