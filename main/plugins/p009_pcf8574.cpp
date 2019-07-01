@@ -4,7 +4,6 @@
 const char *P009_TAG = "PCF8574Plugin";
 
 PLUGIN_CONFIG(PCF8574Plugin, interval, gpio, type)
-PLUGIN_STATS(PCF8574Plugin, value, value)
 
 class PCF8574Plugin_set_direction : public IO_set_direction {
     public:
@@ -96,6 +95,22 @@ bool PCF8574Plugin::init(JsonObject &params) {
 
 
     return true;
+}
+
+bool PCF8574Plugin::getState(JsonObject &params) {
+    return true;
+}
+
+bool PCF8574Plugin::setState(JsonObject &params) {
+    return true;
+}
+
+void* PCF8574Plugin::getStateVarPtr(int n, Type *t) {
+    return nullptr;
+}
+
+void PCF8574Plugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
+
 }
 
 PCF8574Plugin::~PCF8574Plugin() {

@@ -4,7 +4,6 @@
 const char *P010_TAG = "PCA9685Plugin";
 
 PLUGIN_CONFIG(PCA9685Plugin, interval, freq, type)
-PLUGIN_STATS(PCA9685Plugin, value, value)
 
 class PCA9685Plugin_analog_write : public IO_analog_write {
     private:
@@ -41,6 +40,22 @@ bool PCA9685Plugin::init(JsonObject &params) {
     io.addDigitalPins(16, &pins);
 
     return true;
+}
+
+bool PCA9685Plugin::getState(JsonObject &params) {
+    return true;
+}
+
+bool PCA9685Plugin::setState(JsonObject &params) {
+    return true;
+}
+
+void* PCA9685Plugin::getStateVarPtr(int n, Type *t) {
+    return nullptr;
+}
+
+void PCA9685Plugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
+
 }
 
 PCA9685Plugin::~PCA9685Plugin() {

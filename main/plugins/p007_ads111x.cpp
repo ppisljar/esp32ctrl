@@ -4,7 +4,6 @@
 const char *P007_TAG = "ADS111xPlugin";
 
 PLUGIN_CONFIG(ADS111xPlugin, interval, gpio, type)
-PLUGIN_STATS(ADS111xPlugin, value, value)
 
 class ads1115_analog_read : public IO_analog_read {
     private:
@@ -59,6 +58,22 @@ bool ADS111xPlugin::init(JsonObject &params) {
     adc0->setGain(gain);
 
     return true;
+}
+
+bool ADS111xPlugin::getState(JsonObject &params) {
+    return true;
+}
+
+bool ADS111xPlugin::setState(JsonObject &params) {
+    return true;
+}
+
+void* ADS111xPlugin::getStateVarPtr(int n, Type *t) {
+    return nullptr;
+}
+
+void ADS111xPlugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
+
 }
 
 ADS111xPlugin::~ADS111xPlugin() {

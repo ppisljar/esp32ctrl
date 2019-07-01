@@ -22,7 +22,7 @@ static const char *TAG = "MAIN";
 
 // global config object
 Config *g_cfg;
-Plugin *active_plugins[10];
+Plugin *active_plugins[50];
 WiFiPlugin *wifi_plugin;
 
 
@@ -169,7 +169,7 @@ void init_plugins() {
     for (auto plugin : plugins){
         if (!plugin["enabled"]) continue;
         uint8_t pid = plugin["id"];
-        ESP_LOGI(TAG, "initializing plugin '%s' type: %i", plugin["name"].as<char*>(), (int)plugin["type"]);
+        ESP_LOGI(TAG, "initializing plugin '%s' type: %i id:%i", plugin["name"].as<char*>(), (int)plugin["type"], pid);
         if (!Plugin::hasType((int)plugin["type"])) {
             ESP_LOGI(TAG, "invalid plugin type, skipping ...");
             continue;
@@ -182,7 +182,7 @@ void init_plugins() {
 }
 
 void deinit_plugins() {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 50; i++) {
         if (active_plugins[i] != nullptr) {
             free(active_plugins[i]);
         }
@@ -304,7 +304,6 @@ extern "C" void app_main()
 
     fire_system_event(1024, 0, nullptr);
 
-    
     ESP_LOGI(TAG, "done loading plugins, free heap: %i", xPortGetFreeHeapSize());
     for(;;) {
         // if (resetPin < 32 && gpio_get_level((gpio_num_t)resetPin) == 0) {

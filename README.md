@@ -17,3 +17,8 @@ folder strucure:
 - [data folder](data/) contains the content that is flashed to spiffs partition on esp32
 - [ESP32 esp-idf firmware](main/README.md)
 - [web front end](ui/README.md)
+
+
+
+TODO:
+- isAuthenticated crashes if config.json is too big ???? (seems like out of memory but also happens with wroover)

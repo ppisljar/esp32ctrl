@@ -2,7 +2,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
-extern Plugin* active_plugins[10];
+extern Plugin* active_plugins[50];
 
 const char *P005_TAG = "RegulatorPlugin";
 

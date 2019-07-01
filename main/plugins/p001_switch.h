@@ -2,7 +2,6 @@
 #define ESP_PLUGIN_001_H
 
 #include "plugin_defs.h"
-#include  "../lib/any.h"
 
 class SwitchPlugin: public Plugin {
     private:

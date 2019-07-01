@@ -8,7 +8,7 @@ bool PWMOutputPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]["values"]);
 
-    uint8_t gpio = (*cfg)["gpio"] | 255;
+    gpio = (*cfg)["gpio"] | 255;
     if (gpio != 255) {
         ESP_LOGI(TAG, "setting gpio %d to OUTPUT", gpio);
         io.setDirection(gpio, GPIO_MODE_INPUT_OUTPUT);
@@ -37,8 +37,6 @@ void* PWMOutputPlugin::getStateVarPtr(int n, Type *t) {
 } 
 
 void PWMOutputPlugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
-    int gpio = (*cfg)["gpio"] | 255;
-    
     uint8_t value;
     convert(&value, Type::byte, val, t);
     if (n == 0 && state != value) {

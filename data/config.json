@@ -10,6 +10,12 @@
         "ssid": "Teltonika_Router",
         "pass": "secpass123"
     },
+    "security": {
+        "pass": "admin",
+        "ip_block": {
+            "enabled": 0
+        }
+    },
     "plugins": [
         {
             "id": 0,
@@ -90,13 +96,12 @@
             "state": {
                 "values": [
                     {
-                        "name": "SW1"
+                        "name": "SW1",
+                        "type": "0"
                     },
                     {
-                        "name": "SW2"
-                    },
-                    {
-                        "name": "SW3"
+                        "name": "SW2",
+                        "type": "0"
                     }
                 ]
             }
@@ -148,6 +153,214 @@
                     }
                 ]
             }
+        },
+        {
+            "id": 6,
+            "idx": 6,
+            "type": 1,
+            "name": "SW2",
+            "enabled": 1,
+            "params": {
+                "gpio": 45,
+                "invert": false
+            },
+            "interval": 60,
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 7,
+            "idx": 7,
+            "type": 1,
+            "name": "SW3",
+            "enabled": 1,
+            "params": {
+                "gpio": 46,
+                "invert": false
+            },
+            "interval": 60,
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 8,
+            "idx": 8,
+            "type": 1,
+            "name": "SW4",
+            "enabled": 1,
+            "params": {
+                "gpio": 47,
+                "invert": false
+            },
+            "interval": 60,
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 9,
+            "idx": 9,
+            "type": 1,
+            "name": "SW5",
+            "enabled": 1,
+            "params": {
+                "gpio": 48,
+                "invert": false
+            },
+            "interval": 60,
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 10,
+            "idx": 10,
+            "type": 1,
+            "name": "SW6",
+            "enabled": 1,
+            "params": {
+                "gpio": 49,
+                "invert": false
+            },
+            "interval": 60,
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 11,
+            "idx": 11,
+            "type": 19,
+            "name": "PWM1",
+            "enabled": 1,
+            "params": {
+                "gpio": 52
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Output",
+                        "type": "1"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 12,
+            "idx": 12,
+            "type": 19,
+            "name": "PWM2",
+            "enabled": 1,
+            "params": {
+                "gpio": 53
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Output",
+                        "type": "1"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 13,
+            "idx": 13,
+            "type": 19,
+            "name": "PWM3",
+            "enabled": 1,
+            "params": {
+                "gpio": 54
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Output",
+                        "type": "1"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 14,
+            "idx": 14,
+            "type": 19,
+            "name": "PWM4",
+            "enabled": 1,
+            "params": {
+                "gpio": 55
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Output",
+                        "type": "1"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 15,
+            "idx": 15,
+            "type": 19,
+            "name": "PWM5",
+            "enabled": 1,
+            "params": {
+                "gpio": 56
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Output",
+                        "type": "1"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 16,
+            "idx": 16,
+            "type": 19,
+            "name": "PWM6",
+            "enabled": 1,
+            "params": {
+                "gpio": 57
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Output",
+                        "type": "1"
+                    }
+                ]
+            }
         }
     ],
     "hardware": {
@@ -193,11 +406,5 @@
     "alerting": {
         "alerts": [],
         "enabled": false
-    },
-    "security": {
-        "pass": "admin",
-        "ip_block": {
-            "enabled": 0
-        }
     }
 }

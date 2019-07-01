@@ -8,7 +8,7 @@ bool SwitchPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]["values"]);
 
-    uint8_t gpio = (*cfg)["gpio"] | 255;
+    gpio = (*cfg)["gpio"] | 255;
     if (gpio != 255) {
         ESP_LOGI(P001_TAG, "setting gpio %d to OUTPUT", gpio);
         io.setDirection(gpio, GPIO_MODE_INPUT_OUTPUT);
@@ -37,7 +37,6 @@ void* SwitchPlugin::getStateVarPtr(int n, Type *t) {
 } 
 
 void SwitchPlugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
-    int gpio = (*cfg)["gpio"] | 255;
     bool invert = (*cfg)["invert"] | false;
     
     uint8_t value;
