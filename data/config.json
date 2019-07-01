@@ -1,0 +1,203 @@
+{
+    "unit": {
+        "name": "SHTech-R"
+    },
+    "web": {
+        "user": "admin",
+        "pass": "admin"
+    },
+    "wifi": {
+        "ssid": "Teltonika_Router",
+        "pass": "secpass123"
+    },
+    "plugins": [
+        {
+            "id": 0,
+            "idx": 0,
+            "type": 7,
+            "name": "IO-ADC",
+            "enabled": 1,
+            "params": {
+                "addr": 72,
+                "mode": 1,
+                "rate": 4,
+                "gain": 2
+            }
+        },
+        {
+            "id": 1,
+            "idx": 1,
+            "type": 9,
+            "name": "IO-DIGITAL",
+            "enabled": 1,
+            "params": {
+                "addr": 32,
+                "type": 0
+            },
+            "gpio1": 255,
+            "gpio2": 255,
+            "settings": {
+                "values": [
+                    {
+                        "name": "Tag"
+                    }
+                ]
+            },
+            "pins": [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                0
+            ]
+        },
+        {
+            "id": 2,
+            "idx": 2,
+            "type": 10,
+            "name": "IO-PWM",
+            "enabled": 1,
+            "params": {
+                "addr": 64,
+                "freq": 500
+            }
+        },
+        {
+            "id": 3,
+            "idx": 3,
+            "type": 15,
+            "name": "AC Dimmer",
+            "enabled": 1,
+            "params": {
+                "gpio_zc": 19,
+                "add": 0,
+                "outputs": [
+                    5,
+                    18
+                ]
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "SW1"
+                    },
+                    {
+                        "name": "SW2"
+                    },
+                    {
+                        "name": "SW3"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 4,
+            "idx": 4,
+            "type": 1,
+            "name": "SW1",
+            "enabled": 1,
+            "params": {
+                "gpio": 44,
+                "invert": false
+            },
+            "interval": 60,
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 5,
+            "idx": 5,
+            "type": 2,
+            "name": "SENSOR",
+            "enabled": 1,
+            "params": {
+                "device": 0,
+                "value": 0,
+                "level": 0,
+                "hysteresis": 0,
+                "interval": 0,
+                "gpio": 12,
+                "type": 0
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Temperature",
+                        "type": "2"
+                    },
+                    {
+                        "name": "Humidity",
+                        "type": "2"
+                    }
+                ]
+            }
+        }
+    ],
+    "hardware": {
+        "i2c": {
+            "enabled": 1,
+            "sda": 26,
+            "scl": 25,
+            "freq": 100000
+        },
+        "timer": [
+            {
+                "enabled": false,
+                "divider": 800
+            },
+            {
+                "enabled": false,
+                "divider": 800
+            },
+            {
+                "enabled": false,
+                "divider": 800
+            },
+            {
+                "enabled": false,
+                "divider": 800
+            }
+        ],
+        "spi": {
+            "enabled": false,
+            "sclk": 14,
+            "mosi": 15,
+            "miso": 2,
+            "cs": 13
+        },
+        "sdcard": {
+            "enabled": false
+        }
+    },
+    "alexa": {
+        "enabled": false,
+        "triggers": []
+    },
+    "alerting": {
+        "alerts": [],
+        "enabled": false
+    },
+    "security": {
+        "pass": "admin",
+        "ip_block": {
+            "enabled": 0
+        }
+    }
+}
