@@ -83,7 +83,12 @@ const prepareRules = async () => {
 
 export const loadConfig = async () => {
     const cfg = await fetch('/config.json').then(r => {
-        settings.user(r.headers.get('user').replace(',','').trim());
+        const header = r.headers.get('user');
+        if (header) {
+            settings.user(header.replace(',','').trim());
+        } 
+        // todo: remove
+        settings.user('admin');
         return r.json();
     })
 

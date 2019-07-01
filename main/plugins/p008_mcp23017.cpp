@@ -4,7 +4,6 @@
 const char *P008_TAG = "MCP23017Plugin";
 
 PLUGIN_CONFIG(MCP23017Plugin, interval, gpio, type)
-PLUGIN_STATS(MCP23017Plugin, value, value)
 
 class MCP23017Plugin_set_direction : public IO_set_direction {
     private:
@@ -52,6 +51,11 @@ bool MCP23017Plugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]);
 
+    if (i2c_plugin == nullptr || i2c_plugin->i2c_bus == nullptr) {
+        ESP_LOGW(P008_TAG, "I2C not started, skipping");
+        return false;
+    }
+
     uint8_t mcp23017_addr = (*cfg)["addr"];
     void* dev = iot_mcp23017_create(i2c_plugin->i2c_bus, mcp23017_addr);
     MCP23017Plugin_digital_read *digitalRead = new MCP23017Plugin_digital_read(dev, &pins);
@@ -63,6 +67,22 @@ bool MCP23017Plugin::init(JsonObject &params) {
     io.addDigitalPins(16, &pins);
 
     return true;
+}
+
+bool MCP23017Plugin::getState(JsonObject &params) {
+    return true;
+}
+
+bool MCP23017Plugin::setState(JsonObject &params) {
+    return true;
+}
+
+void* MCP23017Plugin::getStateVarPtr(int n, Type *t) {
+    return nullptr;
+}
+
+void MCP23017Plugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
+
 }
 
 MCP23017Plugin::~MCP23017Plugin() {

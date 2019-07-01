@@ -25,7 +25,7 @@ byte *rule_engine_alexa_triggers[10] = {};
 byte *rule_engine_touch_triggers[10] = {};
 byte *rule_engine_bluetooth_triggers[10] = {};
 
-extern Plugin *active_plugins[10];
+extern Plugin *active_plugins[50];
 extern TimersPlugin *timers_plugin;
 extern CronPlugin *cron_plugin;
 
@@ -71,14 +71,15 @@ void fire_system_event(uint16_t evt_id, uint8_t evt_data_len, uint8_t *evt_data)
 }
 
 
-uint8_t *rules = nullptr;
+
 void load_rules() {
     long rule_length;
-    rules = (uint8_t*)read_file("/spiffs/rules.dat", &rule_length);
+    uint8_t* rules = (uint8_t*)read_file("/spiffs/rules.dat", &rule_length);
     if (rules != NULL && rule_length > 0) {
         ESP_LOGI(TAG_RE, "parsing rule file of size: %ld", rule_length);
         parse_rules(rules, rule_length);
     }
+    free(rules);
 }
 
 void init_rules() {
@@ -115,7 +116,6 @@ void reload_rules() {
             rule_engine_hwtimers[i] = nullptr;
         }
     }
-    free(rules);
     load_rules();
 }
 

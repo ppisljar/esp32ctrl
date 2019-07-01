@@ -10,12 +10,6 @@
         "ssid": "Teltonika_Router",
         "pass": "secpass123"
     },
-    "security": {
-        "pass": "admin",
-        "ip_block": {
-            "enabled": 0
-        }
-    },
     "plugins": [
         {
             "id": 0,
@@ -96,12 +90,13 @@
             "state": {
                 "values": [
                     {
-                        "name": "SW1",
-                        "type": "0"
+                        "name": "SW1"
                     },
                     {
-                        "name": "SW2",
-                        "type": "0"
+                        "name": "SW2"
+                    },
+                    {
+                        "name": "SW3"
                     }
                 ]
             }
@@ -406,5 +401,11 @@
     "alerting": {
         "alerts": [],
         "enabled": false
+    },
+    "security": {
+        "pass": "admin",
+        "ip_block": {
+            "enabled": 0
+        }
     }
 }

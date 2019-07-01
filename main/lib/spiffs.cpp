@@ -114,6 +114,11 @@ char* read_file(char * filename, long *len) {
 
     ESP_LOGI(TAG, "total size of file: %lu", *len);
     char *data = (char*)malloc(*len + 1);
+    if (!data) {
+        ESP_LOGW(TAG, "out of memory");
+        fclose(f);
+        return nullptr;
+    }
     fread(data, *len, 1, f);
     fclose(f);
     ESP_LOGI(TAG, "File read succesfully");

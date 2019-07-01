@@ -38,7 +38,7 @@ struct file_server_data {
 };
 
 extern Config *g_cfg;
-extern Plugin *active_plugins[10];
+extern Plugin *active_plugins[50];
 extern uint8_t event_triggers[8];
 extern int averagerun;
 
@@ -222,9 +222,11 @@ void requestAuthentication(httpd_req_t *req) {
 }
 
 bool isAuthenticated(httpd_req_t *req, bool force = true) {
+    //return true;
+
     ESP_LOGD(TAG, "checking if its authenticted");
     JsonObject& params = g_cfg->getConfig();
-    if (params.containsKey("security") && params["security"]["ip_block"]["enabled"]) {
+    if (params["security"]["ip_block"]["enabled"]) {
         uint32_t startIp = params["security"]["ip_block"]["start"];
         uint32_t endIp = params["security"]["ip_block"]["end"];
 
@@ -443,11 +445,15 @@ static esp_err_t download_get_handler(httpd_req_t *req)
 
 static esp_err_t config_get_handler(httpd_req_t *req)
 {
+    ESP_LOGI(TAG, "config_get_handler");
     if (!isAuthenticated(req, true)) return ESP_OK;
+    ESP_LOGI(TAG, "is authenticated");
     char filepath[FILE_PATH_MAX];
     strcpy(filepath, ((struct file_server_data *)req->user_ctx)->base_path);
     strcpy(filepath + strlen(filepath), "/config.json");
+    ESP_LOGI(TAG, "path is %s", filepath);
     http_resp_file(req, filepath);
+    ESP_LOGI(TAG, "all done");
     return ESP_OK;
 }
 
@@ -793,7 +799,8 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-StaticJsonBuffer<JSON_OBJECT_SIZE(20)> jb;
+StaticJsonBuffer<2000> jb;
+char jb_buf[4048];
 static esp_err_t plugins_post_handler(httpd_req_t *req)
 {
     if (!isAuthenticated(req, false)) return ESP_OK;
@@ -869,22 +876,25 @@ static esp_err_t plugins_handler(httpd_req_t *req)
 static esp_err_t plugins_state_handler(httpd_req_t *req)
 {
     if (!isAuthenticated(req, false)) return ESP_OK;
-
-    char buf[512];
     int len;
 
+    ESP_LOGD(TAG, "plugins_state_handler");
     jb.clear();
     JsonArray& plugins = jb.createArray();
+    ESP_LOGD(TAG, "created array");
     for (auto plugin : active_plugins) {
         if (plugin == NULL) continue;
+        ESP_LOGD(TAG, "creating object %d", plugin->id);
         JsonObject &p = plugins.createNestedObject();
+        ESP_LOGD(TAG, "getting state");
         plugin->getState(p);
     }
 
-    len = plugins.printTo(buf, 512);
-    httpd_resp_send_chunk(req, buf, len);
+    ESP_LOGD(TAG, "writting to output");
+    len = plugins.printTo(jb_buf, 4048);
+    httpd_resp_send_chunk(req, jb_buf, len);
     httpd_resp_sendstr_chunk(req, NULL);
-
+    ESP_LOGD(TAG, "all done");
     // try to get specific registered plugin
     return ESP_OK;
 }
@@ -1064,6 +1074,7 @@ static esp_err_t event_handler(httpd_req_t *req)
     uint8_t event[3];
     ((uint16_t*)event)[0] = events[eventName];
     event[2] = 0;
+    free(confData);
 
     TRIGGER_EVENT(event);
     httpd_resp_set_status(req, "200 OK");

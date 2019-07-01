@@ -15,6 +15,7 @@ import { dummy } from './14_dummy';
 import { dimmer } from './15_dimmer';
 import { udp_server } from './16_udp_server';
 import { digital_input } from './18_digital_input';
+import { pwmOutput } from './19_pwm_output';
 
 // import { bmp085 } from './6_bmp085';
 // import { pcf8591 } from './7_pcf8591';
@@ -77,6 +78,7 @@ export const devices = [
     { name: 'Generic - Dimmer', value: 15, fields: dimmer },
     { name: 'Generic - UDP Server', value: 16, fields: udp_server },
     { name: 'Generic - Digital Input', value: 18, fields: digital_input },
+    { name: 'Generic - PWM Output', value: 19, fields: pwmOutput },
     //{ name: 'Light/Lux - BH1750', value: 10, fields: bh1750 },
     // { name: 'Extra IO - ProMini Extender', value: 11, fields: pme },
     // { name: 'Display - LCD2004', value: 12, fields: lcd2004 },

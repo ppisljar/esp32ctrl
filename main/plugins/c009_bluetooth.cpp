@@ -1,3 +1,4 @@
+#ifdef CONFIG_ENABLE_C009
 #include "c009_bluetooth.h"
 #include "../lib/rule_engine.h"
 #include "../lib/config.h"
@@ -12,7 +13,7 @@
 
 static const char *TAG = "BlueToothPlugin";
 
-extern Plugin* active_plugins[10];
+extern Plugin* active_plugins[50];
 extern Config* g_cfg;
 
 PLUGIN_CONFIG(BlueToothPlugin, t1_enabled, t2_enabled, t3_enabled, t4_enabled)
@@ -681,3 +682,4 @@ bool BlueToothPlugin::init(JsonObject &params) {
     return true;
 }
 
+#endif

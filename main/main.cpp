@@ -22,7 +22,7 @@ static const char *TAG = "MAIN";
 
 // global config object
 Config *g_cfg;
-Plugin *active_plugins[10];
+Plugin *active_plugins[50];
 WiFiPlugin *wifi_plugin;
 
 
@@ -149,6 +149,10 @@ Plugin* VEML6040Plugin_myProtoype = Plugin::addPrototype(17, new VEML6040Plugin)
 #include "plugins/p018_digital_input.h"
 Plugin* DigitalInputPlugin_myProtoype = Plugin::addPrototype(18, new DigitalInputPlugin);
 #endif
+#ifdef CONFIG_ENABLE_P019
+#include "plugins/p019_pwm_output.h"
+Plugin* PWMOutputPlugin_myProtoype = Plugin::addPrototype(19, new PWMOutputPlugin);
+#endif
 
 uint8_t ledPin;
 bool ledInverted;
@@ -165,7 +169,7 @@ void init_plugins() {
     for (auto plugin : plugins){
         if (!plugin["enabled"]) continue;
         uint8_t pid = plugin["id"];
-        ESP_LOGI(TAG, "initializing plugin '%s' type: %i", plugin["name"].as<char*>(), (int)plugin["type"]);
+        ESP_LOGI(TAG, "initializing plugin '%s' type: %i id:%i", plugin["name"].as<char*>(), (int)plugin["type"], pid);
         if (!Plugin::hasType((int)plugin["type"])) {
             ESP_LOGI(TAG, "invalid plugin type, skipping ...");
             continue;
@@ -178,7 +182,7 @@ void init_plugins() {
 }
 
 void deinit_plugins() {
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 50; i++) {
         if (active_plugins[i] != nullptr) {
             free(active_plugins[i]);
         }
@@ -254,11 +258,12 @@ extern "C" void app_main()
 
     #ifdef CONFIG_ENABLE_C001_I2C
     if (cfgObject["hardware"]["i2c"]["enabled"]) {
+        ESP_LOGI(TAG, "i2c init");
         JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];
         i2c_plugin = new I2CPlugin();
-        int i2cerr = i2c_plugin->init(i2c_conf);
-        if (i2cerr != ESP_OK) {
-            ESP_LOGE(TAG, "i2c init: error %x", i2cerr);
+        bool i2cerr = i2c_plugin->init(i2c_conf);
+        if (i2cerr != true) {
+            ESP_LOGE(TAG, "i2c init: error");
         };
     }
     #endif
@@ -299,8 +304,7 @@ extern "C" void app_main()
 
     fire_system_event(1024, 0, nullptr);
 
-    
-
+    ESP_LOGI(TAG, "done loading plugins, free heap: %i", xPortGetFreeHeapSize());
     for(;;) {
         // if (resetPin < 32 && gpio_get_level((gpio_num_t)resetPin) == 0) {
         //     ESP_LOGI(TAG, "reset button pressed");

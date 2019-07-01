@@ -1,3 +1,4 @@
+#ifdef CONFIG_ENABLE_C009
 #ifndef ESP_PLUGIN_c009_H
 #define ESP_PLUGIN_c009_H
 
@@ -16,4 +17,5 @@ class BlueToothPlugin: public Plugin {
         void addCron(unsigned char *expr_string, void* callback);
 };
 
+#endif
 #endif

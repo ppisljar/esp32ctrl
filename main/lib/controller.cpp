@@ -3,9 +3,9 @@
 #include "../plugins/plugin.h"
 
 extern Config *g_cfg;
-extern Plugin *active_plugins[10];
+extern Plugin *active_plugins[50];
 
-Controller_Notify_Handler *handlers[10];
+Controller_Notify_Handler *handlers[50];
 uint last_id = 0;
 
 void registerController(Controller_Notify_Handler* handler) {

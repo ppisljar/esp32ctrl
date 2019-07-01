@@ -1,9 +1,9 @@
 #include "p007_ads111x.h"
+#include "c001_i2c.h"
 
 const char *P007_TAG = "ADS111xPlugin";
 
 PLUGIN_CONFIG(ADS111xPlugin, interval, gpio, type)
-PLUGIN_STATS(ADS111xPlugin, value, value)
 
 class ads1115_analog_read : public IO_analog_read {
     private:
@@ -29,6 +29,11 @@ bool ADS111xPlugin::init(JsonObject &params) {
     int rate = (*cfg)["rate"] | ADS1115_RATE_8;
     int gain = (*cfg)["gain"] | ADS1115_PGA_6P144;
     int addr = (*cfg)["addr"] | ADS1115_DEFAULT_ADDRESS;
+
+    if (i2c_plugin == nullptr || i2c_plugin->i2c_bus == nullptr) {
+        ESP_LOGW(P007_TAG, "I2C not started, skipping");
+        return false;
+    }
     
     adc0 = new ADS1115(addr);
 
@@ -53,6 +58,22 @@ bool ADS111xPlugin::init(JsonObject &params) {
     adc0->setGain(gain);
 
     return true;
+}
+
+bool ADS111xPlugin::getState(JsonObject &params) {
+    return true;
+}
+
+bool ADS111xPlugin::setState(JsonObject &params) {
+    return true;
+}
+
+void* ADS111xPlugin::getStateVarPtr(int n, Type *t) {
+    return nullptr;
+}
+
+void ADS111xPlugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
+
 }
 
 ADS111xPlugin::~ADS111xPlugin() {

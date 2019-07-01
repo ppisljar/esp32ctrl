@@ -12,7 +12,7 @@
 class Config
 {
     private:
-        StaticJsonBuffer<50000> jsonBuffer;
+        StaticJsonBuffer<20000> jsonBuffer;
         JsonObject *configuration;
 
     public:

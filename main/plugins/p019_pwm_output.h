@@ -1,16 +1,16 @@
-#ifndef ESP_PLUGIN_001_H
-#define ESP_PLUGIN_001_H
+#ifndef ESP_PLUGIN_019_H
+#define ESP_PLUGIN_019_H
 
 #include "plugin_defs.h"
 
-class SwitchPlugin: public Plugin {
+class PWMOutputPlugin: public Plugin {
     private:
         int gpio = 255;
         uint8_t state = 0;
         Type state_t = Type::byte;
 
     public:
-        DEFINE_PPLUGIN(SwitchPlugin, 1);
+        DEFINE_PPLUGIN(PWMOutputPlugin, 19);
 
 };
 

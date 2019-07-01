@@ -10610,13 +10610,16 @@ class Form extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 
       case 'gpio':
         options = config.pins || window.pins();
+        if (typeof options == 'function') options = options();
 
         const selectPin = (val, name, form) => {
-          const pins = window.pins();
-          const selectedPin = pins.find(pin => pin.value == val);
-          form.props.config.groups[name].configs = { ...selectedPin.configs
-          };
-          form.forceUpdate();
+          const selectedPin = options.find(pin => pin.value == val);
+
+          if (form.props.config.groups[name]) {
+            form.props.config.groups[name].configs = { ...selectedPin.configs
+            };
+            form.forceUpdate();
+          }
         };
 
         return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
@@ -11644,6 +11647,56 @@ const digital_input = new DigitalInput();
 
 /***/ }),
 
+/***/ "./src/devices/19_pwm_output.js":
+/*!**************************************!*\
+  !*** ./src/devices/19_pwm_output.js ***!
+  \**************************************/
+/*! exports provided: pwmOutput */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "pwmOutput", function() { return pwmOutput; });
+/* harmony import */ var _defs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./_defs */ "./src/devices/_defs.js");
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+
+class PWMOutput extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
+  constructor() {
+    super();
+
+    _defineProperty(this, "defaults", () => {
+      return {
+        'params.gpio': 255,
+        'state.values[0].name': 'Output',
+        'state.values[0].type': '1'
+      };
+    });
+
+    this.params = {
+      name: 'Configuration',
+      configs: {
+        gpio: {
+          name: 'GPIO',
+          type: 'gpio',
+          pins: () => window.io_pins.getPins('analog_out')
+        }
+      }
+    };
+    this.gpio = {
+      name: 'GPIO Settings (global)',
+      configs: {}
+    };
+    this.vals = 1;
+  }
+
+}
+
+const pwmOutput = new PWMOutput();
+
+/***/ }),
+
 /***/ "./src/devices/1_switch.js":
 /*!*********************************!*\
   !*** ./src/devices/1_switch.js ***!
@@ -12260,6 +12313,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _15_dimmer__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./15_dimmer */ "./src/devices/15_dimmer.js");
 /* harmony import */ var _16_udp_server__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./16_udp_server */ "./src/devices/16_udp_server.js");
 /* harmony import */ var _18_digital_input__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./18_digital_input */ "./src/devices/18_digital_input.js");
+/* harmony import */ var _19_pwm_output__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./19_pwm_output */ "./src/devices/19_pwm_output.js");
+
 
 
 
@@ -12390,6 +12445,10 @@ const devices = [{
   name: 'Generic - Digital Input',
   value: 18,
   fields: _18_digital_input__WEBPACK_IMPORTED_MODULE_16__["digital_input"]
+}, {
+  name: 'Generic - PWM Output',
+  value: 19,
+  fields: _19_pwm_output__WEBPACK_IMPORTED_MODULE_17__["pwmOutput"]
 }].sort((a, b) => a.name.localeCompare(b.name));
 
 /***/ }),
@@ -12493,7 +12552,14 @@ const prepareRules = async () => {
 
 const loadConfig = async () => {
   const cfg = await fetch('/config.json').then(r => {
-    _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].user(r.headers.get('user').replace(',', '').trim());
+    const header = r.headers.get('user');
+
+    if (header) {
+      _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].user(header.replace(',', '').trim());
+    } // todo: remove
+
+
+    _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].user('admin');
     return r.json();
   });
   _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].init(cfg);
@@ -12963,7 +13029,7 @@ class IO_PINS {
     }, [...startPins]);
     this.setUsedPins(pins);
     const cs = Array.isArray(capabilities) ? capabilities : [capabilities];
-    return pins.filter(pin => cs.every(c => pin.capabilities.includes(c)));
+    return cs.length ? pins.filter(pin => cs.every(c => pin.capabilities.includes(c))) : pins;
   }
 
 }
@@ -15133,8 +15199,7 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
         class: "button",
         onClick: buttonClick
       }, !state ? 'ON' : 'OFF')));
-    }; // TODO: we should have a generic way to access device values
-
+    };
 
     this.renderSensor = (device, deviceState) => {
       return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
@@ -15181,6 +15246,34 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
       })))));
     };
 
+    this.renderPWM = (device, deviceState) => {
+      const valueChange = async e => {
+        await fetch(`/plugin/${device.id}/state/${e.currentTarget.dataset.id}/${e.currentTarget.value}`);
+      };
+
+      return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        className: "media device"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "media-left"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("p", {
+        class: "image is-64x64"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("span", {
+        class: device.icon
+      }))), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "media-content"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "info"
+      }, device.name, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("span", null, device.state && device.state.values.map((value, i) => {
+        return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("input", {
+          width: "200px",
+          type: "range",
+          value: deviceState[value.name],
+          "data-id": i,
+          onChange: valueChange
+        });
+      })))));
+    };
+
     this.renderDevice = (device, deviceState) => {
       switch (device.type) {
         case 1:
@@ -15198,6 +15291,9 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 
         case 15:
           return this.renderDimmer(device, deviceState);
+
+        case 19:
+          return this.renderPWM(device, deviceState);
 
         default:
           return null;

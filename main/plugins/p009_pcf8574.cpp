@@ -4,7 +4,6 @@
 const char *P009_TAG = "PCF8574Plugin";
 
 PLUGIN_CONFIG(PCF8574Plugin, interval, gpio, type)
-PLUGIN_STATS(PCF8574Plugin, value, value)
 
 class PCF8574Plugin_set_direction : public IO_set_direction {
     public:
@@ -64,6 +63,11 @@ bool PCF8574Plugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]);
 
+    if (i2c_plugin == nullptr || i2c_plugin->i2c_bus == nullptr) {
+        ESP_LOGW(P009_TAG, "I2C not started, skipping");
+        return false;
+    }
+
     uint8_t pcf8574_addr = (*cfg)["addr"];
     uint8_t type = (*cfg)["type"] | 0;
     ESP_LOGI(P009_TAG, "PCF8574 init on addr %d", pcf8574_addr);
@@ -91,6 +95,22 @@ bool PCF8574Plugin::init(JsonObject &params) {
 
 
     return true;
+}
+
+bool PCF8574Plugin::getState(JsonObject &params) {
+    return true;
+}
+
+bool PCF8574Plugin::setState(JsonObject &params) {
+    return true;
+}
+
+void* PCF8574Plugin::getStateVarPtr(int n, Type *t) {
+    return nullptr;
+}
+
+void PCF8574Plugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
+
 }
 
 PCF8574Plugin::~PCF8574Plugin() {
