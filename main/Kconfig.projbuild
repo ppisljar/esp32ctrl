@@ -102,6 +102,10 @@ menu "MyESP32 CTRL"
             bool "SWITCH"
             default y
 
+        config ENABLE_P019
+            bool "PWM Output"
+            default y
+
         config ENABLE_P014_DUMMY
             bool "Dummy Device"
             default y

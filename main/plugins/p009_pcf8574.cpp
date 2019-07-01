@@ -64,6 +64,11 @@ bool PCF8574Plugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]);
 
+    if (i2c_plugin == nullptr || i2c_plugin->i2c_bus == nullptr) {
+        ESP_LOGW(P009_TAG, "I2C not started, skipping");
+        return false;
+    }
+
     uint8_t pcf8574_addr = (*cfg)["addr"];
     uint8_t type = (*cfg)["type"] | 0;
     ESP_LOGI(P009_TAG, "PCF8574 init on addr %d", pcf8574_addr);

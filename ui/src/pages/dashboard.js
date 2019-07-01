@@ -65,7 +65,7 @@ export class DashboardPage extends Component {
                 </div>
             );
         };
-// TODO: we should have a generic way to access device values
+
         this.renderSensor = (device, deviceState) => {
             return (
                 <div className='media device'>
@@ -111,6 +111,31 @@ export class DashboardPage extends Component {
             </div>);
         };
 
+        this.renderPWM = (device, deviceState) => {
+            const valueChange = async (e) => {
+                await fetch(`/plugin/${device.id}/state/${e.currentTarget.dataset.id}/${e.currentTarget.value}`);
+            };
+
+            return (
+            <div className='media device'>
+                <div class="media-left">
+                    <p class="image is-64x64">
+                        <span class={device.icon} />
+                    </p>
+                </div>
+                <div class="media-content">
+                    <div class='info'>
+                    {device.name}
+                    <span>
+                    {device.state && device.state.values.map((value, i) => {
+                        return (<input width='200px' type='range' value={deviceState[value.name]} data-id={i} onChange={valueChange}/>);
+                    })} 
+                    </span>
+                    </div>
+                </div>
+            </div>);
+        };
+
         this.renderDevice = (device, deviceState) => {
             switch (device.type) {
                 case 1: return this.renderSwitch(device, deviceState);
@@ -118,6 +143,7 @@ export class DashboardPage extends Component {
                         return this.renderSensor(device, deviceState);
                 case 5: return this.renderRegulator(device, deviceState);
                 case 15: return this.renderDimmer(device, deviceState);
+                case 19: return this.renderPWM(device, deviceState);
                 
                 default:
                     return (null);

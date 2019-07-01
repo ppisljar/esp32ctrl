@@ -1,4 +1,5 @@
 #include "p007_ads111x.h"
+#include "c001_i2c.h"
 
 const char *P007_TAG = "ADS111xPlugin";
 
@@ -29,6 +30,11 @@ bool ADS111xPlugin::init(JsonObject &params) {
     int rate = (*cfg)["rate"] | ADS1115_RATE_8;
     int gain = (*cfg)["gain"] | ADS1115_PGA_6P144;
     int addr = (*cfg)["addr"] | ADS1115_DEFAULT_ADDRESS;
+
+    if (i2c_plugin == nullptr || i2c_plugin->i2c_bus == nullptr) {
+        ESP_LOGW(P007_TAG, "I2C not started, skipping");
+        return false;
+    }
     
     adc0 = new ADS1115(addr);
 

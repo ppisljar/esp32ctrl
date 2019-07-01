@@ -222,9 +222,11 @@ void requestAuthentication(httpd_req_t *req) {
 }
 
 bool isAuthenticated(httpd_req_t *req, bool force = true) {
+    //return true;
+
     ESP_LOGD(TAG, "checking if its authenticted");
     JsonObject& params = g_cfg->getConfig();
-    if (params.containsKey("security") && params["security"]["ip_block"]["enabled"]) {
+    if (params["security"]["ip_block"]["enabled"]) {
         uint32_t startIp = params["security"]["ip_block"]["start"];
         uint32_t endIp = params["security"]["ip_block"]["end"];
 
@@ -793,7 +795,7 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-StaticJsonBuffer<JSON_OBJECT_SIZE(20)> jb;
+StaticJsonBuffer<JSON_OBJECT_SIZE(100)> jb;
 static esp_err_t plugins_post_handler(httpd_req_t *req)
 {
     if (!isAuthenticated(req, false)) return ESP_OK;
@@ -870,7 +872,7 @@ static esp_err_t plugins_state_handler(httpd_req_t *req)
 {
     if (!isAuthenticated(req, false)) return ESP_OK;
 
-    char buf[512];
+    char buf[2048];
     int len;
 
     jb.clear();
@@ -881,7 +883,7 @@ static esp_err_t plugins_state_handler(httpd_req_t *req)
         plugin->getState(p);
     }
 
-    len = plugins.printTo(buf, 512);
+    len = plugins.printTo(buf, 2048);
     httpd_resp_send_chunk(req, buf, len);
     httpd_resp_sendstr_chunk(req, NULL);
 

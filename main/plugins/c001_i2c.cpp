@@ -30,6 +30,7 @@ bool I2CPlugin::init(JsonObject &params) {
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
     conf.master.clk_speed = (int)params["freq"];
     i2c_bus = iot_i2c_bus_create((i2c_port_t)i2c_master_port, &conf);
+    if (i2c_bus == nullptr) return false;
 
     return true;
     //return i2c_driver_install((i2c_port_t)i2c_master_port, conf.mode, 0, 0, 0);

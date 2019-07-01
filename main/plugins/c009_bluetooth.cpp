@@ -1,3 +1,4 @@
+#ifdef CONFIG_ENABLE_C009
 #include "c009_bluetooth.h"
 #include "../lib/rule_engine.h"
 #include "../lib/config.h"
@@ -681,3 +682,4 @@ bool BlueToothPlugin::init(JsonObject &params) {
     return true;
 }
 
+#endif

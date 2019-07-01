@@ -149,6 +149,10 @@ Plugin* VEML6040Plugin_myProtoype = Plugin::addPrototype(17, new VEML6040Plugin)
 #include "plugins/p018_digital_input.h"
 Plugin* DigitalInputPlugin_myProtoype = Plugin::addPrototype(18, new DigitalInputPlugin);
 #endif
+#ifdef CONFIG_ENABLE_P019
+#include "plugins/p019_pwm_output.h"
+Plugin* PWMOutputPlugin_myProtoype = Plugin::addPrototype(19, new PWMOutputPlugin);
+#endif
 
 uint8_t ledPin;
 bool ledInverted;
@@ -254,11 +258,12 @@ extern "C" void app_main()
 
     #ifdef CONFIG_ENABLE_C001_I2C
     if (cfgObject["hardware"]["i2c"]["enabled"]) {
+        ESP_LOGI(TAG, "i2c init");
         JsonObject &i2c_conf = cfgObject["hardware"]["i2c"];
         i2c_plugin = new I2CPlugin();
-        int i2cerr = i2c_plugin->init(i2c_conf);
-        if (i2cerr != ESP_OK) {
-            ESP_LOGE(TAG, "i2c init: error %x", i2cerr);
+        bool i2cerr = i2c_plugin->init(i2c_conf);
+        if (i2cerr != true) {
+            ESP_LOGE(TAG, "i2c init: error");
         };
     }
     #endif
@@ -300,7 +305,7 @@ extern "C" void app_main()
     fire_system_event(1024, 0, nullptr);
 
     
-
+    ESP_LOGI(TAG, "done loading plugins, free heap: %i", xPortGetFreeHeapSize());
     for(;;) {
         // if (resetPin < 32 && gpio_get_level((gpio_num_t)resetPin) == 0) {
         //     ESP_LOGI(TAG, "reset button pressed");

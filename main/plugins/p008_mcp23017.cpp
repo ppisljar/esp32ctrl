@@ -52,6 +52,11 @@ bool MCP23017Plugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]);
 
+    if (i2c_plugin == nullptr || i2c_plugin->i2c_bus == nullptr) {
+        ESP_LOGW(P008_TAG, "I2C not started, skipping");
+        return false;
+    }
+
     uint8_t mcp23017_addr = (*cfg)["addr"];
     void* dev = iot_mcp23017_create(i2c_plugin->i2c_bus, mcp23017_addr);
     MCP23017Plugin_digital_read *digitalRead = new MCP23017Plugin_digital_read(dev, &pins);

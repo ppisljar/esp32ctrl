@@ -96,7 +96,7 @@ class IO_PINS {
         }, [...startPins]);
         this.setUsedPins(pins);
         const cs = Array.isArray(capabilities) ? capabilities : [capabilities];
-        return pins.filter(pin => cs.every(c => pin.capabilities.includes(c)));
+        return cs.length ? pins.filter(pin => cs.every(c => pin.capabilities.includes(c))) : pins; 
     }
 
 }
