@@ -6,6 +6,7 @@
 class SwitchPlugin: public Plugin {
     private:
         int gpio = 255;
+        bool invert = false;
         uint8_t state = 0;
         Type state_t = Type::byte;
 

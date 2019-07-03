@@ -28,7 +28,7 @@ class PCA9685 extends Device {
        return [...new Array(16)].map((x,i) => ({
            name: `${conf.name} GPIO${i}`,
            value: i,
-           capabilities: ['analog_out'],
+           capabilities: ['analog_out', 'digital_out'],
        }));
     };
 }

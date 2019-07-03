@@ -12,8 +12,6 @@
 #include <esp_system.h>
 #include <esp_log.h>
 
-#define I2C_FREQ_HZ 1000000 // 1 Mhz
-
 #define REG_MODE1      0x00
 #define REG_MODE2      0x01
 #define REG_SUBADR1    0x02
@@ -50,7 +48,9 @@
 
 #define CHECK_ARG(VAL) do { if (!(VAL)) return ESP_ERR_INVALID_ARG; } while (0)
 #define CHECK_ARG_LOGE(VAL, msg, ...) do { if (!(VAL)) { ESP_LOGE(TAG, msg, ## __VA_ARGS__); return ESP_ERR_INVALID_ARG; } } while (0)
-#define CHECK(x) do { esp_err_t __; if ((__ = x) != ESP_OK) return __; } while (0)
+#undef ESP_ERROR_CHECK
+#define ESP_ERROR_CHECK(x)   do { esp_err_t rc = (x); if (rc != ESP_OK) { ESP_LOGE("err", "esp_err_t = %d", rc); /*assert(0 && #x);*/} } while(0);
+
 
 static const char *TAG = "PCA9685";
 
@@ -61,26 +61,24 @@ inline static uint32_t round_div(uint32_t x, uint32_t y)
 
 inline static esp_err_t write_reg(uint8_t dev, uint8_t reg, uint8_t val)
 {
-    return I2Cdev::writeByte(dev, reg, val);
+    return I2Cdev::writeByte(dev, reg, val) ? ESP_OK : ESP_FAIL;
 }
 
 inline static esp_err_t read_reg(uint8_t dev, uint8_t reg, uint8_t *val)
 {
-    return I2Cdev::readByte(dev, reg, val);
+    return I2Cdev::readByte(dev, reg, val) ? ESP_OK : ESP_FAIL;
 }
 
 static esp_err_t update_reg(uint8_t dev, uint8_t reg, uint8_t mask, uint8_t val)
 {
     uint8_t v;
 
-    CHECK(read_reg(dev, reg, &v));
+    ESP_ERROR_CHECK(read_reg(dev, reg, &v));
     v = (v & ~mask) | val;
-    CHECK(write_reg(dev, reg, v));
+    ESP_ERROR_CHECK(write_reg(dev, reg, v));
 
     return ESP_OK;
 }
-
-#define I2C_DEV_CHECK(dev, X) X;
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -92,7 +90,7 @@ esp_err_t pca9685_init(uint8_t dev)
 
 
     // Enable autoincrement
-    I2C_DEV_CHECK(dev, update_reg(dev, REG_MODE1, MODE1_AI, MODE1_AI));
+    ESP_ERROR_CHECK(update_reg(dev, REG_MODE1, MODE1_AI, MODE1_AI));
 
 
     return ESP_OK;
@@ -104,10 +102,10 @@ esp_err_t pca9685_set_subaddr(uint8_t dev, uint8_t num, uint8_t subaddr, bool en
     CHECK_ARG_LOGE(num <= MAX_SUBADDR, "Invalid subadress number (%d), must be in (0..2)", num);
 
 
-    I2C_DEV_CHECK(dev, write_reg(dev, REG_SUBADR1 + num, subaddr << 1));
+    ESP_ERROR_CHECK(write_reg(dev, REG_SUBADR1 + num, subaddr << 1));
 
     uint8_t mask = 1 << (MODE1_SUB_BIT - num);
-    I2C_DEV_CHECK(dev, update_reg(dev, REG_MODE1, mask, enable ? mask : 0));
+    ESP_ERROR_CHECK(update_reg(dev, REG_MODE1, mask, enable ? mask : 0));
 
 
     return ESP_OK;
@@ -119,13 +117,13 @@ esp_err_t pca9685_restart(uint8_t dev)
 
 
     uint8_t mode;
-    I2C_DEV_CHECK(dev, read_reg(dev, REG_MODE1, &mode));
+    ESP_ERROR_CHECK(read_reg(dev, REG_MODE1, &mode));
     if (mode & MODE1_RESTART)
     {
-        I2C_DEV_CHECK(dev, write_reg(dev, REG_MODE1, mode & ~MODE1_SLEEP));
+        write_reg(dev, REG_MODE1, mode & ~MODE1_SLEEP);
         ets_delay_us(WAKEUP_DELAY_US);
     }
-    I2C_DEV_CHECK(dev, write_reg(dev, REG_MODE1, (mode & ~MODE1_SLEEP) | MODE1_RESTART));
+    ESP_ERROR_CHECK(write_reg(dev, REG_MODE1, (mode & ~MODE1_SLEEP) | MODE1_RESTART));
 
 
     return ESP_OK;
@@ -138,7 +136,7 @@ esp_err_t pca9685_is_sleeping(uint8_t dev, bool *sleeping)
 
     uint8_t v;
 
-    I2C_DEV_CHECK(dev, read_reg(dev, REG_MODE1, &v));
+    ESP_ERROR_CHECK(read_reg(dev, REG_MODE1, &v));
 
     *sleeping = v & MODE1_SLEEP;
 
@@ -150,7 +148,7 @@ esp_err_t pca9685_sleep(uint8_t dev, bool sleep)
     CHECK_ARG(dev);
 
 
-    I2C_DEV_CHECK(dev, update_reg(dev, REG_MODE1, MODE1_SLEEP, sleep ? MODE1_SLEEP : 0));
+    ESP_ERROR_CHECK(update_reg(dev, REG_MODE1, MODE1_SLEEP, sleep ? MODE1_SLEEP : 0));
     if (!sleep)
         ets_delay_us(WAKEUP_DELAY_US);
 
@@ -165,7 +163,7 @@ esp_err_t pca9685_is_output_inverted(uint8_t dev, bool *inv)
 
     uint8_t v;
 
-    I2C_DEV_CHECK(dev, read_reg(dev, REG_MODE2, &v));
+    ESP_ERROR_CHECK(read_reg(dev, REG_MODE2, &v));
 
     *inv = v & MODE2_INVRT;
 
@@ -177,7 +175,7 @@ esp_err_t pca9685_set_output_inverted(uint8_t dev, bool inverted)
     CHECK_ARG(dev);
 
 
-    I2C_DEV_CHECK(dev, update_reg(dev, REG_MODE2, MODE2_INVRT, inverted ? MODE2_INVRT : 0));
+    ESP_ERROR_CHECK(update_reg(dev, REG_MODE2, MODE2_INVRT, inverted ? MODE2_INVRT : 0));
 
 
     return ESP_OK;
@@ -190,7 +188,7 @@ esp_err_t pca9685_get_output_open_drain(uint8_t dev, bool *od)
 
     uint8_t v;
 
-    I2C_DEV_CHECK(dev, read_reg(dev, REG_MODE2, &v));
+    ESP_ERROR_CHECK(read_reg(dev, REG_MODE2, &v));
 
     *od = v & MODE2_OUTDRV;
 
@@ -202,7 +200,7 @@ esp_err_t pca9685_set_output_open_drain(uint8_t dev, bool od)
     CHECK_ARG(dev);
 
 
-    I2C_DEV_CHECK(dev, update_reg(dev, REG_MODE2, MODE2_OUTDRV, od ? 0 : MODE2_OUTDRV));
+    ESP_ERROR_CHECK(update_reg(dev, REG_MODE2, MODE2_OUTDRV, od ? 0 : MODE2_OUTDRV));
 
 
     return ESP_OK;
@@ -214,7 +212,7 @@ esp_err_t pca9685_get_prescaler(uint8_t dev, uint8_t *prescaler)
     CHECK_ARG(prescaler);
 
 
-    I2C_DEV_CHECK(dev, read_reg(dev, REG_PRE_SCALE, prescaler));
+    ESP_ERROR_CHECK(read_reg(dev, REG_PRE_SCALE, prescaler));
 
 
     return ESP_OK;
@@ -228,7 +226,7 @@ esp_err_t pca9685_set_prescaler(uint8_t dev, uint8_t prescaler)
 
     pca9685_sleep(dev, true);
 
-    I2C_DEV_CHECK(dev, write_reg(dev, REG_PRE_SCALE, prescaler));
+    ESP_ERROR_CHECK(write_reg(dev, REG_PRE_SCALE, prescaler));
 
     pca9685_sleep(dev, false);
 
@@ -242,7 +240,7 @@ esp_err_t pca9685_get_pwm_frequency(uint8_t dev, uint16_t *freq)
 
     uint8_t prescale;
 
-    I2C_DEV_CHECK(dev, read_reg(dev, REG_PRE_SCALE, &prescale));
+    ESP_ERROR_CHECK(read_reg(dev, REG_PRE_SCALE, &prescale));
 
     *freq = INTERNAL_FREQ / ((uint32_t)4096 * (prescale + 1));
 
@@ -272,26 +270,29 @@ esp_err_t pca9685_set_pwm_value(uint8_t dev, uint8_t channel, uint16_t val)
     if (val == 0)
     {
         // Full off
-        I2C_DEV_CHECK(dev, write_reg(dev, reg + OFFS_REG_LED_OFF, LED_FULL_ON_OFF));
+        ESP_ERROR_CHECK(write_reg(dev, reg + OFFS_REG_LED_OFF, LED_FULL_ON_OFF));
     }
     else if (val < 4096)
     {
         // Normal
         uint8_t buf[4] = { 0, 0, (uint8_t)val, (uint8_t)(val >> 8) };
-        I2Cdev::writeBytes(dev, reg, 4, buf);
+        if (!I2Cdev::writeBytes(dev, reg, 4, buf)) {
+            ESP_LOGW(TAG, "failed");
+            return ESP_FAIL;
+        }
     }
     else
     {
         // Full on
-        I2C_DEV_CHECK(dev, write_reg(dev, reg + OFFS_REG_LED_ON, LED_FULL_ON_OFF));
+        ESP_ERROR_CHECK(write_reg(dev, reg + OFFS_REG_LED_OFF, 0));
+        ESP_ERROR_CHECK(write_reg(dev, reg + OFFS_REG_LED_ON, LED_FULL_ON_OFF));
     }
 
 
     return ESP_OK;
 }
 
-esp_err_t pca9685_set_pwm_values(uint8_t dev, uint8_t first_ch, uint8_t channels,
-        const uint16_t *values)
+esp_err_t pca9685_set_pwm_values(uint8_t dev, uint8_t first_ch, uint8_t channels, const uint16_t *values)
 {
     CHECK_ARG(values);
     CHECK_ARG_LOGE(channels > 0 && first_ch + channels - 1 < PCA9685_CHANNEL_ALL,

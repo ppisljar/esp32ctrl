@@ -12,12 +12,13 @@ void DS18x20Plugin::task(void * pvParameters)
     JsonObject &cfg = *(s->cfg);
 
     ESP_LOGI(P004_TAG, "main task: %i:%i", (unsigned)s, unsigned(s->cfg));
+    int interval = cfg["interval"] | 60;
+    int gpio = cfg["gpio"] | 255;
+    if (interval == 0) interval = 60;
+
     for( ;; )
     {
-        int interval = cfg["interval"] | 60;
-        int gpio = cfg["gpio"] | 255;
 
-        if (interval == 0) interval = 60;
 
         if (gpio != 255) {
             if (ds18x20_measure_and_read_multi((gpio_num_t)gpio, s->addrs, s->sensor_count, s->temperature) == ESP_OK) {
@@ -33,11 +34,12 @@ void DS18x20Plugin::task(void * pvParameters)
 
 bool DS18x20Plugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
-    state_cfg = &((JsonArray &)params["state"]);
+    state_cfg = &((JsonArray &)params["state"]["values"]);
 
     for (int i = 0; i < 16; i++) temperature_t[i] = Type::decimal;
-    if (params["gpio"] != 255) {
+    if ((*cfg)["gpio"] != 255) {
         sensor_count = ds18x20_scan_devices((gpio_num_t)(*cfg)["gpio"].as<int>(), addrs, 4);
+        ESP_LOGI(P004_TAG, "found %d ds18x20 sensors", sensor_count);
     }
 
     xTaskCreatePinnedToCore(this->task, P004_TAG, 4096, this, 5, &task_h, 1);
@@ -45,20 +47,16 @@ bool DS18x20Plugin::init(JsonObject &params) {
 }
 
 bool DS18x20Plugin::getState(JsonObject &params) {
-    char *stateName;
-    for (int n = 0; n < 16; n++) {
-        stateName = (char*)(*state_cfg)[n]["name"].as<char*>();
-        params[stateName] = temperature[n];
+    char *stateName = (char*)(*state_cfg)[0]["name"].as<char*>();
+    ESP_LOGI(P004_TAG, "getting state for ds");
+    JsonArray& arr = params.createNestedArray(stateName);
+    for (int n = 0; n < sensor_count; n++) {
+        arr.add(temperature[n]);
     }
     return true;
 }
 
 bool DS18x20Plugin::setState(JsonObject &params) {
-    char *stateName;
-    for (int n = 0; n < 16; n++) {
-        stateName = (char*)(*state_cfg)[n]["name"].as<char*>();
-        temperature[n] = params[stateName];
-    }
     return true;
 }
 

@@ -6,8 +6,8 @@
 class PWMOutputPlugin: public Plugin {
     private:
         int gpio = 255;
-        uint8_t state = 0;
-        Type state_t = Type::byte;
+        uint16_t state = 0;
+        Type state_t = Type::integer;
 
     public:
         DEFINE_PPLUGIN(PWMOutputPlugin, 19);

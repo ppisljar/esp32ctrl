@@ -13,13 +13,14 @@ export class DiscoverPage extends Component {
         }
 
         this.scani2c = () => {
-            fetch('/i2cscanner').then(r => r.json()).then(r => {
-                this.setState({ devices: r });
+            fetch('/i2c_scan').then(r => r.json()).then(r => {
+
+                this.setState({ devices: Object.keys(r).map(k => `${k} : ${r[k] ? 'TRUE' : ''}`) });
             });
         }
 
         this.scanwifi = () => {
-            fetch('/wifiscanner').then(r => r.json()).then(r => {
+            fetch('/wifi_scan').then(r => r.json()).then(r => {
                 this.setState({ devices: r });
             });
         }

@@ -36,29 +36,22 @@ bool I2CPlugin::init(JsonObject &params) {
     //return i2c_driver_install((i2c_port_t)i2c_master_port, conf.mode, 0, 0, 0);
 }
 
-void I2CPlugin::scan() {
-    uint8_t address;
-    printf("     0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f\r\n");
-    for (int i = 0; i < 128; i += 16) {
-        printf("%02x: ", i);
-        for (int j = 0; j < 16; j++) {
-            fflush(stdout);
-            address = i + j;
+void I2CPlugin::scan(bool to[128]) {
+    for (int i = 0; i < 128; i += 1) {
             i2c_cmd_handle_t cmd = i2c_cmd_link_create();
             i2c_master_start(cmd);
-            i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
+            i2c_master_write_byte(cmd, (i << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
             i2c_master_stop(cmd);
             esp_err_t ret = i2c_master_cmd_begin((i2c_port_t)0, cmd, 50 / portTICK_RATE_MS);
             i2c_cmd_link_delete(cmd);
             if (ret == ESP_OK) {
-                printf("%02x ", address);
+                to[i] = 1;
             } else if (ret == ESP_ERR_TIMEOUT) {
-                printf("UU ");
+                to[i] = 0;
             } else {
-                printf("-- ");
+                to[i] = 0;
             }
-        }
-        printf("\r\n");
+
     }
 
 }

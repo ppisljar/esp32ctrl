@@ -40,6 +40,7 @@ THE SOFTWARE.
 #include "I2Cdev.h"
 
 #define I2C_NUM I2C_NUM_0
+#define TAG "I2C"
 
 #undef ESP_ERROR_CHECK
 #define ESP_ERROR_CHECK(x)   do { esp_err_t rc = (x); if (rc != ESP_OK) { ESP_LOGE("err", "esp_err_t = %d", rc); /*assert(0 && #x);*/} } while(0);
@@ -381,6 +382,7 @@ bool I2Cdev::writeBitsW(uint8_t devAddr, uint8_t regAddr, uint8_t bitStart, uint
 bool I2Cdev::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
 	i2c_cmd_handle_t cmd;
 
+    ESP_LOGI(TAG, "I2C writeByte %i to %02x:%d", data, devAddr, regAddr);
 	cmd = i2c_cmd_link_create();
 	ESP_ERROR_CHECK(i2c_master_start(cmd));
 	ESP_ERROR_CHECK(i2c_master_write_byte(cmd, (devAddr << 1) | I2C_MASTER_WRITE, 1));
@@ -403,6 +405,7 @@ bool I2Cdev::writeByte(uint8_t devAddr, uint8_t regAddr, uint8_t data) {
 bool I2Cdev::writeBytes(uint8_t devAddr, uint8_t regAddr, uint8_t length, uint8_t *data){
 	i2c_cmd_handle_t cmd;
 
+    ESP_LOGI(TAG, "I2C writeBytes [%i, ...] to %02x:%d", data[0], devAddr, regAddr);
 	cmd = i2c_cmd_link_create();
 	ESP_ERROR_CHECK(i2c_master_start(cmd));
 	ESP_ERROR_CHECK(i2c_master_write_byte(cmd, (devAddr << 1) | I2C_MASTER_WRITE, 1));
@@ -423,7 +426,7 @@ bool I2Cdev::writeWord(uint8_t devAddr, uint8_t regAddr, uint16_t data){
 	return true;
 }
 
-#define TAG "I2C"
+
 
 esp_err_t I2Cdev::read(uint8_t dev, uint8_t *out_data, size_t out_size, uint8_t *in_data, size_t in_size)
 {

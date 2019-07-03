@@ -7,7 +7,7 @@ class InputSwitch extends Device {
         this.params = {
             name: 'Configuration',
             configs: {
-                gpio: { name: 'GPIO', type: 'gpio' },
+                gpio: { name: 'GPIO', type: 'gpio', pins: () => window.io_pins.getPins('digital_out') },
                 invert: { name: 'Invert', type: 'checkbox' },
             }
         };

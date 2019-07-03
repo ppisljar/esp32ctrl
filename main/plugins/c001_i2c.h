@@ -22,7 +22,7 @@ class I2CPlugin: public Plugin {
         DEFINE_PLUGIN(I2CPlugin);
         esp_err_t read(uint8_t addr, uint8_t *data_rd, size_t size);
         esp_err_t write(uint8_t addr, uint8_t *data_wr, size_t size);
-        void scan();
+        void scan(bool to[256]);
 
         i2c_bus_handle_t i2c_bus;
 };

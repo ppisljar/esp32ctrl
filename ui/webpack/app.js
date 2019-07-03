@@ -10878,7 +10878,7 @@ class PCA9685 extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
       return [...new Array(16)].map((x, i) => ({
         name: `${conf.name} GPIO${i}`,
         value: i,
-        capabilities: ['analog_out']
+        capabilities: ['analog_out', 'digital_out']
       }));
     });
 
@@ -11731,7 +11731,8 @@ class InputSwitch extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
       configs: {
         gpio: {
           name: 'GPIO',
-          type: 'gpio'
+          type: 'gpio',
+          pins: () => window.io_pins.getPins('digital_out')
         },
         invert: {
           name: 'Invert',
@@ -15215,6 +15216,10 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
       }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
         class: "info"
       }, device.name, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("span", null, device.state && device.state.values.map((value, i) => {
+        if (deviceState[value.name] && deviceState[value.name].length) {
+          return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, value.name, ": ", deviceState[value.name][0], " ");
+        }
+
         return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, value.name, ": ", deviceState[value.name], " ");
       })))));
     };
@@ -15267,6 +15272,8 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
         return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("input", {
           width: "200px",
           type: "range",
+          min: "0",
+          max: "4096",
           value: deviceState[value.name],
           "data-id": i,
           onChange: valueChange
@@ -15303,7 +15310,7 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 
   render(props) {
     return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, this.state.devices.map((device, i) => {
-      return this.renderDevice(device, this.state.deviceState[i] || {});
+      return this.renderDevice(device, this.state.deviceState[device.id] || {});
     }));
   }
 
@@ -15481,6 +15488,7 @@ const setDefaultConfig = (type, config) => {
       Object(_lib_helpers__WEBPACK_IMPORTED_MODULE_4__["set"])(config, key, val);
     });
   });
+  config.state.values.length = device.fields.vals;
 
   if (device.fields.defaults) {
     const defaultConfig = device.fields.defaults();
@@ -15563,6 +15571,7 @@ const ruleUsesDevice = (rule, deviceId) => {
 };
 
 const findRulesUsingDevice = (rules, deviceId, arr = []) => {
+  if (!rules) return arr;
   rules.forEach(rule => {
     if (ruleUsesDevice(rule, deviceId)) {
       arr.push(rule);
@@ -15577,6 +15586,8 @@ const findRulesUsingDevice = (rules, deviceId, arr = []) => {
 };
 
 const deleteRulesUsingDevice = (rules, deviceId) => {
+  if (!rules) return;
+
   for (var i = rules.length - 1; i >= 0; i--) {
     if (ruleUsesDevice(rules[i], deviceId)) rules.splice(i, 1);
   }
@@ -15866,15 +15877,15 @@ class DiscoverPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
     };
 
     this.scani2c = () => {
-      fetch('/i2cscanner').then(r => r.json()).then(r => {
+      fetch('/i2c_scan').then(r => r.json()).then(r => {
         this.setState({
-          devices: r
+          devices: Object.keys(r).map(k => `${k} : ${r[k] ? 'TRUE' : ''}`)
         });
       });
     };
 
     this.scanwifi = () => {
-      fetch('/wifiscanner').then(r => r.json()).then(r => {
+      fetch('/wifi_scan').then(r => r.json()).then(r => {
         this.setState({
           devices: r
         });
@@ -18517,7 +18528,7 @@ class FSPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 /*!****************************!*\
   !*** ./src/pages/index.js ***!
   \****************************/
-/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage */
+/*! exports provided: ControllersPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, DashboardPage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

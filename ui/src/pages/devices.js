@@ -19,6 +19,7 @@ const ruleUsesDevice = (rule, deviceId) => {
 }
 
 const findRulesUsingDevice = (rules, deviceId, arr = []) => {
+    if (!rules) return arr;
     rules.forEach(rule => {
         if (ruleUsesDevice(rule, deviceId)){
             arr.push(rule);
@@ -33,6 +34,7 @@ const findRulesUsingDevice = (rules, deviceId, arr = []) => {
 }
 
 const deleteRulesUsingDevice = (rules, deviceId) => {
+    if (!rules) return;
     for( var i = rules.length-1; i>=0; i--){
         if (ruleUsesDevice(rules[i], deviceId)) rules.splice(i, 1);
     }

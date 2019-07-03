@@ -8,10 +8,14 @@ bool SwitchPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]["values"]);
 
+    state = 0;
     gpio = (*cfg)["gpio"] | 255;
+    invert = ((*cfg)["invert"] | 0) > 0;
+    if (invert) ESP_LOGI(P001_TAG, "inverting");
     if (gpio != 255) {
         ESP_LOGI(P001_TAG, "setting gpio %d to OUTPUT", gpio);
         io.setDirection(gpio, GPIO_MODE_INPUT_OUTPUT);
+        io.digitalWrite(gpio, invert ? !state : state);
     }
 
     return true;
@@ -27,7 +31,6 @@ bool SwitchPlugin::setState(JsonObject &params) {
     char *stateName = (char*)(*state_cfg)[0]["name"].as<char*>();
     state = params[stateName];
     return true;
-    
 }
 
 void* SwitchPlugin::getStateVarPtr(int n, Type *t) { 
@@ -37,10 +40,11 @@ void* SwitchPlugin::getStateVarPtr(int n, Type *t) {
 } 
 
 void SwitchPlugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
-    bool invert = (*cfg)["invert"] | false;
+
     
     uint8_t value;
     convert(&value, Type::byte, val, t);
+
     if (n == 0 && state != value) {
         SET_STATE(this, state, 0, shouldNotify, value, 1);
         ESP_LOGI(P001_TAG, "updating state %d (%p) [%d] to %d", n, &state, state, value);

@@ -80,6 +80,9 @@ export class DashboardPage extends Component {
                             <span>
                                 
                             {device.state && device.state.values.map((value, i) => {
+                                if (deviceState[value.name] && deviceState[value.name].length) {
+                                    return (<div>{value.name}: {deviceState[value.name][0]} </div>)
+                                }
                                 return (<div>{value.name}: {deviceState[value.name]} </div>);
                             })}
                             </span>
@@ -128,7 +131,7 @@ export class DashboardPage extends Component {
                     {device.name}
                     <span>
                     {device.state && device.state.values.map((value, i) => {
-                        return (<input width='200px' type='range' value={deviceState[value.name]} data-id={i} onChange={valueChange}/>);
+                        return (<input width='200px' type='range' min="0" max="4096" value={deviceState[value.name]} data-id={i} onChange={valueChange}/>);
                     })} 
                     </span>
                     </div>
@@ -155,7 +158,7 @@ export class DashboardPage extends Component {
         return (
             <div>
                 {this.state.devices.map((device, i) => {
-                    return this.renderDevice(device, this.state.deviceState[i] || {});
+                    return this.renderDevice(device, this.state.deviceState[device.id] || {});
                 })}
             </div>
         );

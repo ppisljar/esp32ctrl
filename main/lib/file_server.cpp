@@ -15,6 +15,7 @@
 #include "rule_engine.h"
 #include "logging.h"
 #include "esp_wifi.h"
+#include "../plugins/c001_i2c.h"
 
 /* Max length a file path can have on storage */
 #define FILE_PATH_MAX (ESP_VFS_PATH_MAX + CONFIG_SPIFFS_OBJ_NAME_LEN)
@@ -38,6 +39,7 @@ struct file_server_data {
 };
 
 extern Config *g_cfg;
+extern I2CPlugin *i2c_plugin;
 extern Plugin *active_plugins[50];
 extern uint8_t event_triggers[8];
 extern int averagerun;
@@ -980,7 +982,7 @@ static esp_err_t plugin_handler(httpd_req_t *req) {
                 httpd_resp_sendstr(req, "Invalid value");
                 return ESP_OK;
             }
-            ESP_LOGD("FFFF", "setting state of %d:%d to %d", deviceId, valueId, valueByte);
+            ESP_LOGI("FFFF", "setting state of %d:%d to %i", deviceId, valueId, valueByte);
             active_plugins[deviceId]->setStateVarPtr_((uint8_t)valueId, &valueByte, Type::integer, true);
         } else {
             ESP_LOGD("FFFF", "getting state of %d:%d", deviceId, valueId);
@@ -1165,10 +1167,20 @@ static void json_quote_val_prop(httpd_req_t *req, const char* val) {
   lastLevel = level;
 }
 
+static void json_val_prop(httpd_req_t *req, const char* val) {
+  if (lastLevel == level) httpd_resp_sendstr_chunk(req, ",");
+  httpd_resp_sendstr_chunk(req, val);
+  lastLevel = level;
+}
+
 static void json_quote_val(httpd_req_t *req, const char* val) {
   httpd_resp_sendstr_chunk(req, "\"");
   httpd_resp_sendstr_chunk(req, val);
   httpd_resp_sendstr_chunk(req, "\"");
+}
+
+static void json_val(httpd_req_t *req, const char* val) {
+  httpd_resp_sendstr_chunk(req, val);
 }
 
 static void json_open(httpd_req_t *req, bool arr = false, const char* name = "") {
@@ -1195,6 +1207,8 @@ static void json_prop(httpd_req_t *req, const char* name, const char* value) {
   json_quote_val(req, value);
   lastLevel = level;
 }
+
+
 
 static esp_err_t cmd_handler(httpd_req_t *req)
 {
@@ -1242,6 +1256,28 @@ static esp_err_t wifiscan_handler(httpd_req_t *req)
     json_close(req, true);
     httpd_resp_sendstr_chunk(req, NULL);
     
+    return ESP_OK;
+}
+
+static esp_err_t i2cscan_handler(httpd_req_t *req)
+{
+    bool results[128] = {};
+
+    i2c_plugin->scan(results);
+
+    json_init();
+    json_open(req);
+
+    char name[5];
+    for (uint8_t i = 0; i < 128; i++) {
+        for (int x = 0; x < 5; x++) name[x] = 0;
+        sprintf(name, "%02x", i);
+        json_number(req, name, results[i] ? "true" : "false");
+    }
+
+    json_close(req);
+    httpd_resp_sendstr_chunk(req, NULL);
+
     return ESP_OK;
 }
 
@@ -1357,6 +1393,7 @@ esp_err_t start_file_server(const char *base_path)
     http_quick_register("/plugin/*", HTTP_GET, plugin_handler, server_data);
 
     http_quick_register("/wifi_scan", HTTP_GET, wifiscan_handler, server_data);
+    http_quick_register("/i2c_scan", HTTP_GET, i2cscan_handler, server_data);
 
     http_quick_register("/event/*", HTTP_GET, event_handler, server_data);
     http_quick_register("/cmd", HTTP_POST, cmd_handler, server_data);

@@ -73,6 +73,7 @@ const setDefaultConfig = (type, config) => {
             set(config, key, val);
         });
     });
+    config.state.values.length = device.fields.vals;
     if (device.fields.defaults) {
         const defaultConfig = device.fields.defaults();
         Object.keys(defaultConfig).forEach(key => {

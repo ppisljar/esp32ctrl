@@ -31,44 +31,6 @@
             }
         },
         {
-            "id": 1,
-            "idx": 1,
-            "type": 9,
-            "name": "IO-DIGITAL",
-            "enabled": 1,
-            "params": {
-                "addr": 32,
-                "type": 0
-            },
-            "gpio1": 255,
-            "gpio2": 255,
-            "settings": {
-                "values": [
-                    {
-                        "name": "Tag"
-                    }
-                ]
-            },
-            "pins": [
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                0
-            ]
-        },
-        {
             "id": 2,
             "idx": 2,
             "type": 10,
@@ -113,8 +75,8 @@
             "name": "SW1",
             "enabled": 1,
             "params": {
-                "gpio": 44,
-                "invert": false
+                "gpio": 52,
+                "invert": 1
             },
             "interval": 60,
             "state": {
@@ -129,7 +91,7 @@
         {
             "id": 5,
             "idx": 5,
-            "type": 2,
+            "type": 4,
             "name": "SENSOR",
             "enabled": 1,
             "params": {
@@ -137,8 +99,8 @@
                 "value": 0,
                 "level": 0,
                 "hysteresis": 0,
-                "interval": 0,
-                "gpio": 12,
+                "interval": 60,
+                "gpio": 22,
                 "type": 0
             },
             "state": {
@@ -146,13 +108,10 @@
                     {
                         "name": "Temperature",
                         "type": "2"
-                    },
-                    {
-                        "name": "Humidity",
-                        "type": "2"
                     }
                 ]
-            }
+            },
+            "gpio": 255
         },
         {
             "id": 6,
@@ -161,8 +120,8 @@
             "name": "SW2",
             "enabled": 1,
             "params": {
-                "gpio": 45,
-                "invert": false
+                "gpio": 53,
+                "invert": 1
             },
             "interval": 60,
             "state": {
@@ -181,8 +140,8 @@
             "name": "SW3",
             "enabled": 1,
             "params": {
-                "gpio": 46,
-                "invert": false
+                "gpio": 54,
+                "invert": 1
             },
             "interval": 60,
             "state": {
@@ -201,8 +160,8 @@
             "name": "SW4",
             "enabled": 1,
             "params": {
-                "gpio": 47,
-                "invert": false
+                "gpio": 55,
+                "invert": 1
             },
             "interval": 60,
             "state": {
@@ -221,8 +180,8 @@
             "name": "SW5",
             "enabled": 1,
             "params": {
-                "gpio": 48,
-                "invert": false
+                "gpio": 56,
+                "invert": 1
             },
             "interval": 60,
             "state": {
@@ -241,8 +200,8 @@
             "name": "SW6",
             "enabled": 1,
             "params": {
-                "gpio": 49,
-                "invert": false
+                "gpio": 57,
+                "invert": 1
             },
             "interval": 60,
             "state": {
@@ -261,7 +220,7 @@
             "name": "PWM1",
             "enabled": 1,
             "params": {
-                "gpio": 52
+                "gpio": 44
             },
             "state": {
                 "values": [
@@ -279,7 +238,7 @@
             "name": "PWM2",
             "enabled": 1,
             "params": {
-                "gpio": 53
+                "gpio": 45
             },
             "state": {
                 "values": [
@@ -297,7 +256,7 @@
             "name": "PWM3",
             "enabled": 1,
             "params": {
-                "gpio": 54
+                "gpio": 46
             },
             "state": {
                 "values": [
@@ -315,7 +274,7 @@
             "name": "PWM4",
             "enabled": 1,
             "params": {
-                "gpio": 55
+                "gpio": 47
             },
             "state": {
                 "values": [
@@ -333,7 +292,7 @@
             "name": "PWM5",
             "enabled": 1,
             "params": {
-                "gpio": 56
+                "gpio": 48
             },
             "state": {
                 "values": [
@@ -351,13 +310,32 @@
             "name": "PWM6",
             "enabled": 1,
             "params": {
-                "gpio": 57
+                "gpio": 49
             },
             "state": {
                 "values": [
                     {
                         "name": "Output",
                         "type": "1"
+                    }
+                ]
+            }
+        },
+        {
+            "id": 1,
+            "idx": 1,
+            "type": 6,
+            "name": "ADC1",
+            "enabled": 1,
+            "params": {
+                "gpio": 40,
+                "interval": 10
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Analog",
+                        "type": "2"
                     }
                 ]
             }
@@ -406,5 +384,14 @@
     "alerting": {
         "alerts": [],
         "enabled": false
+    },
+    "lcd": {
+        "enabled": false,
+        "params": {
+            "width": 320,
+            "height": 240
+        },
+        "pages": [],
+        "widgets": []
     }
 }

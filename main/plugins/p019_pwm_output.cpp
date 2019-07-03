@@ -37,8 +37,8 @@ void* PWMOutputPlugin::getStateVarPtr(int n, Type *t) {
 } 
 
 void PWMOutputPlugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
-    uint8_t value;
-    convert(&value, Type::byte, val, t);
+    uint16_t value;
+    convert(&value, Type::integer, val, t);
     if (n == 0 && state != value) {
         SET_STATE(this, state, 0, shouldNotify, value, 1);
         ESP_LOGI(TAG, "updating state %d (%p) [%d] to %d", n, &state, state, value);
