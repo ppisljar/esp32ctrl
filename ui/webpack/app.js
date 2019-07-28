@@ -11753,6 +11753,129 @@ const inputSwitch = new InputSwitch();
 
 /***/ }),
 
+/***/ "./src/devices/20_max31855.js":
+/*!************************************!*\
+  !*** ./src/devices/20_max31855.js ***!
+  \************************************/
+/*! exports provided: max31855 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "max31855", function() { return max31855; });
+/* harmony import */ var _defs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./_defs */ "./src/devices/_defs.js");
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+
+class Max31855 extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
+  constructor() {
+    super();
+
+    _defineProperty(this, "defaults", () => {
+      return {
+        'params.cs': 255,
+        'params.clk': 255,
+        'params.data': 255,
+        interval: 60,
+        'state.values[0].name': 'Temperature',
+        'state.values[0].type': '0' // 'state.values[1].name': 'TempRJ',
+        // 'state.values[1].type': '0',
+        // 'state.values[2].name': 'TempTherm',
+        // 'state.values[2].type': '0',
+
+      };
+    });
+
+    this.params = {
+      name: 'Configuration',
+      configs: {
+        cs: {
+          name: 'CS',
+          type: 'gpio'
+        },
+        clk: {
+          name: 'CLK',
+          type: 'gpio'
+        },
+        data: {
+          name: 'DATA',
+          type: 'gpio'
+        },
+        interval: {
+          name: 'Interval',
+          type: 'number'
+        }
+      }
+    };
+    this.vals = 1;
+  }
+
+}
+
+const max31855 = new Max31855();
+
+/***/ }),
+
+/***/ "./src/devices/21_mlx90614.js":
+/*!************************************!*\
+  !*** ./src/devices/21_mlx90614.js ***!
+  \************************************/
+/*! exports provided: mlx90614 */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "mlx90614", function() { return mlx90614; });
+/* harmony import */ var _defs__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./_defs */ "./src/devices/_defs.js");
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+
+const addr = [{
+  name: '0x5A',
+  value: 0x5A
+}];
+
+class Mlx90614 extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
+  constructor() {
+    super();
+
+    _defineProperty(this, "defaults", () => {
+      return {
+        'addr': 0x5A,
+        interval: 60,
+        'state.values[0].name': 'Temperature',
+        'state.values[0].type': '0',
+        'state.values[1].name': 'TempAmbient',
+        'state.values[1].type': '0' // 'state.values[2].name': 'TempTherm',
+        // 'state.values[2].type': '0',
+
+      };
+    });
+
+    this.params = {
+      name: 'Configuration',
+      configs: {
+        addr: {
+          name: 'Address',
+          type: 'select',
+          options: addr
+        },
+        interval: {
+          name: 'Interval',
+          type: 'number'
+        }
+      }
+    };
+    this.vals = 2;
+  }
+
+}
+
+const mlx90614 = new Mlx90614();
+
+/***/ }),
+
 /***/ "./src/devices/2_dht.js":
 /*!******************************!*\
   !*** ./src/devices/2_dht.js ***!
@@ -12315,6 +12438,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _16_udp_server__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./16_udp_server */ "./src/devices/16_udp_server.js");
 /* harmony import */ var _18_digital_input__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./18_digital_input */ "./src/devices/18_digital_input.js");
 /* harmony import */ var _19_pwm_output__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./19_pwm_output */ "./src/devices/19_pwm_output.js");
+/* harmony import */ var _20_max31855__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./20_max31855 */ "./src/devices/20_max31855.js");
+/* harmony import */ var _21_mlx90614__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./21_mlx90614 */ "./src/devices/21_mlx90614.js");
+
+
 
 
 
@@ -12450,6 +12577,14 @@ const devices = [{
   name: 'Generic - PWM Output',
   value: 19,
   fields: _19_pwm_output__WEBPACK_IMPORTED_MODULE_17__["pwmOutput"]
+}, {
+  name: 'Environment - MAX31855 Thermocouple',
+  value: 20,
+  fields: _20_max31855__WEBPACK_IMPORTED_MODULE_18__["max31855"]
+}, {
+  name: 'Environment - MLX90614 IR Temperature',
+  value: 21,
+  fields: _21_mlx90614__WEBPACK_IMPORTED_MODULE_19__["mlx90614"]
 }].sort((a, b) => a.name.localeCompare(b.name));
 
 /***/ }),
@@ -15291,6 +15426,8 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
         case 4:
         case 6:
         case 12:
+        case 20:
+        case 21:
           return this.renderSensor(device, deviceState);
 
         case 5:
@@ -15488,7 +15625,7 @@ const setDefaultConfig = (type, config) => {
       Object(_lib_helpers__WEBPACK_IMPORTED_MODULE_4__["set"])(config, key, val);
     });
   });
-  config.state.values.length = device.fields.vals;
+  config.state = {};
 
   if (device.fields.defaults) {
     const defaultConfig = device.fields.defaults();
@@ -18528,7 +18665,7 @@ class FSPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 /*!****************************!*\
   !*** ./src/pages/index.js ***!
   \****************************/
-/*! exports provided: ControllersPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, DashboardPage */
+/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

@@ -57,6 +57,14 @@ menu "MyESP32 CTRL"
         config ENABLE_P017
             bool "VEML6040"
             default y
+
+        config ENABLE_P020
+            bool "Max31855 Thermocouple Converter"
+            default y
+
+        config ENABLE_P021
+            bool "Mlx90614 IR Temperature Sensor"
+            default y
     endmenu
 
     menu "I2C Devices"

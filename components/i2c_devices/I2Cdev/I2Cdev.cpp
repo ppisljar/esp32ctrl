@@ -262,23 +262,23 @@ int8_t I2Cdev::SelectRegister(uint8_t dev, uint8_t reg){
 
 	cmd = i2c_cmd_link_create();
     if (i2c_master_start(cmd) != ESP_OK) {
-        ESP_LOGD("i2c", "can't start i2c command");
+        ESP_LOGE("i2c", "can't start i2c command");
         return ESP_FAIL;
     }
 	if(i2c_master_write_byte(cmd, (dev << 1) | I2C_MASTER_WRITE, 1) != ESP_OK) {
-        ESP_LOGD("i2c", "can't write byte");
+        ESP_LOGE("i2c", "can't write byte");
         return ESP_FAIL;
     }
 	if(i2c_master_write_byte(cmd, reg, 1) != ESP_OK) {
-        ESP_LOGD("i2c", "can't write byte");
+        ESP_LOGE("i2c", "can't write byte");
         return ESP_FAIL;
     }
 	if(i2c_master_stop(cmd) != ESP_OK) {
-        ESP_LOGD("i2c", "can't send stop");
+        ESP_LOGE("i2c", "can't send stop");
         return ESP_FAIL;
     }
 	if(i2c_master_cmd_begin(I2C_NUM, cmd, 1000/portTICK_PERIOD_MS) != ESP_OK) {
-        ESP_LOGD("i2c", "can't begin");
+        ESP_LOGE("i2c", "can't begin");
         return ESP_FAIL;
     }
 	i2c_cmd_link_delete(cmd);

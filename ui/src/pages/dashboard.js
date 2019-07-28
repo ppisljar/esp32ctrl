@@ -142,7 +142,7 @@ export class DashboardPage extends Component {
         this.renderDevice = (device, deviceState) => {
             switch (device.type) {
                 case 1: return this.renderSwitch(device, deviceState);
-                case 2: case 3: case 4: case 6: case 12:
+                case 2: case 3: case 4: case 6: case 12: case 20: case 21:
                         return this.renderSensor(device, deviceState);
                 case 5: return this.renderRegulator(device, deviceState);
                 case 15: return this.renderDimmer(device, deviceState);

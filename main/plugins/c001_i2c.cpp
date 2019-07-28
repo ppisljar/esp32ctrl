@@ -19,7 +19,7 @@ bool I2CPlugin::init(JsonObject &params) {
     if (!params.containsKey("freq")) {
         params.set("freq", 100000);
     }
-    ESP_LOGI(C001_TAG, "init");
+    ESP_LOGI(C001_TAG, "init SCL: %d, SDA: %d", params["scl"].as<int>(), params["sda"].as<int>());
 
     int i2c_master_port = params["port"] | 0; //I2C_MASTER_NUM;
     i2c_config_t conf;

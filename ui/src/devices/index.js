@@ -16,6 +16,8 @@ import { dimmer } from './15_dimmer';
 import { udp_server } from './16_udp_server';
 import { digital_input } from './18_digital_input';
 import { pwmOutput } from './19_pwm_output';
+import { max31855 } from './20_max31855';
+import { mlx90614 } from './21_mlx90614';
 
 // import { bmp085 } from './6_bmp085';
 // import { pcf8591 } from './7_pcf8591';
@@ -79,6 +81,8 @@ export const devices = [
     { name: 'Generic - UDP Server', value: 16, fields: udp_server },
     { name: 'Generic - Digital Input', value: 18, fields: digital_input },
     { name: 'Generic - PWM Output', value: 19, fields: pwmOutput },
+    { name: 'Environment - MAX31855 Thermocouple', value: 20, fields: max31855 },
+    { name: 'Environment - MLX90614 IR Temperature', value: 21, fields: mlx90614 },
     //{ name: 'Light/Lux - BH1750', value: 10, fields: bh1750 },
     // { name: 'Extra IO - ProMini Extender', value: 11, fields: pme },
     // { name: 'Display - LCD2004', value: 12, fields: lcd2004 },

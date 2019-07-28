@@ -153,6 +153,14 @@ Plugin* DigitalInputPlugin_myProtoype = Plugin::addPrototype(18, new DigitalInpu
 #include "plugins/p019_pwm_output.h"
 Plugin* PWMOutputPlugin_myProtoype = Plugin::addPrototype(19, new PWMOutputPlugin);
 #endif
+#ifdef CONFIG_ENABLE_P020
+#include "plugins/p020_max31855.h"
+Plugin* Max31855Plugin_myProtoype = Plugin::addPrototype(20, new Max31855Plugin);
+#endif
+#ifdef CONFIG_ENABLE_P021
+#include "plugins/p021_mlx90614.h"
+Plugin* Mlx90614Plugin_myProtoype = Plugin::addPrototype(21, new Mlx90614Plugin);
+#endif
 
 uint8_t ledPin;
 bool ledInverted;
