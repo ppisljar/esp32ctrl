@@ -11779,7 +11779,7 @@ class Max31855 extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
         'params.data': 255,
         interval: 60,
         'state.values[0].name': 'Temperature',
-        'state.values[0].type': '0' // 'state.values[1].name': 'TempRJ',
+        'state.values[0].type': '2' // 'state.values[1].name': 'TempRJ',
         // 'state.values[1].type': '0',
         // 'state.values[2].name': 'TempTherm',
         // 'state.values[2].type': '0',
@@ -12632,7 +12632,7 @@ const prepareRules = async () => {
 
   const triggers = renderedNodes.filter(node => {
     console.log(node);
-    return node.group === 'TRIGGERS';
+    return node.group === 'TRIGGERS' || node.group === 'TRIGGER';
   });
   const eventMap = {
     'init': 0
@@ -13078,6 +13078,9 @@ class IO_PINS {
 
     for (let i = 0; i < 40; i++) {
       if ([6, 7, 8, 9, 10, 11].includes(i)) continue; // SPI flash pins
+
+      if ([16, 17].includes(i)) continue; // setting theese to output causes reset
+      // add check for serial pins
 
       const pin = {
         name: `ESP32 GPIO${i}`,
@@ -14848,7 +14851,11 @@ class ConfigPluginsPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"]
       this.plugins = [{
         name: 'IconSelector',
         enabled: false,
-        url: 'http://localhost:8080/build/iconpicker.js'
+        url: 'http://localhost:8080/webpack/iconpicker.js'
+      }, {
+        name: 'AmCharts',
+        enabled: false,
+        url: 'http://localhost:8080/webpack/amcharts.js'
       }];
       _lib_settings__WEBPACK_IMPORTED_MODULE_1__["settings"].editor.set('ui_plugins', this.plugins);
     }
@@ -15448,6 +15455,8 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
   render(props) {
     return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, this.state.devices.map((device, i) => {
       return this.renderDevice(device, this.state.deviceState[device.id] || {});
+    }), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+      class: "chart"
     }));
   }
 
@@ -17006,9 +17015,12 @@ const setStateNode = {
     const {
       device,
       value,
-      val
+      val,
+      val_type
     } = item.params;
-    return [`\xF0${String.fromCharCode(device)}${String.fromCharCode(value)}\x01${String.fromCharCode(val)}`];
+    const v = val_type === 0 ? 255 : val; // F0 DEVICE_ID VAR_ID LENGTH VALUE (length = 1 & value = 255: copy state)
+
+    return [`\xF0${String.fromCharCode(device)}${String.fromCharCode(value)}\x01${String.fromCharCode(v)}`];
   }
 };
 const component = Object(_helper__WEBPACK_IMPORTED_MODULE_1__["generateWidgetComponent"])(setStateNode);
@@ -17101,7 +17113,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const eqOptions = ['', '=', '<', '>', '<=', '>=', '!='];
+const eqOptions = ['changed', '=', '<', '>', '<=', '>=', '!='];
 
 const compareValue = type => {
   const checkValue = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_2__["getTaskValueType"])('params.device', 'params.value', type);
@@ -17113,7 +17125,7 @@ const compareValue = type => {
 
 const getDeviceNode = device => {
   const deviceNode = {
-    group: 'TRIGGER',
+    group: 'TRIGGERS',
     name: device.id,
     title: device.name,
     inputs: 0,
@@ -17205,7 +17217,7 @@ const getDeviceNode = device => {
         val
       } = item.params;
       const comp = eqOptions.findIndex(o => o == eq);
-      const comparison = eq === '' ? `\x00\x01` : `${String.fromCharCode(comp)}\x01${String.fromCharCode(val)}`;
+      const comparison = eq === 'changed' ? `\x00\x01` : `${String.fromCharCode(comp)}\x01${String.fromCharCode(val)}`;
       return [`\xFF\xFE\x00\xFF\x00${String.fromCharCode(device.id)}${String.fromCharCode(value)}${comparison}%%output%%\xFF`];
     }
   };
@@ -17303,6 +17315,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _actions_set_hw_timer__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./actions/set_hw_timer */ "./src/pages/floweditor/nodes/actions/set_hw_timer.js");
 /* harmony import */ var _logic_math__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./logic/math */ "./src/pages/floweditor/nodes/logic/math.js");
 /* harmony import */ var _device__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./device */ "./src/pages/floweditor/nodes/device.js");
+/* harmony import */ var _logic_logging__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./logic/logging */ "./src/pages/floweditor/nodes/logic/logging.js");
 
 
 
@@ -17323,7 +17336,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const getNodes = () => [...Object(_device__WEBPACK_IMPORTED_MODULE_19__["getDeviceNodes"])(), _triggers_timer__WEBPACK_IMPORTED_MODULE_2__["timerNode"], _triggers_hw_timer__WEBPACK_IMPORTED_MODULE_6__["hwtimerNode"], _triggers_hw_interrupt__WEBPACK_IMPORTED_MODULE_7__["hwinterruptNode"], _triggers_touch__WEBPACK_IMPORTED_MODULE_8__["touchNode"], _triggers_bluetooth__WEBPACK_IMPORTED_MODULE_9__["bluetoothNode"], _triggers_alexa__WEBPACK_IMPORTED_MODULE_10__["alexaNode"], _triggers_event__WEBPACK_IMPORTED_MODULE_3__["eventNode"], _triggers_clock__WEBPACK_IMPORTED_MODULE_4__["clockNode"], _triggers_boot__WEBPACK_IMPORTED_MODULE_5__["bootNode"], _logic_if_else__WEBPACK_IMPORTED_MODULE_1__["ifElseNode"], _logic_delay__WEBPACK_IMPORTED_MODULE_11__["delayNode"], _logic_math__WEBPACK_IMPORTED_MODULE_18__["mathNode"], _actions_get_state__WEBPACK_IMPORTED_MODULE_16__["getStateNode"], _actions_set_state__WEBPACK_IMPORTED_MODULE_0__["setStateNode"], _actions_fire_event__WEBPACK_IMPORTED_MODULE_14__["fireeventNode"], _actions_set_timer__WEBPACK_IMPORTED_MODULE_15__["settimerNode"], _actions_set_hw_timer__WEBPACK_IMPORTED_MODULE_17__["setHwTimerNode"], _actions_mqtt__WEBPACK_IMPORTED_MODULE_12__["mqttNode"], _actions_http__WEBPACK_IMPORTED_MODULE_13__["httpNode"]];
+
+const getNodes = () => [...Object(_device__WEBPACK_IMPORTED_MODULE_19__["getDeviceNodes"])(), _triggers_timer__WEBPACK_IMPORTED_MODULE_2__["timerNode"], _triggers_hw_timer__WEBPACK_IMPORTED_MODULE_6__["hwtimerNode"], _triggers_hw_interrupt__WEBPACK_IMPORTED_MODULE_7__["hwinterruptNode"], _triggers_touch__WEBPACK_IMPORTED_MODULE_8__["touchNode"], _triggers_bluetooth__WEBPACK_IMPORTED_MODULE_9__["bluetoothNode"], _triggers_alexa__WEBPACK_IMPORTED_MODULE_10__["alexaNode"], _triggers_event__WEBPACK_IMPORTED_MODULE_3__["eventNode"], _triggers_clock__WEBPACK_IMPORTED_MODULE_4__["clockNode"], _triggers_boot__WEBPACK_IMPORTED_MODULE_5__["bootNode"], _logic_if_else__WEBPACK_IMPORTED_MODULE_1__["ifElseNode"], _logic_delay__WEBPACK_IMPORTED_MODULE_11__["delayNode"], _logic_math__WEBPACK_IMPORTED_MODULE_18__["mathNode"], _logic_logging__WEBPACK_IMPORTED_MODULE_20__["loggingNode"], _actions_get_state__WEBPACK_IMPORTED_MODULE_16__["getStateNode"], _actions_set_state__WEBPACK_IMPORTED_MODULE_0__["setStateNode"], _actions_fire_event__WEBPACK_IMPORTED_MODULE_14__["fireeventNode"], _actions_set_timer__WEBPACK_IMPORTED_MODULE_15__["settimerNode"], _actions_set_hw_timer__WEBPACK_IMPORTED_MODULE_17__["setHwTimerNode"], _actions_mqtt__WEBPACK_IMPORTED_MODULE_12__["mqttNode"], _actions_http__WEBPACK_IMPORTED_MODULE_13__["httpNode"]];
 
 /***/ }),
 
@@ -17544,6 +17558,72 @@ const ifElseNode = {
   }
 };
 const component = Object(_helper__WEBPACK_IMPORTED_MODULE_1__["generateWidgetComponent"])(ifElseNode);
+
+
+/***/ }),
+
+/***/ "./src/pages/floweditor/nodes/logic/logging.js":
+/*!*****************************************************!*\
+  !*** ./src/pages/floweditor/nodes/logic/logging.js ***!
+  \*****************************************************/
+/*! exports provided: loggingNode */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "loggingNode", function() { return loggingNode; });
+/* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
+/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../helper */ "./src/pages/floweditor/nodes/helper.js");
+
+
+const loggingNode = {
+  group: 'LOGIC',
+  name: 'logging',
+  title: 'LOGGING',
+  inputs: 1,
+  outputs: 1,
+  getEditorConfig: () => {
+    return {
+      groups: {
+        params: {
+          name: 'Action',
+          configs: {
+            action: {
+              name: '',
+              type: 'select',
+              options: [{
+                name: 'start',
+                value: 0xe4
+              }, {
+                name: 'stop',
+                value: 0xe5
+              }]
+            }
+          }
+        }
+      }
+    };
+  },
+  getComponent: () => {
+    return component;
+  },
+  getDefault: () => ({
+    action: 0xe4
+  }),
+  getText: item => {
+    const {
+      action
+    } = item.params;
+    return 'logging = ' + action;
+  },
+  toDsl: item => {
+    const {
+      action
+    } = item.params;
+    return [String.fromCharCode(action)];
+  }
+};
+const component = Object(_helper__WEBPACK_IMPORTED_MODULE_1__["generateWidgetComponent"])(loggingNode);
 
 
 /***/ }),

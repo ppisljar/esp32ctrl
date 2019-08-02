@@ -160,6 +160,8 @@ export class DashboardPage extends Component {
                 {this.state.devices.map((device, i) => {
                     return this.renderDevice(device, this.state.deviceState[device.id] || {});
                 })}
+        
+                <div class="chart"></div>
             </div>
         );
     }

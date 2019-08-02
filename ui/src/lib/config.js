@@ -28,7 +28,7 @@ const prepareRules = async () => {
     // find initial nodes (triggers);
     const triggers = renderedNodes.filter(node => {
         console.log(node);
-        return node.group === 'TRIGGERS';
+        return node.group === 'TRIGGERS' || node.group === 'TRIGGER';
     });
 
     const eventMap = {

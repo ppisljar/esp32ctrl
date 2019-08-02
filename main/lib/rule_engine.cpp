@@ -1,6 +1,7 @@
 
 #include "rule_engine.h"
 #include "../plugins/c004_timers.h"
+#include "../plugins/c007_logging.h"
 #include "../plugins/c008_cron.h"
 #include "../plugins/utils.h"
 #include "spiffs.h"
@@ -142,34 +143,35 @@ bool compare(byte** ptr, byte *val, byte *old) {
     for (byte i = 0; i < cmd[1]; i++) {
         switch (cmd[0]) {
             case 0: // every change
-                ESP_LOGD(TAG_RE, "compare val(%p):%d old(%p):%d", val, val[i], old, old[i]);
+                ESP_LOGI(TAG_RE, "compare val(%p):%d old(%p):%d", val, val[i], old, old[i]);
                 if (val[i] == old[i]) match = false;
                 break;
             case 1: // equals
-                ESP_LOGI(TAG_RE, "compare val(%p):%d == :%d", val, val[i], cmd[i + 2]);
+                ESP_LOGD(TAG_RE, "compare val(%p):%d == :%d", val, val[i], cmd[i + 2]);
                 if (cmd[i + 2] != val[i]) match = false;
                 break;
             case 2: // <
-                ESP_LOGI(TAG_RE, "compare val(%p):%d < :%d", val, val[i], cmd[i + 2]);
-                if (cmd[i + 2] >= val[i]) match = false;
+                ESP_LOGD(TAG_RE, "compare val(%p):%d < :%d", val, val[i], cmd[i + 2]);
+                if (val[i] >= cmd[i + 2]) match = false;
                 break;
             case 3: // >
                 ESP_LOGI(TAG_RE, "compare val(%p):%d > :%d", val, val[i], cmd[i + 2]);
-                if (cmd[i + 2] <= val[i]) match = false;
+                if (val[i] <= cmd[i + 2]) match = false;
                 break;
             case 4: // <=
                 ESP_LOGI(TAG_RE, "compare val(%p):%d <= :%d", val, val[i], cmd[i + 2]);
-                if (cmd[i + 2] > val[i]) match = false;
+                if (val[i] > cmd[i + 2]) match = false;
                 break;
             case 5: // >=
                 ESP_LOGI(TAG_RE, "compare val(%p):%d >= :%d", val, val[i], cmd[i + 2]);
-                if (cmd[i + 2] < val[i]) match = false;
+                if (val[i] < cmd[i + 2]) match = false;
                 break;
             case 6: // <>
                 ESP_LOGI(TAG_RE, "compare val(%p):%d <> :%d", val, val[i], cmd[i + 2]);
                 if (cmd[i + 2] == val[i]) match = false;
                 break;
         }
+        //ESP_LOGI(TAG_RE, "updating old %d to new %d", old[i], val[i]);
         old[i] = val[i]; // todo: val[i];
     }
     *ptr+= cmd[1] + 2;
@@ -440,6 +442,17 @@ uint8_t run_rule(byte* start, void* start_val, uint8_t start_val_length, uint8_t
                 state_val_length = 4;
                 break;
             }
+            case CMD_LOGGING_START: {
+                cmd++;
+                logging_plugin->start();
+                break;
+            }
+
+            case CMD_LOGGING_STOP: {
+                logging_plugin->stop();
+                cmd++;
+                break;
+            }
             
             // plugin provided commands
             default:
@@ -463,7 +476,7 @@ void run_rules() {
 
     for (auto rule : rule_list) {
         if (rule == NULL) continue;
-        ESP_LOGD(TAG_RE, "checking rule type:[%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
+        ESP_LOGI(TAG_RE, "checking rule type:[%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
         byte *cmd = rule;
         byte *old;
         uint16_t oldId;
@@ -476,18 +489,22 @@ void run_rules() {
         switch (cmd[0]) { // trigger type (0: var, 1: event, 2: timer, 3: system
             // device variable
             case 0:
-                ESP_LOGD(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
+                ESP_LOGI(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
                 p = active_plugins[cmd[1]];
                 if (p == nullptr) continue;
                 var = (uint8_t*)p->getStateVarPtr((int)cmd[2], nullptr);
 
-                oldId = *cmd;
+                oldId = cmd[1] * 10 + cmd[2]; // id is id * 10 + varid
+                //ESP_LOGI(TAG_RE, "checking for old id %i", oldId);
                 if (!rule_data_ptrs[oldId]) {
+                    //ESP_LOGI(TAG_RE, "old id not found, creating");
                     rule_data_ptrs[oldId] = old_values + old_values_free_ptr;
                     old_values_free_ptr += cmd[4];
                 }
+                
                 old = (byte*)rule_data_ptrs[oldId];
                 cmd += 3;
+                //ESP_LOGI(TAG_RE, "oldid: %d, old: %p, old[0]: %d", oldId, old, old[0]);
                 match = compare(&cmd, var, old);
                 if (match) {
                     start_val = var;

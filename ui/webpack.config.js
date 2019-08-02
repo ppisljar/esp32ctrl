@@ -8,6 +8,7 @@ module.exports = env => ({
     entry: {
         app: './src/app.js',
         iconpicker: './src/plugins/iconpicker/index.js',
+        amcharts: './src/plugins/amcharts/index.js',
     },
     output: {
         path: path.resolve(__dirname, 'webpack'),

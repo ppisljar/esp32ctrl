@@ -25,7 +25,7 @@ class Max31855 extends Device {
             interval: 60,
 
             'state.values[0].name': 'Temperature',
-            'state.values[0].type': '0',
+            'state.values[0].type': '2',
             // 'state.values[1].name': 'TempRJ',
             // 'state.values[1].type': '0',
             // 'state.values[2].name': 'TempTherm',

@@ -8,7 +8,8 @@ export class ConfigPluginsPage extends Component {
         this.plugins = settings.editor.get('ui_plugins');
         if (!this.plugins) {
             this.plugins = [
-                { name: 'IconSelector', enabled: false, url: 'http://localhost:8080/build/iconpicker.js' },
+                { name: 'IconSelector', enabled: false, url: 'http://localhost:8080/webpack/iconpicker.js' },
+                { name: 'AmCharts', enabled: false, url: 'http://localhost:8080/webpack/amcharts.js' },
             ];
             settings.editor.set('ui_plugins', this.plugins);
         }

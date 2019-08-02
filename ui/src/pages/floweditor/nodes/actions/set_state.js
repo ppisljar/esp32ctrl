@@ -62,8 +62,10 @@ const setStateNode = {
     },
 
     toDsl: (item) => {
-        const { device, value, val } = item.params;
-        return [`\xF0${String.fromCharCode(device)}${String.fromCharCode(value)}\x01${String.fromCharCode(val)}`];
+        const { device, value, val, val_type } = item.params;
+        const v = val_type === 0 ? 255 : val;
+        // F0 DEVICE_ID VAR_ID LENGTH VALUE (length = 1 & value = 255: copy state)
+        return [`\xF0${String.fromCharCode(device)}${String.fromCharCode(value)}\x01${String.fromCharCode(v)}`];
     } ,     
 }
 

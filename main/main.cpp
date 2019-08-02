@@ -306,8 +306,11 @@ extern "C" void app_main()
 
     http_server_ready();
 
-    #ifdef ENABLE_C007
+    #ifdef CONFIG_ENABLE_C007
     init_logging();
+    logging_plugin = new LoggingPlugin();
+    logging_plugin->init(cfgObject);
+    logging_plugin->start();
     #endif
 
     fire_system_event(1024, 0, nullptr);
@@ -320,7 +323,7 @@ extern "C" void app_main()
         // }
         ESP_LOGD(TAG, "executing rule engine");
         run_rules();
-        vTaskDelay( 100 / portTICK_PERIOD_MS);
+        vTaskDelay( 5000 / portTICK_PERIOD_MS);
     }
 }
 

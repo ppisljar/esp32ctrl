@@ -20,8 +20,8 @@ void Mlx90614Plugin::task(void * pvParameters)
         s->temp = s->read16(MLX90614_TOBJ1) * 0.02 - 273.15;
         s->tempAmb = s->read16(MLX90614_TA) * 0.02 - 273.15;
 
-        SET_STATE(s, temperature, 0, true, te_eval(s->temp_expr), 5);
-        ESP_LOGI(TAG, "Temp: %f, TempA: %f, temperature: %f", s->temp, s->tempAmb, s->temperature);
+        SET_STATE(s, temperature, 0, true, s->temp, 5); /*  te_eval(s->temp_expr)*/
+        ESP_LOGD(TAG, "Temp: %f, TempA: %f, temperature: %f", s->temp, s->tempAmb, s->temperature);
 
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);
     }
@@ -128,7 +128,6 @@ bool Mlx90614Plugin::getState(JsonObject &params) {
     stateName = (char*)(*state_cfg)[1]["name"].as<char*>();
     params[stateName] = tempAmb;
 
-    ESP_LOGI(TAG, "reading state: %s", stateName);
     return true;
 }
 

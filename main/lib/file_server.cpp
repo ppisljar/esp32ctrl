@@ -880,17 +880,16 @@ static esp_err_t plugins_state_handler(httpd_req_t *req)
     if (!isAuthenticated(req, false)) return ESP_OK;
     int len;
 
-    ESP_LOGI(TAG, "plugins_state_handler");
+    ESP_LOGD(TAG, "plugins_state_handler");
     jb.clear();
     JsonObject& plugins = jb.createObject();
-    ESP_LOGI(TAG, "created array");
     char keybuf[10];
     for (auto plugin : active_plugins) {
         if (plugin == NULL) continue;
-        ESP_LOGI(TAG, "creating object %d", plugin->id);
+        ESP_LOGD(TAG, "creating object %d", plugin->id);
         itoa(plugin->id, keybuf, 10);
         JsonObject &p = plugins.createNestedObject(keybuf);
-        ESP_LOGI(TAG, "getting state");
+        ESP_LOGD(TAG, "getting state");
         plugin->getState(p);
     }
 

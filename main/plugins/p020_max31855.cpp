@@ -17,7 +17,7 @@ void Max31855Plugin::task(void * pvParameters)
         if (interval == 0) interval = 60;
 
         s->getData();
-        SET_STATE(s, temperature, 0, true, te_eval(s->temp_expr), 5);
+        SET_STATE(s, temperature, 0, true, s->temp, 5); // te_eval(s->temp_expr)
         ESP_LOGI(TAG, "themmocouple Temp: %f, TempRJ: %i, TempTherm: %i, temperature: %f", s->temp, s->tempRJ, s->tempTherm, s->temperature);
 
         vTaskDelay(interval * 1000 / portTICK_PERIOD_MS);
@@ -72,7 +72,7 @@ bool Max31855Plugin::init(JsonObject &params) {
         gpio_set_direction((gpio_num_t)cs, GPIO_MODE_OUTPUT);
         gpio_set_direction((gpio_num_t)clk, GPIO_MODE_OUTPUT);
         gpio_set_direction((gpio_num_t)data, GPIO_MODE_INPUT);
-        ESP_LOGI(TAG, "starting thermocouple with formula %s", temp_formula);
+        ESP_LOGD(TAG, "starting thermocouple with formula %s", temp_formula);
         xTaskCreatePinnedToCore(this->task, TAG, 4096, this, 5, &task_h, 1);
     }
 
@@ -84,7 +84,7 @@ bool Max31855Plugin::getState(JsonObject &params) {
     char *stateName = (char*)(*state_cfg)[0]["name"].as<char*>();
     params[stateName] = temp;
 
-    ESP_LOGI(TAG, "reading state: %s", stateName);
+    ESP_LOGD(TAG, "reading state: %s", stateName);
     return true;
 }
 

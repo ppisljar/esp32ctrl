@@ -11,7 +11,13 @@ class LoggingPlugin: public Plugin {
         FILE *f;
         uint8_t state;
         Type state_t = Type::byte;
+        bool started = false;
+
+        bool start();
+        void stop();
+
         DEFINE_PLUGIN(LoggingPlugin);
 };
 
+extern LoggingPlugin* logging_plugin;
 #endif

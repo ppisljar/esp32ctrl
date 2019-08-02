@@ -29,9 +29,142 @@
             },
             "state": {
                 "values": [
-                    { "name": "temperature", "type": 1 }
+                    {
+                        "name": "temperature",
+                        "type": 1
+                    }
                 ]
             }
+        },
+        {
+            "id": 1,
+            "idx": 1,
+            "type": 20,
+            "name": "TC1",
+            "enabled": 1,
+            "params": {
+                "cs": 12,
+                "clk": 13,
+                "data": 15,
+                "interval": 0
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Temperature",
+                        "type": "2"
+                    }
+                ]
+            },
+            "interval": 1
+        },
+        {
+            "id": 2,
+            "idx": 2,
+            "type": 20,
+            "name": "TC2",
+            "enabled": 1,
+            "params": {
+                "cs": 26,
+                "clk": 25,
+                "data": 27,
+                "interval": 0
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Temperature",
+                        "type": "2"
+                    }
+                ]
+            },
+            "interval": 1
+        },
+        {
+            "id": 3,
+            "idx": 3,
+            "type": 1,
+            "name": "SW1",
+            "enabled": 1,
+            "params": {
+                "gpio": 18,
+                "invert": false
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            },
+            "interval": 60
+        },
+        {
+            "id": 4,
+            "idx": 4,
+            "type": 1,
+            "name": "SW2",
+            "enabled": 1,
+            "params": {
+                "gpio": 19,
+                "invert": false
+            },
+            "gpio": {
+                "pull_up": 0
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            },
+            "interval": 60
+        },
+        {
+            "id": 5,
+            "idx": 5,
+            "type": 1,
+            "name": "SW3",
+            "enabled": 1,
+            "params": {
+                "gpio": 4,
+                "invert": false
+            },
+            "gpio": {
+                "pull_up": 0
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            },
+            "interval": 60
+        },
+        {
+            "id": 6,
+            "idx": 6,
+            "type": 1,
+            "name": "BTN",
+            "enabled": 1,
+            "params": {
+                "gpio": 255,
+                "invert": false
+            },
+            "state": {
+                "values": [
+                    {
+                        "name": "Switch",
+                        "type": "0"
+                    }
+                ]
+            },
+            "interval": 60
         }
     ],
     "hardware": {
@@ -68,7 +201,36 @@
         },
         "sdcard": {
             "enabled": false
-        }
+        },
+        "gpio": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            1
+        ]
     },
     "alexa": {
         "enabled": false,

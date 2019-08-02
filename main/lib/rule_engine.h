@@ -49,6 +49,9 @@ extern esp_event_loop_handle_t rule_event_loop;
 #define CMD_HW_TIMER_EN         0xe2
 #define CMD_HW_TIMER_DIS        0xe3
 
+#define CMD_LOGGING_START       0xe4
+#define CMD_LOGGING_STOP        0xe5
+
 #define CMD_MATH    0xee
 #define CMD_HTTP    0xef
 

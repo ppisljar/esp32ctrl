@@ -2,7 +2,7 @@ import { settings } from "../../../lib/settings";
 import { generateWidgetComponent } from "./helper";
 import { getTaskValues, getTaskValueType } from "../../../lib/utils";
 
-const eqOptions = ['', '=', '<', '>', '<=', '>=', '!='];
+const eqOptions = ['changed', '=', '<', '>', '<=', '>=', '!='];
 
 const compareValue = (type) => {
     const checkValue = getTaskValueType('params.device', 'params.value', type);
@@ -14,7 +14,7 @@ const compareValue = (type) => {
 
 const getDeviceNode = (device) => {
     const deviceNode = {
-        group: 'TRIGGER',
+        group: 'TRIGGERS',
         name: device.id,
         title: device.name,
         inputs: 0,
@@ -65,7 +65,7 @@ const getDeviceNode = (device) => {
         toDsl: (item) => {
             const { value, eq, val } = item.params;
             const comp = eqOptions.findIndex(o => o == eq);
-            const comparison = eq === '' ? `\x00\x01` : `${String.fromCharCode(comp)}\x01${String.fromCharCode(val)}`;
+            const comparison = eq === 'changed' ? `\x00\x01` : `${String.fromCharCode(comp)}\x01${String.fromCharCode(val)}`;
             return [`\xFF\xFE\x00\xFF\x00${String.fromCharCode(device.id)}${String.fromCharCode(value)}${comparison}%%output%%\xFF`]; 
         } ,     
     }

@@ -23,6 +23,8 @@ class IO_PINS {
         this.digitalPins = [{ name: '-- select --', value: 255, capabilities: ['digital_in', 'analog_in', 'digital_out', 'analog_out'], configs: {}}];
         for (let i = 0; i < 40; i++) {
             if ([6,7,8,9,10,11].includes(i)) continue; // SPI flash pins
+            if ([16,17].includes(i)) continue; // setting theese to output causes reset
+            // add check for serial pins
             const pin = {
                 name: `ESP32 GPIO${i}`,
                 value: i,
