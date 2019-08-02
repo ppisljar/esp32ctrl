@@ -25,11 +25,11 @@ class LoggingNotify : public Controller_Notify_Handler {
             if (ftell(p->f) == 0) fprintf(p->f, "timestamp, id, value\n");
 
             switch (val_type) {
-                case 1: fprintf (p->f, "%ld,%d-%d,%d\n", now*1000, x->id, var_id, *(uint8_t*)val); break;
-                case 2: fprintf (p->f, "%ld,%d-%d,%i\n", now*1000, x->id, var_id, *(uint16_t*)val); break;
-                case 4: fprintf (p->f, "%ld,%d-%d,%i\n", now*1000, x->id, var_id, *(uint32_t*)val); break;
-                case 5: fprintf (p->f, "%ld,%d-%d,%f\n", now*1000, x->id, var_id, *(float*)val); break;
-                case 0: fprintf (p->f, "%ld,%d-%d,%s\n", now*1000, x->id, var_id, (char*)val); break;
+                case 1: fprintf (p->f, "%ld,%d-%d,%d\n", now, x->id, var_id, *(uint8_t*)val); break;
+                case 2: fprintf (p->f, "%ld,%d-%d,%i\n", now, x->id, var_id, *(uint16_t*)val); break;
+                case 4: fprintf (p->f, "%ld,%d-%d,%i\n", now, x->id, var_id, *(uint32_t*)val); break;
+                case 5: fprintf (p->f, "%ld,%d-%d,%f\n", now, x->id, var_id, *(float*)val); break;
+                case 0: fprintf (p->f, "%ld,%d-%d,%s\n", now, x->id, var_id, (char*)val); break;
             }
 
             if (ftell(p->f) > 32*1024) rewind(p->f);

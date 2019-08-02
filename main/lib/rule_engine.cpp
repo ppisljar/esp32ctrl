@@ -155,7 +155,7 @@ bool compare(byte** ptr, byte *val, byte *old) {
                 if (val[i] >= cmd[i + 2]) match = false;
                 break;
             case 3: // >
-                ESP_LOGI(TAG_RE, "compare val(%p):%d > :%d", val, val[i], cmd[i + 2]);
+                ESP_LOGD(TAG_RE, "compare val(%p):%d > :%d", val, val[i], cmd[i + 2]);
                 if (val[i] <= cmd[i + 2]) match = false;
                 break;
             case 4: // <=
@@ -476,7 +476,7 @@ void run_rules() {
 
     for (auto rule : rule_list) {
         if (rule == NULL) continue;
-        ESP_LOGI(TAG_RE, "checking rule type:[%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
+        ESP_LOGD(TAG_RE, "checking rule type:[%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
         byte *cmd = rule;
         byte *old;
         uint16_t oldId;
@@ -489,7 +489,7 @@ void run_rules() {
         switch (cmd[0]) { // trigger type (0: var, 1: event, 2: timer, 3: system
             // device variable
             case 0:
-                ESP_LOGI(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
+                ESP_LOGD(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
                 p = active_plugins[cmd[1]];
                 if (p == nullptr) continue;
                 var = (uint8_t*)p->getStateVarPtr((int)cmd[2], nullptr);
