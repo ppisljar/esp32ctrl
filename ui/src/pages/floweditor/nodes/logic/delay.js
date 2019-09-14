@@ -25,12 +25,12 @@ const delayNode = {
     },
 
     getText: (item) => {
-        const { val } = item.props;
+        const { val } = item.params;
         return `DELAY ${val}`;
     },
 
-    toDsl: () => {
-        const { val } = item.props;
+    toDsl: (item) => {
+        const { val } = item.params;
         return [`\xF4${String.fromCharCode(val)}`];
     
     } ,     

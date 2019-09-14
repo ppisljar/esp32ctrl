@@ -1,6 +1,6 @@
 import { settings } from "../../../lib/settings";
 import { generateWidgetComponent } from "./helper";
-import { getTaskValues, getTaskValueType } from "../../../lib/utils";
+import { getTaskValues, getTaskValueType, getDeviceById } from "../../../lib/utils";
 
 const eqOptions = ['changed', '=', '<', '>', '<=', '>=', '!='];
 
@@ -48,6 +48,7 @@ const getDeviceNode = (device) => {
 
         getDefault: () => ({
             device: device.id,
+            value: 0,
             eq: '',
         }),
     
@@ -57,7 +58,9 @@ const getDeviceNode = (device) => {
     
         getText: (item) => {
             const { value, eq, val } = item.params;
-            const valueName = settings.get(`plugins[${device.id}].state.values[${value}].name`);
+            
+            const d = getDeviceById(device.id);
+            const valueName = d ? d.state.values[value].name : '';
         
             return `on ${device.name}#${valueName} ${eq} ${val}`;
         },

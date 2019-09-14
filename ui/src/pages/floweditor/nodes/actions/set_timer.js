@@ -1,5 +1,5 @@
 import { Component, h } from "preact";
-import { generateWidgetComponent } from "../helper";
+import { generateWidgetComponent, getString, toByteArray } from "../helper";
 
 const settimerNode = {
     group: 'ACTION',
@@ -38,7 +38,7 @@ const settimerNode = {
 
     toDsl: (item) => {
         const { timer, value } = item.params;
-        return [`\xF3${String.fromCharCode(timer)}${String.fromCharCode(value)}`];
+        return [`\xF3${String.fromCharCode(timer)}${getString(toByteArray(value,2))}`];
     } ,     
 }
 

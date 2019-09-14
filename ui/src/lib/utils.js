@@ -5,6 +5,10 @@ export const getTasks = () => {
     return settings.get('plugins').filter(p => p).map((p, i) => ({ value: p.id, name: p.name }));
 };
 
+export const getDeviceById = (id) => {
+    return settings.get('plugins').find(x => x.id === id);
+}
+
 export const getTaskValues = (path) => {
     return (config) => {
         const selectedTask = get(config,path);

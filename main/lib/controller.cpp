@@ -30,8 +30,9 @@ int8_t findDeviceIdByName(char *device_name) {
     for (uint8_t i = 0; i < 10; i++) {
         if (active_plugins[i] == nullptr) break;
         char *name = (char*)active_plugins[i]->name;
+        ESP_LOGI("CTRL", "comparing '%s' to '%s'", device_name, name);
         if (strcmp(name, device_name) == 0) {
-            ESP_LOGI("CTRL", "found device with name %s : %i", device_name, i);
+            ESP_LOGI("CTRL", "found device with name %s : %i [id: %i]", device_name, i, active_plugins[i]->id);
             return i;
         }
     }
@@ -43,7 +44,8 @@ int8_t findVarIdByName(Plugin *p, char *var_name) {
     int8_t i = 0;
     if (var_name == nullptr) return -1;
     for (auto state_cfg : (*(p->state_cfg))) {
-        if (strcmp(state_cfg["name"], var_name)) {
+        ESP_LOGI("CTRL", "comparing '%s' to '%s'", state_cfg["name"].as<char*>(), var_name);
+        if (strcmp(state_cfg["name"], var_name) == 0) {
             ESP_LOGI("CTRL", "found variable with name %s : %i", var_name, i);
             return i;
         }

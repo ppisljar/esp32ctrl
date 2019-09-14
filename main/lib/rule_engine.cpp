@@ -80,7 +80,6 @@ void load_rules() {
         ESP_LOGI(TAG_RE, "parsing rule file of size: %ld", rule_length);
         parse_rules(rules, rule_length);
     }
-    free(rules);
 }
 
 void init_rules() {
@@ -143,7 +142,7 @@ bool compare(byte** ptr, byte *val, byte *old) {
     for (byte i = 0; i < cmd[1]; i++) {
         switch (cmd[0]) {
             case 0: // every change
-                ESP_LOGI(TAG_RE, "compare val(%p):%d old(%p):%d", val, val[i], old, old[i]);
+                ESP_LOGD(TAG_RE, "compare val(%p):%d old(%p):%d", val, val[i], old, old[i]);
                 if (val[i] == old[i]) match = false;
                 break;
             case 1: // equals
@@ -159,15 +158,15 @@ bool compare(byte** ptr, byte *val, byte *old) {
                 if (val[i] <= cmd[i + 2]) match = false;
                 break;
             case 4: // <=
-                ESP_LOGI(TAG_RE, "compare val(%p):%d <= :%d", val, val[i], cmd[i + 2]);
+                ESP_LOGD(TAG_RE, "compare val(%p):%d <= :%d", val, val[i], cmd[i + 2]);
                 if (val[i] > cmd[i + 2]) match = false;
                 break;
             case 5: // >=
-                ESP_LOGI(TAG_RE, "compare val(%p):%d >= :%d", val, val[i], cmd[i + 2]);
+                ESP_LOGD(TAG_RE, "compare val(%p):%d >= :%d", val, val[i], cmd[i + 2]);
                 if (val[i] < cmd[i + 2]) match = false;
                 break;
             case 6: // <>
-                ESP_LOGI(TAG_RE, "compare val(%p):%d <> :%d", val, val[i], cmd[i + 2]);
+                ESP_LOGD(TAG_RE, "compare val(%p):%d <> :%d", val, val[i], cmd[i + 2]);
                 if (cmd[i + 2] == val[i]) match = false;
                 break;
         }
@@ -181,7 +180,7 @@ bool compare(byte** ptr, byte *val, byte *old) {
 // comparison: [len][[dev][var][type][len]]
 bool multi_compare(byte **ptr) {
     byte *cmd = *ptr;
-    ESP_LOGI(TAG_RE, "multi compare [%x %x %x %x %x]", cmd[0], cmd[1], cmd[2], cmd[3], cmd[4]);
+    ESP_LOGD(TAG_RE, "multi compare [%x %x %x %x %x]", cmd[0], cmd[1], cmd[2], cmd[3], cmd[4]);
     bool match = true;
     byte len = cmd[0];
     cmd++;
@@ -191,7 +190,7 @@ bool multi_compare(byte **ptr) {
         Plugin *p = active_plugins[cmd[0]];
         if (p == nullptr) return false;
         void *var = p->getStateVarPtr(cmd[1], nullptr);
-        ESP_LOGI(TAG_RE, "reading plugin %d (%p) variable %d (%p)", cmd[0], p, cmd[1], var);
+        ESP_LOGD(TAG_RE, "reading plugin %d (%p) variable %d (%p)", cmd[0], p, cmd[1], var);
 
         uint16_t oldId = *cmd;
         if (!rule_data_ptrs[oldId]) {
@@ -199,9 +198,9 @@ bool multi_compare(byte **ptr) {
             old_values_free_ptr += cmd[3];
         }
         old = (byte*)rule_data_ptrs[oldId];
-        ESP_LOGI(TAG_RE, "getting ptr to old data (%p)", old);
+        ESP_LOGD(TAG_RE, "getting ptr to old data (%p)", old);
         cmd+=2;
-        ESP_LOGI(TAG_RE, "comparing");
+        ESP_LOGD(TAG_RE, "comparing");
         if (!compare(&cmd, (uint8_t*)var, old)) match = false;
 
     }
@@ -219,10 +218,10 @@ int parse_rules(byte *rules, long len) {
                 case TRIG_EVENT:
                     // 2 byte eventid
                     ESP_LOGI(TAG_RE, "found an event on address: %p", (void*)(rules + i + 6));
-                    event_list[events_found++] = rules + i + 6; // ??type needs to be included
+                    event_list[1 + events_found++] = rules + i + 6; // ??type needs to be included
                     break;
                 case TRIG_VAR:
-                    ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 5));
+                    ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
                     rule_list[rules_found++] = rules + i + 4; // type needs to be included
                     break;
                 case TRIG_TIMER:
@@ -298,10 +297,11 @@ uint8_t run_rule(byte* start, void* start_val, uint8_t start_val_length, uint8_t
     float y = 0;
     double state_val_value = 0;
     uint8_t state_val_length = start_val_length;
+    bool exit = false;
 
     Plugin *p;
     byte *var;
-    while(cmd[0] != CMD_ENDON && ((cmd - start) < len)) {
+    while(cmd[0] != CMD_ENDON && ((cmd - start) < len) && !exit) {
         switch(cmd[0]) {
             case CMD_GPIO:
                 ESP_LOGI(TAG_RE, "cmd GPIO %d = %d", cmd[1], cmd[2]);
@@ -309,28 +309,34 @@ uint8_t run_rule(byte* start, void* start_val, uint8_t start_val_length, uint8_t
                 gpio_set_level((gpio_num_t)cmd[1], cmd[2]);
                 cmd += 3;
                 break;
-            case CMD_DELAY:
+            case CMD_DELAY: {
+                uint32_t ppp = (uint32_t)(cmd + 2);
+                uint32_t x = ppp;
                 // todo: add pointer to here to the timers ?
-                ESP_LOGI(TAG_RE, "cmd delay %d", cmd[1]);
-                soft_timer([cmd, state_val, state_val_length](){
-                    run_rule(cmd+2, state_val, state_val_length, 255);
+                ESP_LOGI(TAG_RE, "cmd delay %d at %p, %p, %i", cmd[1], (void*)ppp, state_val, state_val_length);
+                soft_timer([=](){
+                    ESP_LOGI(TAG_RE, "continuing at %p, %p, %i, %p", (void*)ppp, state_val, state_val_length, (void*)x);
+                    run_rule((uint8_t*)x, state_val, state_val_length, 255);
                 }, cmd[1] * 1000, false);
-                cmd += 2;
+                exit = true;
+                // vTaskDelay( cmd[1] * 1000 / portTICK_PERIOD_MS);
+                // cmd += 2;
                 break;
-            case CMD_EVENT:
+            } case CMD_EVENT:
                 // CMD_EVENT EVENT_ID (2 bytes) DATA_LEN DATA
                 cmd++;
                 ESP_LOGI(TAG_RE, "cmd triggering event %d %p with %d bytes of data", *((uint16_t*)cmd), cmd, cmd[2]);
                 TRIGGER_EVENT(cmd);
                 cmd += 3 + cmd[2];
                 break;
-            case CMD_TIMER:
-                // CMD_TIMER TIMER_ID TIME
-                ESP_LOGI(TAG_RE, "cmd triggering timer %d time: %d", cmd[1], cmd[2]*100);
-                TRIGGER_TIMER(cmd[1], cmd[2]*100);
-                cmd += 3;
+            case CMD_TIMER: {
+                // CMD_TIMER TIMER_ID TIME TIME
+                int16_t timetowait = (cmd[3] << 8) + cmd[2];
+                ESP_LOGI(TAG_RE, "cmd triggering timer %d time: %ds", cmd[1], timetowait);
+                TRIGGER_TIMER(cmd[1], timetowait*100);
+                cmd += 4;
                 break;
-            case CMD_GET:
+            } case CMD_GET:
                 // CMD_GET DEVICE_ID VAR_ID LENGTH
                 ESP_LOGI(TAG_RE, "cmd get p:%d v:%d l:%d", cmd[1], cmd[2], cmd[3]);
                 p = active_plugins[cmd[1]];
@@ -392,7 +398,10 @@ uint8_t run_rule(byte* start, void* start_val, uint8_t start_val_length, uint8_t
             // until we find endif command
             case CMD_ELSE:
                 ESP_LOGI(TAG_RE, "cmd else");
-                while(cmd[0] != CMD_ENDIF) cmd++;
+                while(cmd[0] != CMD_ENDIF) {
+                    cmd++;
+                    ESP_LOGI(TAG_RE, "++");
+                }
                 break;
             // endif commands, does nothing, just marker for if/else
             case CMD_ENDIF:
@@ -476,7 +485,7 @@ void run_rules() {
 
     for (auto rule : rule_list) {
         if (rule == NULL) continue;
-        ESP_LOGD(TAG_RE, "checking rule type:[%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
+        //ESP_LOGI(TAG_RE, "checking rule type:[%i] on address: %i [%x %x %x %x]", rule[0], (unsigned)(rule), rule[0], rule[1], rule[2], rule[3]);
         byte *cmd = rule;
         byte *old;
         uint16_t oldId;
@@ -489,7 +498,7 @@ void run_rules() {
         switch (cmd[0]) { // trigger type (0: var, 1: event, 2: timer, 3: system
             // device variable
             case 0:
-                ESP_LOGD(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
+                //ESP_LOGI(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
                 p = active_plugins[cmd[1]];
                 if (p == nullptr) continue;
                 var = (uint8_t*)p->getStateVarPtr((int)cmd[2], nullptr);
@@ -509,6 +518,7 @@ void run_rules() {
                 if (match) {
                     start_val = var;
                     start_val_len = 1;
+                    cmd--;
                 }
                 break;
             case 2:

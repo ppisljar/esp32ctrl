@@ -1,6 +1,7 @@
 #include "p011_mqtt.h"
-
+#include "../lib/config.h"
 static const char *TAG = "MQTTPlugin";
+extern Config* g_cfg;
 
 PLUGIN_CONFIG(MQTTPlugin, interval, uri, client_id, user, pass, lwt_topic, lwt_msg)
 PLUGIN_STATS(MQTTPlugin, value, value)
@@ -9,8 +10,10 @@ PLUGIN_STATS(MQTTPlugin, value, value)
 static void parseSubscribeTopicStr(const char *topic_in, struct subscribe_info *info) {
     std::string str_topic(topic_in);
 
-    replace_string_in_place(str_topic, "%unit_id%", "test");
-    replace_string_in_place(str_topic, "%unit_name%", "test");
+    JsonObject& c = g_cfg->getConfig();
+
+    replace_string_in_place(str_topic, "%unit_id%", c["unit"]["name"]);
+    replace_string_in_place(str_topic, "%unit_name%", c["unit"]["name"]);
     replace_string_in_place(str_topic, "%timestamp%", "test");
 
     std::string topic(str_topic);
@@ -68,11 +71,23 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
     int msg_id;
     // your_context_t *context = event->context;
     switch (event->event_id) {
-        case MQTT_EVENT_CONNECTED:
+        case MQTT_EVENT_CONNECTED: {
             p->connected = true;
+
+            parseSubscribeTopicStr((*(p->cfg))["subscribe_topic"].as<char*>(), &p->info);
+            int msg_id = esp_mqtt_client_subscribe(p->client, p->info.topic, 0);
+            ESP_LOGI(TAG, "sent subscribe to '%s' successful, msg_id=%d", p->info.topic, msg_id);
+            //subscribe(info.topic, [this]);
+
+            // char* atopic = (*(p->cfg))["ad_topic"];
+            // if (atopic != nullptr) { // pubish on connect
+                
+            //     esp_mqtt_client_publish(p->client, atopic, (*(p->cfg))["ad_msg"], 0, 0, 0);  // len, qos, retain
+            // }
+
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             break;
-        case MQTT_EVENT_DISCONNECTED:
+        } case MQTT_EVENT_DISCONNECTED:
             p->connected = false;
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
             break;
@@ -157,19 +172,6 @@ bool MQTTPlugin::init(JsonObject &params) {
     MQTT_Notify *notify = new MQTT_Notify(this);
     registerController(notify);
 
-    parseSubscribeTopicStr((*cfg)["subscribe_topic"].as<char*>(), &info);
-    ESP_LOGI(TAG, "%s", info.topic);
-
-    uint8_t cnt = 0;
-    while (!connected && cnt < 50) {
-        cnt++;
-        vTaskDelay( 100 / portTICK_PERIOD_MS);
-    }
-
-    int msg_id = esp_mqtt_client_subscribe(client, info.topic, 0);
-    ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
-    //subscribe(info.topic, [this]);
-
     // register rule engine custom command (mqtt publish)
     // 0x55 TOPIC_LEN TOPIC DATA_LEN DATA
     register_command(55, [this](uint8_t* start) {
@@ -185,7 +187,7 @@ bool MQTTPlugin::init(JsonObject &params) {
 }
 
 void MQTTPlugin::handler(char* topic, int topic_len, char* msg) {
-    ESP_LOGD(TAG, "got mqtt controller data");
+    ESP_LOGI(TAG, "%s %s", topic, msg);
     const char *device_field = (*cfg)["subscribe_data_device_id"];
     const char *var_field = (*cfg)["subscribe_data_value_id"];
     const char *value_field = (*cfg)["subscribe_data_value"];

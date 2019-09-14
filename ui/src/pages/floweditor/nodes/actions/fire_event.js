@@ -10,7 +10,7 @@ const fireeventNode = {
     outputs: 1,  
     getEditorConfig: () => {
         const events = Object.keys(settings.events).map((k, i) => {
-            return { name: k, value: settings.events[k] };
+            return { name: k, value: i };
         });
 
         const cfg = {

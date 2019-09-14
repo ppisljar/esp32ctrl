@@ -1,6 +1,6 @@
 import { Component, h } from "preact";
 import { generateWidgetComponent } from "../helper";
-import { getTaskValueType, getTasks, getTaskValues } from "../../../../lib/utils";
+import { getTaskValueType, getTasks, getTaskValues, getDeviceById } from "../../../../lib/utils";
 import { settings } from "../../../../lib/settings";
 
 const eqOptions = ['changed', '=', '<', '>', '<=', '>=', '!='];
@@ -58,8 +58,9 @@ const ifElseNode = {
     getText: (item) => {
         const { device, value, val, eq, val_type } = item.params;
         if (device === undefined || value === undefined) return 'click to configure';
-        const deviceName = settings.get(`plugins[${device}].name`);
-        const valueName = settings.get(`plugins[${device}].state.values[${value}].name`);
+        const d = getDeviceById(device)
+        const deviceName = d ? d.name : '';
+        const valueName = d ? d.state.values[value].name : '';
         let text = `IF ${deviceName}#${valueName} ${eq} `;
         if (eq !== 'changed') {
             text += val_type ? val : '[state]';

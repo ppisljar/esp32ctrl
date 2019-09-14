@@ -10978,6 +10978,11 @@ class MQTT extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
 
               case 3:
                 // Home Assistant
+                form.setProp('params.subscribe_topic', 'homeassistant/%unit_id%/%device_name%/%value_name%');
+                form.setProp('params.subscribe_data', '%value%');
+                form.setProp('params.publish_topic', 'homeassistant/%unit_id%/%device_name%/%value_name%');
+                form.setProp('params.pubish_data', '%value%');
+                form.setProp('params.value_field', 'value');
                 break;
             }
           }
@@ -11072,6 +11077,14 @@ class MQTT extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
         },
         publish_data: {
           name: 'Publish Data',
+          type: 'string'
+        },
+        ad_topic: {
+          name: 'AutoDiscover Topic',
+          type: 'string'
+        },
+        ad_data: {
+          name: 'AutoDiscover Data',
           type: 'string'
         }
       }
@@ -13359,12 +13372,13 @@ settings.editor = new Settings();
 /*!**************************!*\
   !*** ./src/lib/utils.js ***!
   \**************************/
-/*! exports provided: getTasks, getTaskValues, getTaskValueType, stringToAsciiByteArray */
+/*! exports provided: getTasks, getDeviceById, getTaskValues, getTaskValueType, stringToAsciiByteArray */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTasks", function() { return getTasks; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getDeviceById", function() { return getDeviceById; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTaskValues", function() { return getTaskValues; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTaskValueType", function() { return getTaskValueType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "stringToAsciiByteArray", function() { return stringToAsciiByteArray; });
@@ -13377,6 +13391,9 @@ const getTasks = () => {
     value: p.id,
     name: p.name
   }));
+};
+const getDeviceById = id => {
+  return _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].get('plugins').find(x => x.id === id);
 };
 const getTaskValues = path => {
   return config => {
@@ -16485,7 +16502,7 @@ const fireeventNode = {
     const events = Object.keys(_lib_settings__WEBPACK_IMPORTED_MODULE_2__["settings"].events).map((k, i) => {
       return {
         name: k,
-        value: _lib_settings__WEBPACK_IMPORTED_MODULE_2__["settings"].events[k]
+        value: i
       };
     });
     const cfg = {
@@ -17007,8 +17024,9 @@ const setStateNode = {
       val
     } = item.params;
     if (device === undefined || value === undefined) return 'click to configure';
-    const deviceName = _lib_settings__WEBPACK_IMPORTED_MODULE_3__["settings"].get(`plugins[${device}].name`);
-    const valueName = _lib_settings__WEBPACK_IMPORTED_MODULE_3__["settings"].get(`plugins[${device}].state.values[${value}].name`);
+    const d = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_2__["getDeviceById"])(device);
+    const deviceName = d ? d.name : '';
+    const valueName = d ? d.state.values[value].name : '';
     return `set ${deviceName}#${valueName} = ${val}`;
   },
   toDsl: item => {
@@ -17089,7 +17107,7 @@ const settimerNode = {
       timer,
       value
     } = item.params;
-    return [`\xF3${String.fromCharCode(timer)}${String.fromCharCode(value)}`];
+    return [`\xF3${String.fromCharCode(timer)}${Object(_helper__WEBPACK_IMPORTED_MODULE_1__["getString"])(Object(_helper__WEBPACK_IMPORTED_MODULE_1__["toByteArray"])(value, 2))}`];
   }
 };
 const component = Object(_helper__WEBPACK_IMPORTED_MODULE_1__["generateWidgetComponent"])(settimerNode);
@@ -17196,6 +17214,7 @@ const getDeviceNode = device => {
     },
     getDefault: () => ({
       device: device.id,
+      value: 0,
       eq: ''
     }),
     getComponent: () => {
@@ -17207,7 +17226,8 @@ const getDeviceNode = device => {
         eq,
         val
       } = item.params;
-      const valueName = _lib_settings__WEBPACK_IMPORTED_MODULE_0__["settings"].get(`plugins[${device.id}].state.values[${value}].name`);
+      const d = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_2__["getDeviceById"])(device.id);
+      const valueName = d ? d.state.values[value].name : '';
       return `on ${device.name}#${valueName} ${eq} ${val}`;
     },
     toDsl: item => {
@@ -17382,13 +17402,13 @@ const delayNode = {
   getText: item => {
     const {
       val
-    } = item.props;
+    } = item.params;
     return `DELAY ${val}`;
   },
-  toDsl: () => {
+  toDsl: item => {
     const {
       val
-    } = item.props;
+    } = item.params;
     return [`\xF4${String.fromCharCode(val)}`];
   }
 };
@@ -17534,8 +17554,9 @@ const ifElseNode = {
       val_type
     } = item.params;
     if (device === undefined || value === undefined) return 'click to configure';
-    const deviceName = _lib_settings__WEBPACK_IMPORTED_MODULE_3__["settings"].get(`plugins[${device}].name`);
-    const valueName = _lib_settings__WEBPACK_IMPORTED_MODULE_3__["settings"].get(`plugins[${device}].state.values[${value}].name`);
+    const d = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_2__["getDeviceById"])(device);
+    const deviceName = d ? d.name : '';
+    const valueName = d ? d.state.values[value].name : '';
     let text = `IF ${deviceName}#${valueName} ${eq} `;
 
     if (eq !== 'changed') {
