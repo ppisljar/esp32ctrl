@@ -25,6 +25,8 @@ import {
     ConfigLCDPage,
     ConfigLCDScreenPage,
     ConfigLCDWidgetPage,
+    ProfilesPage,
+    ProfilesEditPage,
 } from '../pages';
 
 
@@ -58,8 +60,10 @@ const menus = [
     { title: 'Dashboard', href: 'dashboard', component: DashboardPage, children: [] },
     { title: 'Devices', href: 'devices', component: DevicesPage, children: [] },
     //{ title: 'Controllers', href: 'controllers', component: ControllersPage, children: [] },
-    //{ title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [] },
-    { title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [] },
+    { title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [
+        
+    ] },
+    { title: 'Profiles', href: 'profiles', component: ProfilesPage, children: [] },
     { title: 'Alexa', href: 'alexa', component: ControllerAlexaPage, children: [] },
     { title: 'Alerts', href: 'alerts', component: AlertsPage, children: [] },
     { title: 'Config', adminOnly: true, href: 'config', component: ConfigPage, children: [
@@ -86,6 +90,7 @@ const routes = [
     { title: 'Edit Alert', href:'alerts/edit', component: AlertsEditPage },
     { title: 'Edit Screen', href:'config/lcdscreen', component: ConfigLCDScreenPage },
     { title: 'Edit Widget', href:'config/lcdwidget', component: ConfigLCDWidgetPage },
+    { title: 'Edit Profile', href:'profiles/edit', component: ProfilesEditPage },
     { title: 'Save to Flash', href:'tools/diff', component: DiffPage },
     { title: 'Setup', href: 'config/setup', component: SetupPage }
 ];

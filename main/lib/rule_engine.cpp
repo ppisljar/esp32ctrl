@@ -78,8 +78,12 @@ void load_rules() {
     uint8_t* rules = (uint8_t*)read_file("/spiffs/rules.dat", &rule_length);
     if (rules != NULL && rule_length > 0) {
         ESP_LOGI(TAG_RE, "parsing rule file of size: %ld", rule_length);
+        for (int i = 0; i < rule_length; i++) {
+            printf("%#02X ", rules[i]);
+        }
         parse_rules(rules, rule_length);
     }
+    //free(rules);
 }
 
 void init_rules() {
