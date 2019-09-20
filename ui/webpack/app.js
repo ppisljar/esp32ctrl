@@ -12921,12 +12921,16 @@ const menus = [{
   component: _pages__WEBPACK_IMPORTED_MODULE_0__["DevicesPage"],
   children: []
 }, //{ title: 'Controllers', href: 'controllers', component: ControllersPage, children: [] },
-//{ title: 'Automation', href: 'rules', component: RulesEditorPage, class: 'full', children: [] },
 {
   title: 'Automation',
   href: 'rules',
   component: _pages__WEBPACK_IMPORTED_MODULE_0__["RulesEditorPage"],
   class: 'full',
+  children: []
+}, {
+  title: 'Profiles',
+  href: 'profiles',
+  component: _pages__WEBPACK_IMPORTED_MODULE_0__["ProfilesPage"],
   children: []
 }, {
   title: 'Alexa',
@@ -13022,6 +13026,10 @@ const routes = [{
   title: 'Edit Widget',
   href: 'config/lcdwidget',
   component: _pages__WEBPACK_IMPORTED_MODULE_0__["ConfigLCDWidgetPage"]
+}, {
+  title: 'Edit Profile',
+  href: 'profiles/edit',
+  component: _pages__WEBPACK_IMPORTED_MODULE_0__["ProfilesEditPage"]
 }, {
   title: 'Save to Flash',
   href: 'tools/diff',
@@ -18766,7 +18774,7 @@ class FSPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 /*!****************************!*\
   !*** ./src/pages/index.js ***!
   \****************************/
-/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage */
+/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, ProfilesEditPage, ProfilesPage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -18858,6 +18866,14 @@ __webpack_require__.r(__webpack_exports__);
 
 /* harmony import */ var _tools_sysvars__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./tools.sysvars */ "./src/pages/tools.sysvars.js");
 /* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "SysVarsPage", function() { return _tools_sysvars__WEBPACK_IMPORTED_MODULE_27__["SysVarsPage"]; });
+
+/* harmony import */ var _profiles__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./profiles */ "./src/pages/profiles.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ProfilesPage", function() { return _profiles__WEBPACK_IMPORTED_MODULE_28__["ProfilesPage"]; });
+
+/* harmony import */ var _profiles_edit__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./profiles.edit */ "./src/pages/profiles.edit.js");
+/* harmony reexport (safe) */ __webpack_require__.d(__webpack_exports__, "ProfilesEditPage", function() { return _profiles_edit__WEBPACK_IMPORTED_MODULE_29__["ProfilesEditPage"]; });
+
+
 
 
 
@@ -19851,6 +19867,240 @@ class LoadPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
       type: "button",
       onClick: this.saveForm
     }, "upload")));
+  }
+
+}
+
+/***/ }),
+
+/***/ "./src/pages/profiles.edit.js":
+/*!************************************!*\
+  !*** ./src/pages/profiles.edit.js ***!
+  \************************************/
+/*! exports provided: ProfilesEditPage */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ProfilesEditPage", function() { return ProfilesEditPage; });
+/* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
+/* harmony import */ var _components_form__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../components/form */ "./src/components/form/index.js");
+/* harmony import */ var _lib_settings__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/settings */ "./src/lib/settings.js");
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../lib/utils */ "./src/lib/utils.js");
+
+
+
+
+const typeOptions = [{
+  name: 'time: seconds',
+  value: 0
+}, {
+  name: 'manual steps',
+  value: 99
+}];
+const baseFields = {
+  name: {
+    name: 'Name',
+    type: 'string',
+    var: 'name'
+  },
+  description: {
+    name: 'Description',
+    type: 'string',
+    var: 'description'
+  },
+  icon: {
+    name: 'Icon',
+    type: 'string',
+    var: 'icon'
+  },
+  type: {
+    name: 'Type',
+    type: 'select',
+    options: typeOptions
+  }
+};
+
+const getFormConfig = (config, form) => {
+  const steps = {};
+  config.steps.forEach((step, i) => {
+    const configs = {};
+    step.configs.forEach((cfg, j) => {
+      configs[`${j}_prop`] = [{
+        name: 'Device',
+        type: 'select',
+        value: cfg.device,
+        options: _lib_utils__WEBPACK_IMPORTED_MODULE_3__["getTasks"],
+        var: `steps[${i}].configs[${j}].device`
+      }, {
+        name: 'Config',
+        type: 'select',
+        value: cfg.value_id,
+        options: Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getTaskValues"])(`steps[${i}].configs[${j}].device`),
+        var: `steps[${i}].configs[${j}].value_id`
+      }, {
+        type: 'button',
+        value: 'remove',
+        click: () => {
+          step.configs.splice(i, 1);
+          form.forceUpdate();
+        }
+      }];
+    });
+    steps[`step_${i}`] = {
+      name: `Step ${i}`,
+      configs: {
+        opts: [{
+          name: 'number',
+          type: 'number',
+          value: i,
+          var: `steps[${i}].number`
+        }, {
+          type: 'button',
+          value: 'remove',
+          click: () => {
+            config.steps.splice(i, 1);
+            form.forceUpdate();
+          }
+        }],
+        ...configs,
+        add: {
+          type: 'button',
+          value: 'add config',
+          click: () => {
+            step.configs.push({});
+            form.forceUpdate();
+          }
+        }
+      }
+    };
+  });
+  return {
+    groups: {
+      settings: {
+        name: 'Profile Settings',
+        configs: { ...baseFields,
+          add: {
+            type: 'button',
+            value: 'add step',
+            click: () => {
+              form.addStep();
+            }
+          }
+        }
+      },
+      ...steps
+    }
+  };
+};
+
+class ProfilesEditPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
+  constructor(props) {
+    super(props);
+    this.config = _lib_settings__WEBPACK_IMPORTED_MODULE_2__["settings"].get(`profiles[${props.params[0]}]`);
+
+    this.addStep = () => {
+      this.config.steps.push({
+        configs: []
+      });
+      this.forceUpdate();
+    };
+  }
+
+  render(props) {
+    const formConfig = getFormConfig(this.config, this);
+
+    if (!formConfig) {
+      alert('something went wrong, cant edit profile');
+      window.location.href = '#profiles';
+    }
+
+    return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])(_components_form__WEBPACK_IMPORTED_MODULE_1__["Form"], {
+      config: formConfig,
+      selected: this.config
+    });
+  }
+
+}
+
+/***/ }),
+
+/***/ "./src/pages/profiles.js":
+/*!*******************************!*\
+  !*** ./src/pages/profiles.js ***!
+  \*******************************/
+/*! exports provided: ProfilesPage */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "ProfilesPage", function() { return ProfilesPage; });
+/* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
+/* harmony import */ var _lib_settings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/settings */ "./src/lib/settings.js");
+
+
+
+const firstFreeKey = (array, key = 'id') => {
+  let i = 0;
+
+  while (array.find(e => e && e[key] == i)) i++;
+
+  return i;
+};
+
+class ProfilesPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
+  constructor(props) {
+    super(props);
+    this.state = {
+      config: _lib_settings__WEBPACK_IMPORTED_MODULE_1__["settings"].get('profiles')
+    };
+
+    if (!this.state.config) {
+      this.state.config = [];
+      _lib_settings__WEBPACK_IMPORTED_MODULE_1__["settings"].set('profiles', this.state.config);
+    }
+
+    this.add = () => {
+      const item = {
+        id: firstFreeKey(this.state.config),
+        name: 'new profile',
+        steps: []
+      };
+      this.state.config.push(item);
+      window.location.hash = `#profiles/edit/${this.state.config.length - 1}`;
+    };
+
+    this.delete = i => {
+      this.state.config.splice(i, 1);
+      this.forceUpdate();
+    };
+  }
+
+  render(props) {
+    return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("button", {
+      type: "button",
+      onClick: this.add
+    }, "add profile")), this.state.config.map((item, i) => {
+      const editUrl = `#profiles/edit/${i}`;
+      const iconClass = `${item.icon}`;
+      return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "device"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "icon"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("span", {
+        class: iconClass
+      })), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "body"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "info"
+      }, i + 1, ": \xA0\xA0", item.name, " [", item.description, "]", Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("a", {
+        href: editUrl
+      }, "edit"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("a", {
+        onClick: () => {
+          this.delete(i);
+        }
+      }, "delete"))));
+    }));
   }
 
 }
