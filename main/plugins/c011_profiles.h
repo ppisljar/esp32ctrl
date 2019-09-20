@@ -10,8 +10,8 @@ class ProfilesPlugin: public Plugin {
     public:
         uint8_t current_profile;
         uint16_t current_step;
-        Type current_profile_type = Type::byte;
-        Type current_step_type = Type::integer;
+        Type current_profile_t = Type::byte;
+        Type current_step_t = Type::integer;
         DEFINE_PLUGIN(ProfilesPlugin);
 
         void setProfile(uint8_t profile_id);
