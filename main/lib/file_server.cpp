@@ -367,6 +367,7 @@ static esp_err_t http_resp_file(httpd_req_t *req, char* filepath)
 {
     FILE *fd = NULL;
     struct stat file_stat;
+    ESP_LOGI(TAG, "sending file %s", filepath);
 
     if (strlen(filepath) == 0) {
         if (!strncmp(req->uri, "/sdcard", 7) == 0) {
@@ -377,6 +378,8 @@ static esp_err_t http_resp_file(httpd_req_t *req, char* filepath)
         /* Concatenate the requested file path */
         strcat(filepath, req->uri);
     }
+
+    ESP_LOGI(TAG, "sending file %s", filepath);
    
     if (stat(filepath, &file_stat) == -1) {
         ESP_LOGE(TAG, "Failed to stat file : %s", filepath);
@@ -471,6 +474,7 @@ static esp_err_t index_get_handler(httpd_req_t *req)
 
 std::function<esp_err_t(httpd_req_t*)> handlers_404[10] = {};
 static esp_err_t handler_404(httpd_req_t *req) {
+    ESP_LOGI(TAG, "handling 404");
     esp_err_t responded = ESP_FAIL;
     //if (isAuthenticated(req, false)) {
         responded = download_get_handler(req);
@@ -1364,7 +1368,7 @@ esp_err_t start_file_server(const char *base_path)
      * target URIs which match the wildcard scheme */
     config.uri_match_fn = httpd_uri_match_wildcard;
     config.global_user_ctx = server_data;
-    config.max_uri_handlers = 25;
+    config.max_uri_handlers = 30;
 
     ESP_LOGD(TAG, "Starting HTTP Server");
     if (httpd_start(&server, &config) != ESP_OK) {

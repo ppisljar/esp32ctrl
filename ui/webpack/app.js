@@ -16245,7 +16245,7 @@ class DropPageComponent extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"]
       for (let i = this.state.connections.length - 1; i >= 0; i--) {
         const c = this.state.connections[i];
 
-        if (c.to.startsWith(`node-${item.id}-`) || c.from.startsWith(`node-${item.id}-`)) {
+        if (!c.to || c.to.startsWith(`node-${item.id}-`) || c.from.startsWith(`node-${item.id}-`)) {
           this.state.connections.splice(i, 1);
         }
       }

@@ -128,7 +128,7 @@ void register_command(uint8_t cmd_id, std::function<uint8_t(uint8_t*)> handler) 
 uint8_t find_command(uint8_t cmd_id, uint8_t *start) {
     auto cmd = custom_commands.find(cmd_id);
     if (cmd != custom_commands.end()) {
-        ESP_LOGI(TAG_RE, "found custom command %i at %p", cmd_id, cmd->second);
+        ESP_LOGI(TAG_RE, "found custom command %i at ...", cmd_id /*(void*)cmd->second*/);
         return cmd->second(start);
     }
     return 0;

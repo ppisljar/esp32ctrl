@@ -1,6 +1,6 @@
 #include "c003_wifi.h"
 #include "../lib/global_state.h"
-#include "DNSServer.h"
+#include "../../components/network/DNSServer/DNSServer.h"
 #include "mdns.h"
 #include "../lib/config.h"
 

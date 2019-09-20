@@ -44,9 +44,12 @@ bool HueEmulatorPlugin::init(JsonObject &params) {
     }
 
     http_quick_register("/description.xml", HTTP_GET, hueemulator_webhandler, this);
-    http_quick_register("/api/*", HTTP_GET, hueemulator_apihandler, this);
-    http_quick_register("/api/*", HTTP_POST, hueemulator_apihandler, this);
-    http_quick_register("/api/*", HTTP_PUT, hueemulator_apihandler, this);
+    http_quick_register("/api*", HTTP_GET, hueemulator_apihandler, this);
+    http_quick_register("/api*", HTTP_POST, hueemulator_apihandler, this);
+    http_quick_register("/api*", HTTP_PUT, hueemulator_apihandler, this);
+    http_quick_register("/api/*", HTTP_CONNECT, hueemulator_apihandler, this);
+    http_quick_register("/api/*", HTTP_OPTIONS, hueemulator_apihandler, this);
+    http_quick_register("/api/*", HTTP_HEAD, hueemulator_apihandler, this);
 
 
     ESP_LOGI(TAG, "init");

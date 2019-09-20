@@ -42,14 +42,7 @@ if(CONFIG_UGFX_GUI_ENABLE)
                                             "gdisp/SSD1306")
         endif()
 
-        if(CONFIG_UGFX_DRIVER_NT35510)
-            set(COMPONENT_SRCS "${COMPONENT_SRCS}"
-                                "gdisp/NT35510/gdisp_lld_NT35510.c"
-                                "gdisp/NT35510/NT35510_adapter.cpp"
-                                )
-            set(COMPONENT_ADD_INCLUDEDIRS "${COMPONENT_ADD_INCLUDEDIRS}"
-                                            "gdisp/NT35510")
-        endif()
+       
 
         #Input driver
         #Touch driver
@@ -138,13 +131,7 @@ else()
                                                 "gdisp/SSD1306")
             endif()
 
-            if(CONFIG_LVGL_DRIVER_NT35510)
-                set(COMPONENT_SRCS "${COMPONENT_SRCS}"
-                                    "gdisp/NT35510/gdisp_lld_NT35510.c"
-                                    "gdisp/NT35510/NT35510_adapter.cpp")
-                set(COMPONENT_ADD_INCLUDEDIRS "${COMPONENT_ADD_INCLUDEDIRS}"
-                                                "gdisp/NT35510")
-            endif()
+            
 
             #Input driver
             #Touch driver
@@ -202,6 +189,6 @@ endif()
 # depend on any configuration choices (CONFIG_xxx macros). 
 # This is because requirements are expanded before configuration is loaded. 
 # Other component variables (like include paths or source files) can depend on configuration choices.
-set(COMPONENT_REQUIRES lvgl_gui ugfx_gui nt35510 ssd1306 lcd xpt2046 ft5x06 touchpad)
+set(COMPONENT_REQUIRES lvgl_gui ugfx_gui ssd1306 xpt2046 ft5x06)
 
 register_component()

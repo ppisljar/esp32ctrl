@@ -2,7 +2,7 @@
 #define ESP_PLUGIN_007_H
 
 #include "plugin_defs.h"
-#include "ADS1115.h"
+#include "../../components/i2c_devices/others/ADS1115/include/ADS1115.h"
 
 class ADS111xPlugin: public Plugin {
     private:

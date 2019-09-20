@@ -117,13 +117,13 @@ private:
 
     std::string response = 
       "HTTP/1.1 200 OK\r\n"
-      "EXT:\r\n"
       "CACHE-CONTROL: max-age=100\r\n" // SSDP_INTERVAL
+      "EXT:\r\n"
       "LOCATION: http://"+ myip +":80/description.xml\r\n"
-      "SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/1.17.0\r\n" // _modelName, _modelNumber
+      "SERVER: FreeRTOS/7.4.2, UPnP/1.0, IpBridge/1.7.0\r\n" // _modelName, _modelNumber
       "hue-bridgeid: "+ escapedMac +"\r\n"
       "ST: urn:schemas-upnp-org:device:basic:1\r\n"  // _deviceType
-      "USN: uuid:2f402f80-da50-11e1-9b23-"+ escapedMac +"::upnp:rootdevice\r\n" // _uuid::_deviceType
+      "USN: uuid:2f402f80-da50-11e1-9b23-"+ escapedMac +"\r\n" // _uuid::_deviceType //::upnp:rootdevice
       "\r\n";
 
     in_addr_t ip = espalexaUdp.remoteIP();
