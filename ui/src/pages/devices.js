@@ -115,11 +115,11 @@ export class DevicesPage extends Component {
             {tasks.map((task, i) => {
                 if (task === null) return (null);
                 if (settings.userName !== 'admin' && task.lock) return (null);
+                const deviceLive = this.state.devices[task.id];
                 const editUrl = `#devices/edit/${i}`;
                 const device = devices.find(d => d.value === task.type);
                 const deviceType = device ? device.name : '--unknown--';
                 const enabledProp = `plugins[${i}].enabled`;
-                const deviceLive = this.state.devices[i];
                 const vals = deviceLive ? Object.keys(deviceLive).map(key => ({ name: key, value: deviceLive[key]})) : [];
                 vals.forEach(v => {
                     if (v.value === true) v.value = 1;
