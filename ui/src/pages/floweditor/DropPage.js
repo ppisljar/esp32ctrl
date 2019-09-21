@@ -86,8 +86,8 @@ class DropPageComponent extends Component {
         const fel = document.getElementById(c.from);
         if (!fel) return;
         const frect = fel.getBoundingClientRect();
-        const x0 = frect.left + frect.width - this.position.left;
-        const y0 = frect.top + frect.height / 2 - this.position.top;
+        const x0 = frect.left + frect.width / 2 - this.position.left;
+        const y0 = frect.top + frect.height - this.position.top;
 
         let x1, y1;
         if (c.to && c.to.x) {
@@ -97,8 +97,8 @@ class DropPageComponent extends Component {
             const tel = document.getElementById(c.to);
             if (!tel) return;
             const trect = tel.getBoundingClientRect();
-            x1 = trect.left - this.position.left;
-            y1 = trect.top + trect.height / 2 - this.position.top;
+            x1 = trect.left + trect.width / 2 - this.position.left;
+            y1 = trect.top - this.position.top;
         } else {
             return (null);
         }

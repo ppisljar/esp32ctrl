@@ -127,8 +127,8 @@ private:
       "\r\n";
 
     in_addr_t ip = espalexaUdp.remoteIP();
-    ESP_LOGI("ALEXA", "sending search response to %s:%d", inet_ntoa(ip), espalexaUdp.remotePort());
-    ESP_LOGI("ALEXA", "%s", response.c_str());
+    ESP_LOGD("ALEXA", "sending search response to %s:%d", inet_ntoa(ip), espalexaUdp.remotePort());
+    ESP_LOGD("ALEXA", "%s", response.c_str());
 
     espalexaUdp.beginPacket(espalexaUdp.remoteIP(), espalexaUdp.remotePort());
     espalexaUdp.write((uint8_t*)response.c_str(), response.length());
@@ -142,8 +142,8 @@ public:
   bool begin(in_addr_t myip)
   {
       local_ip = myip;
-    ESP_LOGI("ALEXA","Espalexa Begin... %s", inet_ntoa(local_ip));
-    ESP_LOGI("ALEXA","MAXDEVICES %d", ESPALEXA_MAXDEVICES);
+    ESP_LOGD("ALEXA","Espalexa Begin... %s", inet_ntoa(local_ip));
+    ESP_LOGD("ALEXA","MAXDEVICES %d", ESPALEXA_MAXDEVICES);
 
     uint8_t mac[6];
     esp_read_mac(mac, (esp_mac_type_t)0);
@@ -171,7 +171,7 @@ public:
   //send description.xml device property page
   esp_err_t serveDescription(httpd_req_t *req)
   {
-    ESP_LOGI("ALEXA","# Responding to description.xml ... #\n");
+    ESP_LOGD("ALEXA","# Responding to description.xml ... #\n");
     char* s = inet_ntoa(local_ip);
 
     httpd_resp_set_status(req, "200 OK");
@@ -241,7 +241,7 @@ public:
     if(request.find("M-SEARCH") != std::string::npos) {
       ESP_LOGD("ALEXA","%s", request.c_str());
       if(request.find("upnp:rootdevice") != std::string::npos ||  request.find("asic:1") != std::string::npos) {
-        ESP_LOGI("ALEXA","Responding search req...");
+        ESP_LOGD("ALEXA","Responding search req...");
         respondToSearch();
       }
     }
@@ -286,8 +286,8 @@ public:
     
     if (req.find("api") == std::string::npos) return false; //return if not an API call
 
-    ESP_LOGI("ALEXA","AlexaApiCall %s\n %s", req.c_str(), body.c_str());
-    ESP_LOGI("ALEXA","ok");
+    ESP_LOGD("ALEXA","AlexaApiCall %s\n %s", req.c_str(), body.c_str());
+    ESP_LOGD("ALEXA","ok");
 
     if (body.find("devicetype") != std::string::npos) //client wants a hue api username, we dont care and give static
     {

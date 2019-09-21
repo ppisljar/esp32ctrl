@@ -3,8 +3,8 @@ import {Device} from './_defs';
 const mqttTypes = [
     { name: 'OpenHAB', value: 0 },
     { name: 'Domoticz', value: 1 },
-    { name: '', value: 2 },
-    { name: '', value: 3 },
+    { name: 'PIDome', value: 2 },
+    { name: 'Home Assistant', value: 3 },
 ]
 
 class MQTT extends Device {
@@ -34,9 +34,11 @@ class MQTT extends Device {
                         case 3: // Home Assistant
                             form.setProp('params.subscribe_topic', 'homeassistant/%unit_id%/%device_name%/%value_name%');
                             form.setProp('params.subscribe_data', '%value%');
-                            form.setProp('params.publish_topic', 'homeassistant/%unit_id%/%device_name%/%value_name%');
+                            form.setProp('params.publish_topic', 'homeassistant/%unit_id%/%device_name%/%value_name%/status');
                             form.setProp('params.pubish_data', '%value%');
                             form.setProp('params.value_field', 'value');
+                            form.setProp('params.device_as_id', 1);
+                            form.setProp('params.value_as_id', 1);
                             break;
                     }
                 } },

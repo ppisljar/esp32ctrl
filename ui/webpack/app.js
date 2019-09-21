@@ -10927,10 +10927,10 @@ const mqttTypes = [{
   name: 'Domoticz',
   value: 1
 }, {
-  name: '',
+  name: 'PIDome',
   value: 2
 }, {
-  name: '',
+  name: 'Home Assistant',
   value: 3
 }];
 
@@ -10980,9 +10980,11 @@ class MQTT extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
                 // Home Assistant
                 form.setProp('params.subscribe_topic', 'homeassistant/%unit_id%/%device_name%/%value_name%');
                 form.setProp('params.subscribe_data', '%value%');
-                form.setProp('params.publish_topic', 'homeassistant/%unit_id%/%device_name%/%value_name%');
+                form.setProp('params.publish_topic', 'homeassistant/%unit_id%/%device_name%/%value_name%/status');
                 form.setProp('params.pubish_data', '%value%');
                 form.setProp('params.value_field', 'value');
+                form.setProp('params.device_as_id', 1);
+                form.setProp('params.value_as_id', 1);
                 break;
             }
           }
@@ -11238,7 +11240,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
 
 const valueTypes = [{
   name: 'Bit',
-  value: 0
+  value: 4
 }, {
   name: 'Byte',
   value: 0
@@ -11290,6 +11292,12 @@ class Dummy extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
           type: 'number',
           min: 0,
           max: 255,
+          var: `params.values[${i}].val`
+        }, {
+          name: 'Bit',
+          if: `params.values[${i}].type`,
+          ifval: 4,
+          type: 'checkbox',
           var: `params.values[${i}].val`
         }, {
           name: 'Int',
@@ -16305,8 +16313,8 @@ class DropPageComponent extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"]
       const fel = document.getElementById(c.from);
       if (!fel) return;
       const frect = fel.getBoundingClientRect();
-      const x0 = frect.left + frect.width - this.position.left;
-      const y0 = frect.top + frect.height / 2 - this.position.top;
+      const x0 = frect.left + frect.width / 2 - this.position.left;
+      const y0 = frect.top + frect.height - this.position.top;
       let x1, y1;
 
       if (c.to && c.to.x) {
@@ -16316,8 +16324,8 @@ class DropPageComponent extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"]
         const tel = document.getElementById(c.to);
         if (!tel) return;
         const trect = tel.getBoundingClientRect();
-        x1 = trect.left - this.position.left;
-        y1 = trect.top + trect.height / 2 - this.position.top;
+        x1 = trect.left + trect.width / 2 - this.position.left;
+        y1 = trect.top - this.position.top;
       } else {
         return null;
       }
@@ -16533,10 +16541,17 @@ const fireeventNode = {
     return component;
   },
   getText: item => {
+    const events = Object.keys(_lib_settings__WEBPACK_IMPORTED_MODULE_2__["settings"].events).map((k, i) => {
+      return {
+        name: k,
+        value: i
+      };
+    });
     const {
       event
     } = item.params;
-    return `event ${event}`;
+    const eventName = events.find(e => e.value === event).name;
+    return `event ${eventName}`;
   },
   toDsl: item => {
     const {
@@ -16943,11 +16958,11 @@ const setStateNode = {
   inputs: 1,
   outputs: 1,
   getEditorConfig: () => {
-    const isBit = compareValue(0);
-    const isByte = compareValue(1);
-    const isInt16 = compareValue(2);
-    const isInt32 = compareValue(4);
-    const isString = compareValue(5);
+    const isBit = compareValue(4);
+    const isByte = compareValue(0);
+    const isInt16 = compareValue(1);
+    const isInt32 = compareValue(2);
+    const isString = compareValue(3);
     const cfg = {
       groups: {
         params: {
@@ -16996,7 +17011,7 @@ const setStateNode = {
               max: 255,
               var: 'params.val'
             },
-            val_int16: {
+            val_int: {
               name: 'Int16',
               if: isInt16,
               type: 'number',
@@ -17004,8 +17019,8 @@ const setStateNode = {
               max: 65535,
               var: 'params.val'
             },
-            val_int32: {
-              name: 'Int32',
+            val_decimal: {
+              name: 'Decimal',
               if: isInt32,
               type: 'number',
               min: 0,
@@ -17157,11 +17172,11 @@ const getDeviceNode = device => {
     inputs: 0,
     outputs: 1,
     getEditorConfig: () => {
-      const isBit = compareValue(0);
-      const isByte = compareValue(1);
-      const isInt16 = compareValue(2);
-      const isInt32 = compareValue(4);
-      const isString = compareValue(5);
+      const isBit = compareValue(4);
+      const isByte = compareValue(0);
+      const isInt16 = compareValue(1);
+      const isInt32 = compareValue(2);
+      const isString = compareValue(3);
       const cfg = {
         groups: {
           params: {
@@ -17198,7 +17213,7 @@ const getDeviceNode = device => {
                 max: 255,
                 var: 'params.val'
               },
-              val_int16: {
+              val_int: {
                 name: 'Int16',
                 if: isInt16,
                 type: 'number',
@@ -17206,8 +17221,8 @@ const getDeviceNode = device => {
                 max: 65535,
                 var: 'params.val'
               },
-              val_int32: {
-                name: 'Int32',
+              val_decimal: {
+                name: 'Decimal',
                 if: isInt32,
                 type: 'number',
                 min: 0,
@@ -17460,11 +17475,11 @@ const ifElseNode = {
   inputs: 1,
   outputs: 2,
   getEditorConfig: () => {
-    const isBit = compareValue(0);
-    const isByte = compareValue(1);
-    const isInt16 = compareValue(2);
-    const isInt32 = compareValue(4);
-    const isString = compareValue(5);
+    const isBit = compareValue(4);
+    const isByte = compareValue(0);
+    const isInt16 = compareValue(1);
+    const isInt32 = compareValue(2);
+    const isString = compareValue(3);
 
     const notChanged = config => {
       console.log(config.params);
@@ -17525,16 +17540,16 @@ const ifElseNode = {
               max: 255,
               var: 'params.val'
             },
-            val_int16: {
-              name: 'Int16',
+            val_int: {
+              name: 'Int',
               if: isInt16,
               type: 'number',
               min: 0,
               max: 65535,
               var: 'params.val'
             },
-            val_int32: {
-              name: 'Int32',
+            val_decimal: {
+              name: 'Decimal',
               if: isInt32,
               type: 'number',
               min: 0,
@@ -18441,7 +18456,8 @@ class WidgetOutput extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
     });
 
     _defineProperty(this, "onMouseDown", e => {
-      this.offset = [e.layerX, e.layerY];
+      this.offset = [0, 0]; // [e.layerX, e.layerY];
+
       document.addEventListener('mousemove', this.onMouseMove);
       document.addEventListener('mouseup', this.onMouseUp);
       e.preventDefault();
@@ -18774,7 +18790,7 @@ class FSPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 /*!****************************!*\
   !*** ./src/pages/index.js ***!
   \****************************/
-/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, ProfilesEditPage, ProfilesPage */
+/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, ProfilesPage, ProfilesEditPage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";

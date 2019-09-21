@@ -26,7 +26,7 @@ export class WidgetOutput extends Component {
   }
 
   onMouseDown = (e) => {
-    this.offset = [e.layerX, e.layerY];
+    this.offset = [0, 0]; // [e.layerX, e.layerY];
     document.addEventListener('mousemove', this.onMouseMove);
     document.addEventListener('mouseup', this.onMouseUp);
     e.preventDefault();

@@ -4,6 +4,9 @@ static const char *TAG = "DummyPlugin";
 
 PLUGIN_CONFIG(DummyPlugin, value, value)
 
+uint8_t type_size[4] = { 1, 2, 4, 24};
+uint8_t type_map[6] = { 0, 1, 2, 3, 0};
+
 bool DummyPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]);
@@ -17,12 +20,13 @@ bool DummyPlugin::init(JsonObject &params) {
         if (!val["name"]) values[i] = nullptr;   
 
         dummy_vals_t *value = (dummy_vals_t*)malloc(sizeof(dummy_vals_t));
-        // value types: bool, int, double, float, string
+        // value types: byte, integer, decimal, string
         value->name = (char*)malloc(strlen(val["name"]) + 1);
         strcpy(value->name, val["name"].as<char*>());
         value->name[strlen(val["name"])] = 0;
         value->type = val["type"] | 0;
-        value->value = (uint8_t*)malloc(1);
+        value->type = type_map[value->type];
+        value->value = (uint8_t*)malloc(type_size[value->type]);
         *value->value = 0;
 
         ESP_LOGI(TAG, "adding dummy value %d with name %s and type %d", i, value->name, value->type);

@@ -1,7 +1,7 @@
 import {Device} from './_defs';
 
 const valueTypes = [
-    { name: 'Bit', value: 0 },
+    { name: 'Bit', value: 4 },
     { name: 'Byte', value: 0 },
     { name: 'Integer', value: 1 },
     { name: 'Decimal', value: 2 },
@@ -24,6 +24,7 @@ class Dummy extends Device {
                 { name: 'String', if: `params.values[${i}].type`, ifval:3, type: 'string', var: `params.values[${i}].val` },
                 { name: 'Decimal', if: `params.values[${i}].type`, ifval:2, type: 'number', step:.01, var: `params.values[${i}].val` },
                 { name: 'Byte', if: `params.values[${i}].type`, ifval:0, type: 'number', min: 0, max: 255, var: `params.values[${i}].val` },
+                { name: 'Bit', if: `params.values[${i}].type`, ifval:4, type: 'checkbox', var: `params.values[${i}].val` },
                 { name: 'Int', if: `params.values[${i}].type`, ifval:1, type: 'number', min: 0, max: 65535, var: `params.values[${i}].val` },
                 { type: 'button', value: 'X', click: (event, form) => {
                     const conf = form.props.selected;

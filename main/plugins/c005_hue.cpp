@@ -9,13 +9,13 @@ PLUGIN_STATS(HueEmulatorPlugin, state, state)
 extern HueEmulatorPlugin *hue_plugin;
 
 esp_err_t hueemulator_webhandler(httpd_req_t *req) {
-    ESP_LOGI(TAG, "description.xml web handler");
+    ESP_LOGD(TAG, "description.xml web handler");
     // auto p = (HueEmulatorPlugin*)req->user_ctx;
     return hue_plugin->alexa->serveDescription(req);
 }
 
 esp_err_t hueemulator_apihandler(httpd_req_t *req) {
-    ESP_LOGI(TAG, "alexa API call: %s", req->uri);
+    ESP_LOGD(TAG, "alexa API call: %s", req->uri);
     return hue_plugin->alexa->handleAlexaApiCall(req);
 }
 
@@ -47,9 +47,9 @@ bool HueEmulatorPlugin::init(JsonObject &params) {
     http_quick_register("/api*", HTTP_GET, hueemulator_apihandler, this);
     http_quick_register("/api*", HTTP_POST, hueemulator_apihandler, this);
     http_quick_register("/api*", HTTP_PUT, hueemulator_apihandler, this);
-    http_quick_register("/api/*", HTTP_CONNECT, hueemulator_apihandler, this);
-    http_quick_register("/api/*", HTTP_OPTIONS, hueemulator_apihandler, this);
-    http_quick_register("/api/*", HTTP_HEAD, hueemulator_apihandler, this);
+    // http_quick_register("/api/*", HTTP_CONNECT, hueemulator_apihandler, this);
+    // http_quick_register("/api/*", HTTP_OPTIONS, hueemulator_apihandler, this);
+    // http_quick_register("/api/*", HTTP_HEAD, hueemulator_apihandler, this);
 
 
     ESP_LOGI(TAG, "init");

@@ -20,11 +20,11 @@ const ifElseNode = {
     inputs: 1,
     outputs: 2,  
     getEditorConfig: () => {
-        const isBit = compareValue(0);
-        const isByte = compareValue(1);
-        const isInt16 = compareValue(2);
-        const isInt32 = compareValue(4);
-        const isString = compareValue(5);
+        const isBit = compareValue(4);
+        const isByte = compareValue(0);
+        const isInt16 = compareValue(1);
+        const isInt32 = compareValue(2);
+        const isString = compareValue(3);
         const notChanged = config => { console.log(config.params); return config.params.eq != 'changed' };
         return {
             groups: {
@@ -38,8 +38,8 @@ const ifElseNode = {
                         val_string: { name: 'String', if: isString, type: 'string', var: 'params.val' },
                         val_bit: { name: 'Bit', if: isBit, type: 'select', options: [0, 1], var: 'params.val' },
                         val_byte: { name: 'Byte', if: isByte, type: 'number', min: 0, max: 255, var: 'params.val' },
-                        val_int16: { name: 'Int16', if: isInt16, type: 'number', min: 0, max: 65535, var: 'params.val' },
-                        val_int32: { name: 'Int32', if: isInt32, type: 'number', min: 0, max: 4294967295, var: 'params.val' },
+                        val_int: { name: 'Int', if: isInt16, type: 'number', min: 0, max: 65535, var: 'params.val' },
+                        val_decimal: { name: 'Decimal', if: isInt32, type: 'number', min: 0, max: 4294967295, var: 'params.val' },
                     }
                 }
             }

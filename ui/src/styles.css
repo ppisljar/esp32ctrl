@@ -363,20 +363,24 @@ fieldset > label {
     background: linen;
 }
 .node-inputs {
-    float: left;
-    left: -30px;
-    position: relative;
+    position: absolute;
+    top: -15px;
+    margin-left: -10px;
+    width: 100%;
 }
 .node-outputs {
-    float: right;
-    right: -30px;
-    position: relative;
+    position: absolute;
+    bottom: -20px;
+    margin-left: -10px;
+    width: 100%;
 }
 .node-input, .node-output {
     border: 1px solid black;
     width: 15px;
     height: 10px;
     border-radius: 5px;
+    margin: 0 5px;
+    display: inline-block;
 }
 
 .configbox { 

@@ -32,8 +32,12 @@ const fireeventNode = {
     },
 
     getText: (item) => {
+        const events = Object.keys(settings.events).map((k, i) => {
+            return { name: k, value: i };
+        });
         const { event } = item.params;
-        return `event ${event}`;
+        const eventName = events.find(e => e.value === event).name;
+        return `event ${eventName}`;
     },
 
     toDsl: (item) => {
