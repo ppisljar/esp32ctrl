@@ -127,6 +127,9 @@ class DropPageComponent extends Component {
 
     componentDidMount() {
         this.forceUpdate();
+        setTimeout(() => {
+            this.forceUpdate();
+        }, 10);
     }
 }
 
