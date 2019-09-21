@@ -36,7 +36,7 @@ const fireeventNode = {
             return { name: k, value: i };
         });
         const { event } = item.params;
-        const eventName = events.find(e => e.value === event).name;
+        const eventName = event ? events.find(e => e.value === event).name : '--configure--';
         return `event ${eventName}`;
     },
 

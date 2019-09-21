@@ -123,6 +123,71 @@ void reload_rules() {
     load_rules();
 }
 
+int parse_rules(byte *rules, long len) {
+    int rules_found = 0;
+    int events_found = 0;
+    for (long i = 0; i < len; i++) {
+        if (rules[i] == 0xff && rules[i+1] == 0xfe && rules[i+2] == 0x00 && rules[i+3] == 0xff) {
+            switch (rules[i+4]) {
+                case TRIG_EVENT:
+                    // 2 byte eventid
+                    ESP_LOGI(TAG_RE, "found an event on address: %p", (void*)(rules + i + 6));
+                    event_list[1 + events_found++] = rules + i + 6; // ??type needs to be included
+                    break;
+                case TRIG_VAR:
+                    ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
+                    rule_list[rules_found++] = rules + i + 4; // type needs to be included
+                    break;
+                case TRIG_TIMER:
+                    ESP_LOGI(TAG_RE, "found a timer trigger %d, on : %p", rules[i+5], (void*)(rules + i + 6));
+                    rule_list[rules_found++] = rules + i + 4; // type needs to be included
+                    break;
+                case TRIG_HWTIMER:
+                    ESP_LOGI(TAG_RE, "found hw timer %d on address: %p", rules[i+5], (void*)(rules + i + 6));
+                    rule_engine_hwtimers[rules[i + 5]] = rules + i + 6;
+                    break;
+                case TRIG_HWINTER:
+                    ESP_LOGI(TAG_RE, "found hw trigger %d on address: %p", rules[i+5], (void*)(rules + i + 6));
+                    rule_engine_hwinterrupts[rules[i + 5]] = rules + i + 6;
+                    // todo: enable interrupt on selected pin
+                    timers_plugin->enableHwInterrupt(rules[i + 5]);
+                    break;
+                case TRIG_ALEXA:
+                    ESP_LOGI(TAG_RE, "found alexa %d on address: %p", rules[i + 5], (void*)(rules + i + 6));
+                    rule_engine_alexa_triggers[rules[i + 5]] = rules + i + 6;
+                    break;
+                case TRIG_TOUCH:
+                    ESP_LOGI(TAG_RE, "found touch %d on address: %p", rules[i + 5], (void*)(rules + i + 6));
+                    rule_engine_touch_triggers[rules[i + 5]] = rules + i + 6;
+                    break;
+                case TRIG_CRON:
+                    ESP_LOGI(TAG_RE, "found cron %s on address: %p", rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
+                    cron_plugin->addCron(rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
+                    break;   
+                case TRIG_BLUETOOTH:
+                    ESP_LOGI(TAG_RE, "found bletooth %s on address: %p", rules + i + 5, (void*)(rules + i + 6));
+                    rule_engine_bluetooth_triggers[rules[i + 5]] = rules + i + 6;
+                    break;     
+            }
+        }
+    }
+    return rules_found;
+}
+
+int parse_alerts(byte *alerts, long len) {
+    int alerts_found = 0;
+
+    for (byte i = 0; i < len; i++) {
+        if (alerts[i] == 0xff && alerts[i+1] == 0xfe && alerts[i+2] == 0x00 && alerts[i+3] == 0xff) {
+            switch (alerts[i+4]) {
+                case TRIG_VAR:
+                    alert_list[alerts_found++] = alerts + i + 4;
+                    break;
+            }
+        }
+    }
+    return alerts_found;
+}
 
 static std::map<uint8_t, std::function<uint8_t(uint8_t*)>> custom_commands;
 void register_command(uint8_t cmd_id, std::function<uint8_t(uint8_t*)> handler) {
@@ -210,73 +275,6 @@ bool multi_compare(byte **ptr) {
     }
     *ptr = cmd;
     return match;
-}
-
-int parse_rules(byte *rules, long len) {
-    
-    int rules_found = 0;
-    int events_found = 0;
-    for (byte i = 0; i < len; i++) {
-        if (rules[i] == 0xff && rules[i+1] == 0xfe && rules[i+2] == 0x00 && rules[i+3] == 0xff) {
-            switch (rules[i+4]) {
-                case TRIG_EVENT:
-                    // 2 byte eventid
-                    ESP_LOGI(TAG_RE, "found an event on address: %p", (void*)(rules + i + 6));
-                    event_list[1 + events_found++] = rules + i + 6; // ??type needs to be included
-                    break;
-                case TRIG_VAR:
-                    ESP_LOGI(TAG_RE, "found a trigger on address: %p", (void*)(rules + i + 4));
-                    rule_list[rules_found++] = rules + i + 4; // type needs to be included
-                    break;
-                case TRIG_TIMER:
-                    ESP_LOGI(TAG_RE, "found a timer trigger %d, on address: %p", rules[i+5], (void*)(rules + i + 6));
-                    rule_list[rules_found++] = rules + i + 4; // type needs to be included
-                    break;
-                case TRIG_HWTIMER:
-                    ESP_LOGI(TAG_RE, "found hw timer %d on address: %p", rules[i+5], (void*)(rules + i + 6));
-                    rule_engine_hwtimers[rules[i + 5]] = rules + i + 6;
-                    break;
-                case TRIG_HWINTER:
-                    ESP_LOGI(TAG_RE, "found hw trigger %d on address: %p", rules[i+5], (void*)(rules + i + 6));
-                    rule_engine_hwinterrupts[rules[i + 5]] = rules + i + 6;
-                    // todo: enable interrupt on selected pin
-                    timers_plugin->enableHwInterrupt(rules[i + 5]);
-                    break;
-                case TRIG_ALEXA:
-                    ESP_LOGI(TAG_RE, "found alexa %d on address: %p", rules[i + 5], (void*)(rules + i + 6));
-                    rule_engine_alexa_triggers[rules[i + 5]] = rules + i + 6;
-                    break;
-                case TRIG_TOUCH:
-                    ESP_LOGI(TAG_RE, "found touch %d on address: %p", rules[i + 5], (void*)(rules + i + 6));
-                    rule_engine_touch_triggers[rules[i + 5]] = rules + i + 6;
-                    break;
-                case TRIG_CRON:
-                    ESP_LOGI(TAG_RE, "found cron %s on address: %p", rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
-                    cron_plugin->addCron(rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
-                    break;   
-                case TRIG_BLUETOOTH:
-                    ESP_LOGI(TAG_RE, "found bletooth %s on address: %p", rules + i + 5, (void*)(rules + i + 6));
-                    rule_engine_bluetooth_triggers[rules[i + 5]] = rules + i + 6;
-                    break;     
-            }
-        }
-    }
-    return rules_found;
-}
-
-int parse_alerts(byte *alerts, long len) {
-    int alerts_found = 0;
-
-    for (byte i = 0; i < len; i++) {
-        if (alerts[i] == 0xff && alerts[i+1] == 0xfe && alerts[i+2] == 0x00 && alerts[i+3] == 0xff) {
-            switch (alerts[i+4]) {
-                case TRIG_VAR:
-                    alert_list[alerts_found++] = alerts + i + 4;
-                    break;
-            }
-        }
-    }
-    return alerts_found;
 }
 
 void check_alerts() {
