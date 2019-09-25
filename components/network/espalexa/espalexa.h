@@ -150,7 +150,7 @@ public:
     char buff[32];
     sprintf(buff, "%x:%x:%x:%x:%x:%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     macAddress = buff;
-    ESP_LOGI("ALEXA", "MAC: %s", macAddress.c_str());
+    ESP_LOGD("ALEXA", "MAC: %s", macAddress.c_str());
     sprintf(buff, "%x%x%x%x%x%x", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     escapedMac = buff;// todo: tolower
     struct in_addr ip;
@@ -260,7 +260,7 @@ public:
 
   bool addDevice(std::string deviceName, std::function<void(void*, uint8_t)> callback, EspalexaDeviceType t = EspalexaDeviceType::dimmable, uint8_t initialValue = 0)
   {
-    ESP_LOGI("ALEXA","%d",(currentDeviceCount+1));
+    ESP_LOGD("ALEXA","%d",(currentDeviceCount+1));
     if (currentDeviceCount >= ESPALEXA_MAXDEVICES) return false;
     EspalexaDevice* d = new EspalexaDevice(deviceName, callback, t, initialValue);
     return addDevice(d);
@@ -291,7 +291,7 @@ public:
 
     if (body.find("devicetype") != std::string::npos) //client wants a hue api username, we dont care and give static
     {
-      ESP_LOGI("ALEXA","devType");
+      ESP_LOGD("ALEXA","devType");
       body = "";
       httpSend(r, 200, "application/json", "[{\"success\":{\"username\":\"2WLEDHardQrI3WHYTHoMcXHgEspsM8ZZRpSKtBQr\"}}]");
       return ESP_OK;
@@ -302,7 +302,7 @@ public:
       httpSend(r, 200, "application/json", "[{\"success\":true}]"); //short valid response
 
       int devId = std::stoi(req.substr(req.find("lights")+7));
-      ESP_LOGI("ALEXA","ls %d", devId);
+      ESP_LOGD("ALEXA","ls %d", devId);
       devices[devId-1]->setPropertyChanged(EspalexaDeviceProperty::none);
       
       if (body.find("false") != std::string::npos) //OFF command
@@ -362,11 +362,11 @@ public:
       if (req.length() > pos + 7) {
           devId = std::stoi(req.substr(pos + 7, 1));
       }
-      ESP_LOGI("ALEXA","l %d",devId);
+      ESP_LOGD("ALEXA","l %d",devId);
 
       if (devId == 0) //client wants all lights
       {
-        ESP_LOGI("ALEXA","lAll");
+        ESP_LOGD("ALEXA","lAll");
         std::string jsonTemp = "{";
         for (int i = 0; i<currentDeviceCount; i++)
         {
@@ -375,7 +375,7 @@ public:
           if (i < currentDeviceCount-1) jsonTemp += ",";
         }
         jsonTemp += "}";
-        ESP_LOGI("ALEXA", "responding with: \n %s", jsonTemp.c_str());
+        ESP_LOGD("ALEXA", "responding with: \n %s", jsonTemp.c_str());
         httpSend(r, 200, "application/json", (char*)jsonTemp.c_str());
       } else //client wants one light (devId)
       {

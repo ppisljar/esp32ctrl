@@ -12,5 +12,5 @@
 
 void init_logging();
 void xlog_web(httpd_req_t *req);
-
+void xlog_set(httpd_req_t *req);
 #endif

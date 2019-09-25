@@ -2,6 +2,9 @@ import { h, Component } from 'preact';
 import { settings } from '../lib/settings';
 import { loadDevices } from '../lib/esp';
 import { toByteArray } from './floweditor/nodes/helper';
+import { AnsiUp } from '../3rd/ansi_up';
+
+const ansi = new AnsiUp();
 
 const CMD = {
   SET     : 0xf0,
@@ -36,6 +39,10 @@ export class ToolsPage extends Component {
             device: null,
             state: null,
             value: 0,
+            logs: [],
+            tag: '',
+            level: 0,
+            log_filter: /.*/
         }
 
         this.sendCommand = (e) => {
@@ -85,24 +92,31 @@ export class ToolsPage extends Component {
                 this.cmdOutput.value = response;
             });
         }
+
+        this.evtSource = new EventSource('/logs');
+
+        this.evtSource.onmessage = (e) => {
+            this.state.logs.push(e.data);
+            this.forceUpdate();
+        }
     }
 
-    fetch() {
-        fetch('/logs').then(response => response.text()).then(response => {
-            response.split('\n').map(log => {
-                if (log.trim() === '') return;
-                let formatted = log.trim().substr(4);
-                formatted = formatted.substr(0, formatted.length - 4);
-                const cls = formatted.substr(0, 3);
-                formatted = formatted.substr(3);
-                this.history += `<div class="log_level c${cls}"><span class="date"></span><span class="value">${formatted}</span></div>`;
-                this.log.innerHTML = this.history;
-                if (true) {
-                    this.log.scrollTop = this.log.scrollHeight;
-                }
-            })
-        });
-    }
+    // fetch() {
+    //     fetch('/logs').then(response => response.text()).then(response => {
+    //         response.split('\n').map(log => {
+    //             if (log.trim() === '') return;
+    //             let formatted = log.trim().substr(4);
+    //             formatted = formatted.substr(0, formatted.length - 4);
+    //             const cls = formatted.substr(0, 3);
+    //             formatted = formatted.substr(3);
+    //             this.history += `<div class="log_level c${cls}"><span class="date"></span><span class="value">${formatted}</span></div>`;
+    //             this.log.innerHTML = this.history;
+    //             if (true) {
+    //                 this.log.scrollTop = this.log.scrollHeight;
+    //             }
+    //         })
+    //     });
+    // }
 
     render(props) {
         const devices = settings.get('plugins');
@@ -122,12 +136,55 @@ export class ToolsPage extends Component {
         const setDeviceStateVal = e => {
             this.setState({ val: e.currentTarget.value });
         }
+        const setTag = e => {
+            this.setState({ tag: e.currentTarget.value });
+        }
+        const setLevel = e => {
+            this.setState({ level: e.currentTarget.value });
+        }
+        const setLogFilter = e => {
+            this.setState({ log_filter: /e.currentTarget.value/ });
+        }
+        
+
+        const setLoggingLevel = e => {
+            fetch(`/logs/${this.state.tag}/${this.state.level}`, {
+                method: 'POST',
+            });
+        }
 
         const device_state = this.state.device !== null ? this.device_state[this.state.device] || {} : {};
 
         return (
             <div>
-                <div style="width: 100%; height: 200px; overflow-y: scroll; border: 1px solid gray; margin-bottom: 10px;" ref={ref => this.log = ref}>loading logs ...</div>
+                <div>
+                    TAG: 
+                    <input type='text' value={this.state.tag} onChange={setTag}></input>
+
+                    LEVEL: 
+                    <select value={this.state.level} onChange={setLevel}>
+                        <option value='0'>none</option>
+                        <option value='1'>error</option>
+                        <option value='2'>warning</option>
+                        <option value='3'>info</option>
+                        <option value='4'>debug</option>
+                        <option value='5'>verbose</option>
+                    </select>
+
+                    <button type="button" onClick={setLoggingLevel}>SET</button>   
+
+                    FILTER (regex): 
+                    <input type='text' value={this.state.log_filter.toString()} onChange={setLogFilter}></input>
+                </div>
+                <div style="width: 100%; height: 200px; overflow-y: scroll; border: 1px solid gray; margin-bottom: 10px;">
+                    {this.state.logs.filter(log => {
+                        if (this.state.log_filter && !this.state.log_filter.test(log)) return false;
+                        return true;
+                    }).map(log => {
+                        const decorated = ansi.ansi_to_html(log);
+                        return (<div dangerouslySetInnerHTML={{__html: decorated}}></div>);
+                    })}
+                </div>
                 <div>
                     Command: 
                     <select value={this.state.cmd} onChange={setCmd}>
@@ -176,13 +233,12 @@ export class ToolsPage extends Component {
     async componentDidMount() {
         this.device_state = await loadDevices();
         this.events = settings.events;
-        this.forceUpdate();
-        this.interval = setInterval(() => {
-            this.fetch();
-        }, 1000);
+        //this.forceUpdate();
     }
 
     componentWillUnmount() {
-        if (this.interval) clearInterval(this.interval);
+        if (this.evtSource) {
+            this.evtSource.close();
+        }
     }
 }
