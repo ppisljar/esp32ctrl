@@ -18,6 +18,7 @@ import { digital_input } from './18_digital_input';
 import { pwmOutput } from './19_pwm_output';
 import { max31855 } from './20_max31855';
 import { mlx90614 } from './21_mlx90614';
+import {PIDLevelControl} from "./22_pid_regulator";
 
 // import { bmp085 } from './6_bmp085';
 // import { pcf8591 } from './7_pcf8591';
@@ -83,6 +84,7 @@ export const devices = [
     { name: 'Generic - PWM Output', value: 19, fields: pwmOutput },
     { name: 'Environment - MAX31855 Thermocouple', value: 20, fields: max31855 },
     { name: 'Environment - MLX90614 IR Temperature', value: 21, fields: mlx90614 },
+    { name: 'Generic - PID Regulator', value: 22, fields: PIDLevelControl },
     //{ name: 'Light/Lux - BH1750', value: 10, fields: bh1750 },
     // { name: 'Extra IO - ProMini Extender', value: 11, fields: pme },
     // { name: 'Display - LCD2004', value: 12, fields: lcd2004 },

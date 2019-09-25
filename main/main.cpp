@@ -161,6 +161,10 @@ Plugin* Max31855Plugin_myProtoype = Plugin::addPrototype(20, new Max31855Plugin)
 #include "plugins/p021_mlx90614.h"
 Plugin* Mlx90614Plugin_myProtoype = Plugin::addPrototype(21, new Mlx90614Plugin);
 #endif
+#ifdef CONFIG_ENABLE_P022
+#include "plugins/p022_pid_regulator.h"
+Plugin* PIDRegulatorPlugin_myProtoype = Plugin::addPrototype(22, new PIDRegulatorPlugin);
+#endif
 
 uint8_t ledPin;
 bool ledInverted;
@@ -199,6 +203,7 @@ void deinit_plugins() {
 
 extern "C" void app_main()
 {
+    esp_log_level_set("*", (esp_log_level_t)3); // by default assume info error level
     //initArduino();
     //nvs_flash_erase();
     ESP_ERROR_CHECK(nvs_flash_init());
