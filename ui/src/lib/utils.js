@@ -9,6 +9,14 @@ export const getDeviceById = (id) => {
     return settings.get('plugins').find(x => x.id === id);
 }
 
+export const getTaskConfigs = (path) => {
+    return (config) => {
+        const selectedTask = get(config,path);
+        const task = settings.get('plugins').find(p => p.id === selectedTask);
+        if (!task || !task.params) return [];
+        return Object.keys(task.params).filter(val => !val.private).map((val, i) => ({ value: val, name: val }));
+    };
+}
 export const getTaskValues = (path) => {
     return (config) => {
         const selectedTask = get(config,path);

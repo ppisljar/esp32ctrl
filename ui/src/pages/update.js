@@ -28,6 +28,8 @@ export class UpdatePage extends Component {
         return (
         <form class="pure-form pure-form-aligned">
             <div class="pure-control-group">
+                <a href="https://github.com/ppisljar/esp32ctrl/">download latest version</a>
+                current version: <span>v</span>
                 <label for="file" class="pure-checkbox">
                     Firmware:
                 </label>

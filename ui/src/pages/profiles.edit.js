@@ -1,7 +1,7 @@
 import { h, Component } from 'preact';
 import { Form } from '../components/form';
 import { settings } from '../lib/settings';
-import { getTasks, getTaskValues } from '../lib/utils';
+import { getTasks, getTaskConfigs } from '../lib/utils';
 
 const typeOptions = [
     { name: 'time: seconds', value: 0 },
@@ -23,7 +23,7 @@ const getFormConfig = (config, form) => {
         step.configs.forEach((cfg, j) => {
             configs[`${j}_prop`] = [
                 { name: 'Device', type: 'select', value: cfg.device, options: getTasks, var: `steps[${i}].configs[${j}].device` },
-                { name: 'Config', type: 'select', value: cfg.value_id, options: getTaskValues(`steps[${i}].configs[${j}].device`), var: `steps[${i}].configs[${j}].value_id` },
+                { name: 'Config', type: 'select', value: cfg.value_id, options: getTaskConfigs(`steps[${i}].configs[${j}].device`), var: `steps[${i}].configs[${j}].value_id` },
                 { type: 'button', value: 'remove', click: () => {
                     step.configs.splice(i, 1);
                     form.forceUpdate();
