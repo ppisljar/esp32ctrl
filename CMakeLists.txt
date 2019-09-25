@@ -17,3 +17,7 @@ set(EXTRA_COMPONENT_DIRS ./components
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 project(file_server)
 spiffs_create_partition_image(storage data FLASH_IN_PROJECT)
+
+partition_table_get_partition_info(ota_partition_offset "--partition-type app --partition-subtype ota_1" "offset")
+set(ota_init_data_bin "${build_dir}/../esp32_minimal_ota.bin")
+esptool_py_flash_project_args(ota_1 ${ota_partition_offset} ${ota_init_data_bin} FLASH_IN_PROJECT)

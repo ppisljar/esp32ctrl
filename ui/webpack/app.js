@@ -10245,6 +10245,484 @@ module.exports = function(originalModule) {
 
 /***/ }),
 
+/***/ "./src/3rd/ansi_up.js":
+/*!****************************!*\
+  !*** ./src/3rd/ansi_up.js ***!
+  \****************************/
+/*! exports provided: AnsiUp */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AnsiUp", function() { return AnsiUp; });
+
+
+var __makeTemplateObject = undefined && undefined.__makeTemplateObject || function (cooked, raw) {
+  if (Object.defineProperty) {
+    Object.defineProperty(cooked, "raw", {
+      value: raw
+    });
+  } else {
+    cooked.raw = raw;
+  }
+
+  return cooked;
+};
+
+var PacketKind;
+
+(function (PacketKind) {
+  PacketKind[PacketKind["EOS"] = 0] = "EOS";
+  PacketKind[PacketKind["Text"] = 1] = "Text";
+  PacketKind[PacketKind["Incomplete"] = 2] = "Incomplete";
+  PacketKind[PacketKind["ESC"] = 3] = "ESC";
+  PacketKind[PacketKind["Unknown"] = 4] = "Unknown";
+  PacketKind[PacketKind["SGR"] = 5] = "SGR";
+  PacketKind[PacketKind["OSCURL"] = 6] = "OSCURL";
+})(PacketKind || (PacketKind = {}));
+
+var AnsiUp = function () {
+  function AnsiUp() {
+    this.VERSION = "4.0.3";
+    this.setup_palettes();
+    this._use_classes = false;
+    this._escape_for_html = true;
+    this.bold = false;
+    this.fg = this.bg = null;
+    this._buffer = '';
+    this._url_whitelist = {
+      'http': 1,
+      'https': 1
+    };
+  }
+
+  Object.defineProperty(AnsiUp.prototype, "use_classes", {
+    get: function () {
+      return this._use_classes;
+    },
+    set: function (arg) {
+      this._use_classes = arg;
+    },
+    enumerable: true,
+    configurable: true
+  });
+  Object.defineProperty(AnsiUp.prototype, "escape_for_html", {
+    get: function () {
+      return this._escape_for_html;
+    },
+    set: function (arg) {
+      this._escape_for_html = arg;
+    },
+    enumerable: true,
+    configurable: true
+  });
+  Object.defineProperty(AnsiUp.prototype, "url_whitelist", {
+    get: function () {
+      return this._url_whitelist;
+    },
+    set: function (arg) {
+      this._url_whitelist = arg;
+    },
+    enumerable: true,
+    configurable: true
+  });
+
+  AnsiUp.prototype.setup_palettes = function () {
+    var _this = this;
+
+    this.ansi_colors = [[{
+      rgb: [0, 0, 0],
+      class_name: "ansi-black"
+    }, {
+      rgb: [187, 0, 0],
+      class_name: "ansi-red"
+    }, {
+      rgb: [0, 187, 0],
+      class_name: "ansi-green"
+    }, {
+      rgb: [187, 187, 0],
+      class_name: "ansi-yellow"
+    }, {
+      rgb: [0, 0, 187],
+      class_name: "ansi-blue"
+    }, {
+      rgb: [187, 0, 187],
+      class_name: "ansi-magenta"
+    }, {
+      rgb: [0, 187, 187],
+      class_name: "ansi-cyan"
+    }, {
+      rgb: [255, 255, 255],
+      class_name: "ansi-white"
+    }], [{
+      rgb: [85, 85, 85],
+      class_name: "ansi-bright-black"
+    }, {
+      rgb: [255, 85, 85],
+      class_name: "ansi-bright-red"
+    }, {
+      rgb: [0, 255, 0],
+      class_name: "ansi-bright-green"
+    }, {
+      rgb: [255, 255, 85],
+      class_name: "ansi-bright-yellow"
+    }, {
+      rgb: [85, 85, 255],
+      class_name: "ansi-bright-blue"
+    }, {
+      rgb: [255, 85, 255],
+      class_name: "ansi-bright-magenta"
+    }, {
+      rgb: [85, 255, 255],
+      class_name: "ansi-bright-cyan"
+    }, {
+      rgb: [255, 255, 255],
+      class_name: "ansi-bright-white"
+    }]];
+    this.palette_256 = [];
+    this.ansi_colors.forEach(function (palette) {
+      palette.forEach(function (rec) {
+        _this.palette_256.push(rec);
+      });
+    });
+    var levels = [0, 95, 135, 175, 215, 255];
+
+    for (var r = 0; r < 6; ++r) {
+      for (var g = 0; g < 6; ++g) {
+        for (var b = 0; b < 6; ++b) {
+          var col = {
+            rgb: [levels[r], levels[g], levels[b]],
+            class_name: 'truecolor'
+          };
+          this.palette_256.push(col);
+        }
+      }
+    }
+
+    var grey_level = 8;
+
+    for (var i = 0; i < 24; ++i, grey_level += 10) {
+      var gry = {
+        rgb: [grey_level, grey_level, grey_level],
+        class_name: 'truecolor'
+      };
+      this.palette_256.push(gry);
+    }
+  };
+
+  AnsiUp.prototype.escape_txt_for_html = function (txt) {
+    return txt.replace(/[&<>]/gm, function (str) {
+      if (str === "&") return "&amp;";
+      if (str === "<") return "&lt;";
+      if (str === ">") return "&gt;";
+    });
+  };
+
+  AnsiUp.prototype.append_buffer = function (txt) {
+    var str = this._buffer + txt;
+    this._buffer = str;
+  };
+
+  AnsiUp.prototype.get_next_packet = function () {
+    var pkt = {
+      kind: PacketKind.EOS,
+      text: '',
+      url: ''
+    };
+    var len = this._buffer.length;
+    if (len == 0) return pkt;
+
+    var pos = this._buffer.indexOf("\x1B");
+
+    if (pos == -1) {
+      pkt.kind = PacketKind.Text;
+      pkt.text = this._buffer;
+      this._buffer = '';
+      return pkt;
+    }
+
+    if (pos > 0) {
+      pkt.kind = PacketKind.Text;
+      pkt.text = this._buffer.slice(0, pos);
+      this._buffer = this._buffer.slice(pos);
+      return pkt;
+    }
+
+    if (pos == 0) {
+      if (len == 1) {
+        pkt.kind = PacketKind.Incomplete;
+        return pkt;
+      }
+
+      var next_char = this._buffer.charAt(1);
+
+      if (next_char != '[' && next_char != ']') {
+        pkt.kind = PacketKind.ESC;
+        pkt.text = this._buffer.slice(0, 1);
+        this._buffer = this._buffer.slice(1);
+        return pkt;
+      }
+
+      if (next_char == '[') {
+        if (!this._csi_regex) {
+          this._csi_regex = rgx(__makeTemplateObject(["\n                        ^                           # beginning of line\n                                                    #\n                                                    # First attempt\n                        (?:                         # legal sequence\n                          \u001B[                      # CSI\n                          ([<-?]?)              # private-mode char\n                          ([d;]*)                    # any digits or semicolons\n                          ([ -/]?               # an intermediate modifier\n                          [@-~])                # the command\n                        )\n                        |                           # alternate (second attempt)\n                        (?:                         # illegal sequence\n                          \u001B[                      # CSI\n                          [ -~]*                # anything legal\n                          ([\0-\u001F:])              # anything illegal\n                        )\n                    "], ["\n                        ^                           # beginning of line\n                                                    #\n                                                    # First attempt\n                        (?:                         # legal sequence\n                          \\x1b\\[                      # CSI\n                          ([\\x3c-\\x3f]?)              # private-mode char\n                          ([\\d;]*)                    # any digits or semicolons\n                          ([\\x20-\\x2f]?               # an intermediate modifier\n                          [\\x40-\\x7e])                # the command\n                        )\n                        |                           # alternate (second attempt)\n                        (?:                         # illegal sequence\n                          \\x1b\\[                      # CSI\n                          [\\x20-\\x7e]*                # anything legal\n                          ([\\x00-\\x1f:])              # anything illegal\n                        )\n                    "]));
+        }
+
+        var match = this._buffer.match(this._csi_regex);
+
+        if (match === null) {
+          pkt.kind = PacketKind.Incomplete;
+          return pkt;
+        }
+
+        if (match[4]) {
+          pkt.kind = PacketKind.ESC;
+          pkt.text = this._buffer.slice(0, 1);
+          this._buffer = this._buffer.slice(1);
+          return pkt;
+        }
+
+        if (match[1] != '' || match[3] != 'm') pkt.kind = PacketKind.Unknown;else pkt.kind = PacketKind.SGR;
+        pkt.text = match[2];
+        var rpos = match[0].length;
+        this._buffer = this._buffer.slice(rpos);
+        return pkt;
+      }
+
+      if (next_char == ']') {
+        if (len < 4) {
+          pkt.kind = PacketKind.Incomplete;
+          return pkt;
+        }
+
+        if (this._buffer.charAt(2) != '8' || this._buffer.charAt(3) != ';') {
+          pkt.kind = PacketKind.ESC;
+          pkt.text = this._buffer.slice(0, 1);
+          this._buffer = this._buffer.slice(1);
+          return pkt;
+        }
+
+        if (!this._osc_st) {
+          this._osc_st = rgxG(__makeTemplateObject(["\n                        (?:                         # legal sequence\n                          (\u001B\\)                    # ESC                           |                           # alternate\n                          (\u0007)                      # BEL (what xterm did)\n                        )\n                        |                           # alternate (second attempt)\n                        (                           # illegal sequence\n                          [\0-\u0006]                 # anything illegal\n                          |                           # alternate\n                          [\b-\u001A]                 # anything illegal\n                          |                           # alternate\n                          [\u001C-\u001F]                 # anything illegal\n                        )\n                    "], ["\n                        (?:                         # legal sequence\n                          (\\x1b\\\\)                    # ESC \\\n                          |                           # alternate\n                          (\\x07)                      # BEL (what xterm did)\n                        )\n                        |                           # alternate (second attempt)\n                        (                           # illegal sequence\n                          [\\x00-\\x06]                 # anything illegal\n                          |                           # alternate\n                          [\\x08-\\x1a]                 # anything illegal\n                          |                           # alternate\n                          [\\x1c-\\x1f]                 # anything illegal\n                        )\n                    "]));
+        }
+
+        this._osc_st.lastIndex = 0;
+        {
+          var match_1 = this._osc_st.exec(this._buffer);
+
+          if (match_1 === null) {
+            pkt.kind = PacketKind.Incomplete;
+            return pkt;
+          }
+
+          if (match_1[3]) {
+            pkt.kind = PacketKind.ESC;
+            pkt.text = this._buffer.slice(0, 1);
+            this._buffer = this._buffer.slice(1);
+            return pkt;
+          }
+        }
+        {
+          var match_2 = this._osc_st.exec(this._buffer);
+
+          if (match_2 === null) {
+            pkt.kind = PacketKind.Incomplete;
+            return pkt;
+          }
+
+          if (match_2[3]) {
+            pkt.kind = PacketKind.ESC;
+            pkt.text = this._buffer.slice(0, 1);
+            this._buffer = this._buffer.slice(1);
+            return pkt;
+          }
+        }
+
+        if (!this._osc_regex) {
+          this._osc_regex = rgx(__makeTemplateObject(["\n                        ^                           # beginning of line\n                                                    #\n                        \u001B]8;                    # OSC Hyperlink\n                        [ -:<-~]*       # params (excluding ;)\n                        ;                           # end of params\n                        ([!-~]{0,512})        # URL capture\n                        (?:                         # ST\n                          (?:\u001B\\)                  # ESC                           |                           # alternate\n                          (?:\u0007)                    # BEL (what xterm did)\n                        )\n                        ([!-~]+)              # TEXT capture\n                        \u001B]8;;                   # OSC Hyperlink End\n                        (?:                         # ST\n                          (?:\u001B\\)                  # ESC                           |                           # alternate\n                          (?:\u0007)                    # BEL (what xterm did)\n                        )\n                    "], ["\n                        ^                           # beginning of line\n                                                    #\n                        \\x1b\\]8;                    # OSC Hyperlink\n                        [\\x20-\\x3a\\x3c-\\x7e]*       # params (excluding ;)\n                        ;                           # end of params\n                        ([\\x21-\\x7e]{0,512})        # URL capture\n                        (?:                         # ST\n                          (?:\\x1b\\\\)                  # ESC \\\n                          |                           # alternate\n                          (?:\\x07)                    # BEL (what xterm did)\n                        )\n                        ([\\x21-\\x7e]+)              # TEXT capture\n                        \\x1b\\]8;;                   # OSC Hyperlink End\n                        (?:                         # ST\n                          (?:\\x1b\\\\)                  # ESC \\\n                          |                           # alternate\n                          (?:\\x07)                    # BEL (what xterm did)\n                        )\n                    "]));
+        }
+
+        var match = this._buffer.match(this._osc_regex);
+
+        if (match === null) {
+          pkt.kind = PacketKind.ESC;
+          pkt.text = this._buffer.slice(0, 1);
+          this._buffer = this._buffer.slice(1);
+          return pkt;
+        }
+
+        pkt.kind = PacketKind.OSCURL;
+        pkt.url = match[1];
+        pkt.text = match[2];
+        var rpos = match[0].length;
+        this._buffer = this._buffer.slice(rpos);
+        return pkt;
+      }
+    }
+  };
+
+  AnsiUp.prototype.ansi_to_html = function (txt) {
+    this.append_buffer(txt);
+    var blocks = [];
+
+    while (true) {
+      var packet = this.get_next_packet();
+      if (packet.kind == PacketKind.EOS || packet.kind == PacketKind.Incomplete) break;
+      if (packet.kind == PacketKind.ESC || packet.kind == PacketKind.Unknown) continue;
+      if (packet.kind == PacketKind.Text) blocks.push(this.transform_to_html(this.with_state(packet)));else if (packet.kind == PacketKind.SGR) this.process_ansi(packet);else if (packet.kind == PacketKind.OSCURL) blocks.push(this.process_hyperlink(packet));
+    }
+
+    return blocks.join("");
+  };
+
+  AnsiUp.prototype.with_state = function (pkt) {
+    return {
+      bold: this.bold,
+      fg: this.fg,
+      bg: this.bg,
+      text: pkt.text
+    };
+  };
+
+  AnsiUp.prototype.process_ansi = function (pkt) {
+    var sgr_cmds = pkt.text.split(';');
+
+    while (sgr_cmds.length > 0) {
+      var sgr_cmd_str = sgr_cmds.shift();
+      var num = parseInt(sgr_cmd_str, 10);
+
+      if (isNaN(num) || num === 0) {
+        this.fg = this.bg = null;
+        this.bold = false;
+      } else if (num === 1) {
+        this.bold = true;
+      } else if (num === 22) {
+        this.bold = false;
+      } else if (num === 39) {
+        this.fg = null;
+      } else if (num === 49) {
+        this.bg = null;
+      } else if (num >= 30 && num < 38) {
+        this.fg = this.ansi_colors[0][num - 30];
+      } else if (num >= 40 && num < 48) {
+        this.bg = this.ansi_colors[0][num - 40];
+      } else if (num >= 90 && num < 98) {
+        this.fg = this.ansi_colors[1][num - 90];
+      } else if (num >= 100 && num < 108) {
+        this.bg = this.ansi_colors[1][num - 100];
+      } else if (num === 38 || num === 48) {
+        if (sgr_cmds.length > 0) {
+          var is_foreground = num === 38;
+          var mode_cmd = sgr_cmds.shift();
+
+          if (mode_cmd === '5' && sgr_cmds.length > 0) {
+            var palette_index = parseInt(sgr_cmds.shift(), 10);
+
+            if (palette_index >= 0 && palette_index <= 255) {
+              if (is_foreground) this.fg = this.palette_256[palette_index];else this.bg = this.palette_256[palette_index];
+            }
+          }
+
+          if (mode_cmd === '2' && sgr_cmds.length > 2) {
+            var r = parseInt(sgr_cmds.shift(), 10);
+            var g = parseInt(sgr_cmds.shift(), 10);
+            var b = parseInt(sgr_cmds.shift(), 10);
+
+            if (r >= 0 && r <= 255 && g >= 0 && g <= 255 && b >= 0 && b <= 255) {
+              var c = {
+                rgb: [r, g, b],
+                class_name: 'truecolor'
+              };
+              if (is_foreground) this.fg = c;else this.bg = c;
+            }
+          }
+        }
+      }
+    }
+  };
+
+  AnsiUp.prototype.transform_to_html = function (fragment) {
+    var txt = fragment.text;
+    if (txt.length === 0) return txt;
+    if (this._escape_for_html) txt = this.escape_txt_for_html(txt);
+    if (!fragment.bold && fragment.fg === null && fragment.bg === null) return txt;
+    var styles = [];
+    var classes = [];
+    var fg = fragment.fg;
+    var bg = fragment.bg;
+    if (fragment.bold) styles.push('font-weight:bold');
+
+    if (!this._use_classes) {
+      if (fg) styles.push("color:rgb(" + fg.rgb.join(',') + ")");
+      if (bg) styles.push("background-color:rgb(" + bg.rgb + ")");
+    } else {
+      if (fg) {
+        if (fg.class_name !== 'truecolor') {
+          classes.push(fg.class_name + "-fg");
+        } else {
+          styles.push("color:rgb(" + fg.rgb.join(',') + ")");
+        }
+      }
+
+      if (bg) {
+        if (bg.class_name !== 'truecolor') {
+          classes.push(bg.class_name + "-bg");
+        } else {
+          styles.push("background-color:rgb(" + bg.rgb.join(',') + ")");
+        }
+      }
+    }
+
+    var class_string = '';
+    var style_string = '';
+    if (classes.length) class_string = " class=\"" + classes.join(' ') + "\"";
+    if (styles.length) style_string = " style=\"" + styles.join(';') + "\"";
+    return "<span" + style_string + class_string + ">" + txt + "</span>";
+  };
+
+  ;
+
+  AnsiUp.prototype.process_hyperlink = function (pkt) {
+    var parts = pkt.url.split(':');
+    if (parts.length < 1) return '';
+    if (!this._url_whitelist[parts[0]]) return '';
+    var result = "<a href=\"" + this.escape_txt_for_html(pkt.url) + "\">" + this.escape_txt_for_html(pkt.text) + "</a>";
+    return result;
+  };
+
+  return AnsiUp;
+}();
+
+function rgx(tmplObj) {
+  var subst = [];
+
+  for (var _i = 1; _i < arguments.length; _i++) {
+    subst[_i - 1] = arguments[_i];
+  }
+
+  var regexText = tmplObj.raw[0];
+  var wsrgx = /^\s+|\s+\n|\s*#[\s\S]*?\n|\n/gm;
+  var txt2 = regexText.replace(wsrgx, '');
+  return new RegExp(txt2);
+}
+
+function rgxG(tmplObj) {
+  var subst = [];
+
+  for (var _i = 1; _i < arguments.length; _i++) {
+    subst[_i - 1] = arguments[_i];
+  }
+
+  var regexText = tmplObj.raw[0];
+  var wsrgx = /^\s+|\s+\n|\s*#[\s\S]*?\n|\n/gm;
+  var txt2 = regexText.replace(wsrgx, '');
+  return new RegExp(txt2, 'g');
+}
+
+
+
+/***/ }),
+
 /***/ "./src/app.js":
 /*!********************!*\
   !*** ./src/app.js ***!
@@ -11897,6 +12375,67 @@ const mlx90614 = new Mlx90614();
 
 /***/ }),
 
+/***/ "./src/devices/22_pid_regulator.js":
+/*!*****************************************!*\
+  !*** ./src/devices/22_pid_regulator.js ***!
+  \*****************************************/
+/*! exports provided: PIDLevelControl */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PIDLevelControl", function() { return PIDLevelControl; });
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../lib/utils */ "./src/lib/utils.js");
+
+const PIDLevelControl = {
+  defaults: () => ({
+    'state.values[0].name': 'Output',
+    'state.values[0].type': '1'
+  }),
+  params: {
+    name: 'Configuration',
+    configs: {
+      device: {
+        name: 'Check Device',
+        type: 'select',
+        options: _lib_utils__WEBPACK_IMPORTED_MODULE_0__["getTasks"]
+      },
+      value: {
+        name: 'Check Value',
+        type: 'select',
+        options: Object(_lib_utils__WEBPACK_IMPORTED_MODULE_0__["getTaskValues"])('params.device')
+      },
+      level: {
+        name: 'Set Level',
+        type: 'number'
+      },
+      interval: {
+        name: 'Interval',
+        type: 'number'
+      },
+      p: {
+        name: 'P',
+        type: 'number'
+      },
+      i: {
+        name: 'I',
+        type: 'number'
+      },
+      d: {
+        name: 'D',
+        type: 'number'
+      },
+      f: {
+        name: 'V',
+        type: 'number'
+      }
+    }
+  },
+  vals: 1
+};
+
+/***/ }),
+
 /***/ "./src/devices/2_dht.js":
 /*!******************************!*\
   !*** ./src/devices/2_dht.js ***!
@@ -12461,6 +13000,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _19_pwm_output__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./19_pwm_output */ "./src/devices/19_pwm_output.js");
 /* harmony import */ var _20_max31855__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./20_max31855 */ "./src/devices/20_max31855.js");
 /* harmony import */ var _21_mlx90614__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./21_mlx90614 */ "./src/devices/21_mlx90614.js");
+/* harmony import */ var _22_pid_regulator__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./22_pid_regulator */ "./src/devices/22_pid_regulator.js");
+
 
 
 
@@ -12606,6 +13147,10 @@ const devices = [{
   name: 'Environment - MLX90614 IR Temperature',
   value: 21,
   fields: _21_mlx90614__WEBPACK_IMPORTED_MODULE_19__["mlx90614"]
+}, {
+  name: 'Generic - PID Regulator',
+  value: 22,
+  fields: _22_pid_regulator__WEBPACK_IMPORTED_MODULE_20__["PIDLevelControl"]
 }].sort((a, b) => a.name.localeCompare(b.name));
 
 /***/ }),
@@ -13388,13 +13933,14 @@ settings.editor = new Settings();
 /*!**************************!*\
   !*** ./src/lib/utils.js ***!
   \**************************/
-/*! exports provided: getTasks, getDeviceById, getTaskValues, getTaskValueType, stringToAsciiByteArray */
+/*! exports provided: getTasks, getDeviceById, getTaskConfigs, getTaskValues, getTaskValueType, stringToAsciiByteArray */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTasks", function() { return getTasks; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getDeviceById", function() { return getDeviceById; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTaskConfigs", function() { return getTaskConfigs; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTaskValues", function() { return getTaskValues; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTaskValueType", function() { return getTaskValueType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "stringToAsciiByteArray", function() { return stringToAsciiByteArray; });
@@ -13410,6 +13956,17 @@ const getTasks = () => {
 };
 const getDeviceById = id => {
   return _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].get('plugins').find(x => x.id === id);
+};
+const getTaskConfigs = path => {
+  return config => {
+    const selectedTask = Object(_helpers__WEBPACK_IMPORTED_MODULE_1__["get"])(config, path);
+    const task = _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].get('plugins').find(p => p.id === selectedTask);
+    if (!task || !task.params) return [];
+    return Object.keys(task.params).filter(val => !val.private).map((val, i) => ({
+      value: val,
+      name: val
+    }));
+  };
 };
 const getTaskValues = path => {
   return config => {
@@ -15858,11 +16415,11 @@ class DevicesPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
     }, "add device"))), tasks.map((task, i) => {
       if (task === null) return null;
       if (_lib_settings__WEBPACK_IMPORTED_MODULE_1__["settings"].userName !== 'admin' && task.lock) return null;
+      const deviceLive = this.state.devices[task.id];
       const editUrl = `#devices/edit/${i}`;
       const device = _devices__WEBPACK_IMPORTED_MODULE_2__["devices"].find(d => d.value === task.type);
       const deviceType = device ? device.name : '--unknown--';
       const enabledProp = `plugins[${i}].enabled`;
-      const deviceLive = this.state.devices[i];
       const vals = deviceLive ? Object.keys(deviceLive).map(key => ({
         name: key,
         value: deviceLive[key]
@@ -16373,6 +16930,9 @@ class DropPageComponent extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"]
 
   componentDidMount() {
     this.forceUpdate();
+    setTimeout(() => {
+      this.forceUpdate();
+    }, 10);
   }
 
 }
@@ -19952,7 +20512,7 @@ const getFormConfig = (config, form) => {
         name: 'Config',
         type: 'select',
         value: cfg.value_id,
-        options: Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getTaskValues"])(`steps[${i}].configs[${j}].device`),
+        options: Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getTaskConfigs"])(`steps[${i}].configs[${j}].device`),
         var: `steps[${i}].configs[${j}].value_id`
       }, {
         type: 'button',
@@ -20399,10 +20959,13 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _lib_settings__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../lib/settings */ "./src/lib/settings.js");
 /* harmony import */ var _lib_esp__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../lib/esp */ "./src/lib/esp.js");
 /* harmony import */ var _floweditor_nodes_helper__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./floweditor/nodes/helper */ "./src/pages/floweditor/nodes/helper.js");
+/* harmony import */ var _3rd_ansi_up__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../3rd/ansi_up */ "./src/3rd/ansi_up.js");
 
 
 
 
+
+const ansi = new _3rd_ansi_up__WEBPACK_IMPORTED_MODULE_4__["AnsiUp"]();
 const CMD = {
   SET: 0xf0,
   SET_CFG: 0xf1,
@@ -20431,7 +20994,11 @@ class ToolsPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
       event: null,
       device: null,
       state: null,
-      value: 0
+      value: 0,
+      logs: [],
+      tag: '',
+      level: 0,
+      log_filter: /.*/
     };
 
     this.sendCommand = e => {
@@ -20480,25 +21047,30 @@ class ToolsPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
         this.cmdOutput.value = response;
       });
     };
-  }
 
-  fetch() {
-    fetch('/logs').then(response => response.text()).then(response => {
-      response.split('\n').map(log => {
-        if (log.trim() === '') return;
-        let formatted = log.trim().substr(4);
-        formatted = formatted.substr(0, formatted.length - 4);
-        const cls = formatted.substr(0, 3);
-        formatted = formatted.substr(3);
-        this.history += `<div class="log_level c${cls}"><span class="date"></span><span class="value">${formatted}</span></div>`;
-        this.log.innerHTML = this.history;
+    this.evtSource = new EventSource('/logs');
 
-        if (true) {
-          this.log.scrollTop = this.log.scrollHeight;
-        }
-      });
-    });
-  }
+    this.evtSource.onmessage = e => {
+      this.state.logs.push(e.data);
+      this.forceUpdate();
+    };
+  } // fetch() {
+  //     fetch('/logs').then(response => response.text()).then(response => {
+  //         response.split('\n').map(log => {
+  //             if (log.trim() === '') return;
+  //             let formatted = log.trim().substr(4);
+  //             formatted = formatted.substr(0, formatted.length - 4);
+  //             const cls = formatted.substr(0, 3);
+  //             formatted = formatted.substr(3);
+  //             this.history += `<div class="log_level c${cls}"><span class="date"></span><span class="value">${formatted}</span></div>`;
+  //             this.log.innerHTML = this.history;
+  //             if (true) {
+  //                 this.log.scrollTop = this.log.scrollHeight;
+  //             }
+  //         })
+  //     });
+  // }
+
 
   render(props) {
     const devices = _lib_settings__WEBPACK_IMPORTED_MODULE_1__["settings"].get('plugins');
@@ -20537,11 +21109,70 @@ class ToolsPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
       });
     };
 
+    const setTag = e => {
+      this.setState({
+        tag: e.currentTarget.value
+      });
+    };
+
+    const setLevel = e => {
+      this.setState({
+        level: e.currentTarget.value
+      });
+    };
+
+    const setLogFilter = e => {
+      this.setState({
+        log_filter: /e.currentTarget.value/
+      });
+    };
+
+    const setLoggingLevel = e => {
+      fetch(`/logs/${this.state.tag}/${this.state.level}`, {
+        method: 'POST'
+      });
+    };
+
     const device_state = this.state.device !== null ? this.device_state[this.state.device] || {} : {};
-    return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
-      style: "width: 100%; height: 200px; overflow-y: scroll; border: 1px solid gray; margin-bottom: 10px;",
-      ref: ref => this.log = ref
-    }, "loading logs ..."), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, "Command:", Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("select", {
+    return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, "TAG:", Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("input", {
+      type: "text",
+      value: this.state.tag,
+      onChange: setTag
+    }), "LEVEL:", Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("select", {
+      value: this.state.level,
+      onChange: setLevel
+    }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("option", {
+      value: "0"
+    }, "none"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("option", {
+      value: "1"
+    }, "error"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("option", {
+      value: "2"
+    }, "warning"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("option", {
+      value: "3"
+    }, "info"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("option", {
+      value: "4"
+    }, "debug"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("option", {
+      value: "5"
+    }, "verbose")), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("button", {
+      type: "button",
+      onClick: setLoggingLevel
+    }, "SET"), "FILTER (regex):", Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("input", {
+      type: "text",
+      value: this.state.log_filter.toString(),
+      onChange: setLogFilter
+    })), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+      style: "width: 100%; height: 200px; overflow-y: scroll; border: 1px solid gray; margin-bottom: 10px;"
+    }, this.state.logs.filter(log => {
+      if (this.state.log_filter && !this.state.log_filter.test(log)) return false;
+      return true;
+    }).map(log => {
+      const decorated = ansi.ansi_to_html(log);
+      return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        dangerouslySetInnerHTML: {
+          __html: decorated
+        }
+      });
+    })), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", null, "Command:", Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("select", {
       value: this.state.cmd,
       onChange: setCmd
     }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("option", {
@@ -20585,15 +21216,13 @@ class ToolsPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 
   async componentDidMount() {
     this.device_state = await Object(_lib_esp__WEBPACK_IMPORTED_MODULE_2__["loadDevices"])();
-    this.events = _lib_settings__WEBPACK_IMPORTED_MODULE_1__["settings"].events;
-    this.forceUpdate();
-    this.interval = setInterval(() => {
-      this.fetch();
-    }, 1000);
+    this.events = _lib_settings__WEBPACK_IMPORTED_MODULE_1__["settings"].events; //this.forceUpdate();
   }
 
   componentWillUnmount() {
-    if (this.interval) clearInterval(this.interval);
+    if (this.evtSource) {
+      this.evtSource.close();
+    }
   }
 
 }
@@ -20700,7 +21329,9 @@ class UpdatePage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
       class: "pure-form pure-form-aligned"
     }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
       class: "pure-control-group"
-    }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("label", {
+    }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("a", {
+      href: "https://github.com/ppisljar/esp32ctrl/"
+    }, "download latest version"), "current version: ", Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("span", null, "v"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("label", {
       for: "file",
       class: "pure-checkbox"
     }, "Firmware:"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("input", {
