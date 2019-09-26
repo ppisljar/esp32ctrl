@@ -1,5 +1,5 @@
 import { h, Component } from 'preact';
-import { fetchProgress } from '../lib/esp';
+import { fetchProgress, fetchWithTimeout } from '../lib/esp';
 import { loader } from '../lib/loader';
 
 function sleep(ms) {
@@ -22,7 +22,7 @@ export class UpdatePage extends Component {
                 // wait for ESP to come back online
                 while (true) {
                     try {
-                        await fetch('/');
+                        await fetchWithTimeout('/');
                         break;
                     } catch (e) {
                         console.log('still waiting');

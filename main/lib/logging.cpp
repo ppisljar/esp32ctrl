@@ -2,29 +2,9 @@
 #include "esp_http_server.h"
 #include <sys/socket.h>
 
-static int pre_start_mem, post_stop_mem;
-//extern int httpd_default_send(httpd_handle_t hd, int sockfd, const char *buf, size_t buf_len, int flags);
-
 int log_clients[4] = { -1, -1, -1, -1 };
-httpd_handle_t hd;
+char buffer[512];
 
-struct async_resp_arg {
-  httpd_handle_t hd;
-  int fd;
-  char *buf;
-  int len;
-};
-static char buffer[512];
-
-static void xlog_web_async(void *arg) {
-  struct async_resp_arg *resp_arg = (struct async_resp_arg *)arg;
-  httpd_handle_t hd = resp_arg->hd;
-  int fd = resp_arg->fd;
-  httpd_default_send(hd, fd, "event: message\ndata: ", sizeof("event: message\ndata: ") - 1, 0);
-  httpd_default_send(hd, fd, resp_arg->buf, resp_arg->len, 0);
-  httpd_default_send(hd, fd, "\n\n", 2, 0);
-  free(arg);
-}
 
 int sent = 0;
 bool ok = true;
@@ -71,12 +51,11 @@ void xlog_web(httpd_req_t *req) { // this is request handler for http server
     httpd_resp_sendstr_chunk(req, nullptr);
     return;
   }
-  printf("using logging client slot %d\n", i);
-  hd = req->handle;
+  //printf("using logging client slot %d\n", i);
   log_clients[i] = httpd_req_to_sockfd(req);
   
   const char *httpd_hdr_str = "HTTP/1.1 200\r\nContent-Type: text/event-stream;charset=UTF-8\r\nCache-Control: no-cache\r\n\r\n";
-  httpd_default_send(req->handle, httpd_req_to_sockfd(req), httpd_hdr_str, strlen(httpd_hdr_str), 0);
+  send(log_clients[i], httpd_hdr_str, strlen(httpd_hdr_str), 0);
 }
 
 void xlog_set(httpd_req_t *req) {

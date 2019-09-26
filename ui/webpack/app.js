@@ -13283,12 +13283,13 @@ const saveConfig = async (config = true, editor = true, rules = true, alerts = t
 /*!************************!*\
   !*** ./src/lib/esp.js ***!
   \************************/
-/*! exports provided: fetchProgress, storeFile, deleteFile, loadDevices, default */
+/*! exports provided: fetchProgress, fetchWithTimeout, storeFile, deleteFile, loadDevices, default */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fetchProgress", function() { return fetchProgress; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "fetchWithTimeout", function() { return fetchWithTimeout; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "storeFile", function() { return storeFile; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "deleteFile", function() { return deleteFile; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "loadDevices", function() { return loadDevices; });
@@ -13309,6 +13310,37 @@ const fetchProgress = (url, opts = {}) => {
     if (xhr.upload && opts.onProgress) xhr.upload.onprogress = opts.onProgress; // event.loaded / event.total * 100 ; //event.lengthComputable
 
     xhr.send(opts.body);
+  });
+};
+const fetchWithTimeout = (url, params) => {
+  const FETCH_TIMEOUT = 5000;
+  let didTimeOut = false;
+  return new Promise(function (resolve, reject) {
+    const timeout = setTimeout(function () {
+      didTimeOut = true;
+      reject(new Error('Request timed out'));
+    }, FETCH_TIMEOUT);
+    fetch(url, params).then(function (response) {
+      // Clear the timeout as cleanup
+      clearTimeout(timeout);
+
+      if (!didTimeOut) {
+        console.log('fetch good! ', response);
+        resolve(response);
+      }
+    }).catch(function (err) {
+      console.log('fetch failed! ', err); // Rejection already happened with setTimeout
+
+      if (didTimeOut) return; // Reject with error
+
+      reject(err);
+    });
+  }).then(function () {
+    // Request success and no timeout
+    console.log('good promise, no timeout! ');
+  }).catch(function (err) {
+    // Error: response error, request timeout or runtime error
+    console.log('promise error! ', err);
   });
 };
 const storeFile = async (filename, data, onProgress) => {
@@ -19350,7 +19382,7 @@ class FSPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 /*!****************************!*\
   !*** ./src/pages/index.js ***!
   \****************************/
-/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, ProfilesPage, ProfilesEditPage */
+/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, ProfilesPage, ProfilesEditPage, UpdatePage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -21321,7 +21353,7 @@ class UpdatePage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
         // wait for ESP to come back online
         while (true) {
           try {
-            await fetch('/');
+            await Object(_lib_esp__WEBPACK_IMPORTED_MODULE_1__["fetchWithTimeout"])('/');
             break;
           } catch (e) {
             console.log('still waiting');

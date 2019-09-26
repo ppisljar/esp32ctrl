@@ -96,7 +96,7 @@ bool DimmerPlugin::init(JsonObject &params) {
         ledc_timer_config_t timer_config = {};
         timer_config.speed_mode = LEDC_HIGH_SPEED_MODE;
         timer_config.timer_num = (ledc_timer_t)0;
-        timer_config.bit_num = (ledc_timer_bit_t)DUTY_BIT_DEPTH;
+        timer_config.duty_resolution = (ledc_timer_bit_t)DUTY_BIT_DEPTH;
         timer_config.freq_hz = HZ * 2;
         ESP_ERROR_CHECK( ledc_timer_config(&timer_config) );
 
