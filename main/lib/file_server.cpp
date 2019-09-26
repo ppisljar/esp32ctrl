@@ -525,6 +525,7 @@ static esp_err_t flash_post_handler(httpd_req_t *req) {
 
     // boots into the OTA app
     esp_ota_set_boot_partition(update_partition);
+    httpd_resp_sendstr(req, "OK");
 
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     esp_restart();

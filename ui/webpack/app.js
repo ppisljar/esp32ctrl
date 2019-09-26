@@ -21300,6 +21300,11 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 class UpdatePage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
   constructor(props) {
     super(props);
@@ -21308,18 +21313,36 @@ class UpdatePage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
     };
 
     this.saveForm = () => {
-      _lib_loader__WEBPACK_IMPORTED_MODULE_2__["loader"].show();
-      Object(_lib_esp__WEBPACK_IMPORTED_MODULE_1__["fetchProgress"])('/update', {
-        method: 'POST',
-        body: this.file.files[0],
-        onProgress: e => {
-          const perc = 100 * e.loaded / e.total;
-          this.setState({
-            progress: perc
-          });
+      _lib_loader__WEBPACK_IMPORTED_MODULE_2__["loader"].show(); // POST to /update will boot ESP in OTA mode
+
+      fetch('/update', {
+        method: 'POST'
+      }).then(async () => {
+        // wait for ESP to come back online
+        while (true) {
+          try {
+            await fetch('/');
+            break;
+          } catch (e) {
+            console.log('still waiting');
+            await sleep(1000);
+          }
         }
-      }).then(() => {
-        window.location.href = '#config/reboot';
+
+        console.log('got it!'); // post the new firmare
+
+        Object(_lib_esp__WEBPACK_IMPORTED_MODULE_1__["fetchProgress"])('/update', {
+          method: 'POST',
+          body: this.file.files[0],
+          onProgress: e => {
+            const perc = 100 * e.loaded / e.total;
+            this.setState({
+              progress: perc
+            });
+          }
+        }).then(() => {
+          window.location.href = '#config/reboot';
+        });
       });
     };
   }

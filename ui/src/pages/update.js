@@ -2,6 +2,10 @@ import { h, Component } from 'preact';
 import { fetchProgress } from '../lib/esp';
 import { loader } from '../lib/loader';
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
 export class UpdatePage extends Component {
     constructor(props) {
         super(props);
@@ -11,15 +15,32 @@ export class UpdatePage extends Component {
         this.saveForm = () => {
             loader.show();
     
-            fetchProgress('/update', {
+            // POST to /update will boot ESP in OTA mode
+            fetch('/update', {
                 method: 'POST',
-                body: this.file.files[0],
-                onProgress: (e) => {
-                    const perc = 100 * e.loaded / e.total;
-                    this.setState({ progress: perc });
+            }).then(async () => { 
+                // wait for ESP to come back online
+                while (true) {
+                    try {
+                        await fetch('/');
+                        break;
+                    } catch (e) {
+                        console.log('still waiting');
+                        await sleep(1000);
+                    }
                 }
-            }).then(() => {
-                window.location.href = '#config/reboot';
+                console.log('got it!');
+                // post the new firmare
+                fetchProgress('/update', {
+                    method: 'POST',
+                    body: this.file.files[0],
+                    onProgress: (e) => {
+                        const perc = 100 * e.loaded / e.total;
+                        this.setState({ progress: perc });
+                    }
+                }).then(() => {
+                    window.location.href = '#config/reboot';
+                });
             });
         }
     }

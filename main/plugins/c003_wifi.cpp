@@ -101,6 +101,13 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_GOT_IP");
             ESP_LOGI(TAG, "Got IP: '%s'", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
             break;
+        case SYSTEM_EVENT_STA_CONNECTED:
+            //&event.event_info.sta_connected.
+            ESP_LOGI(TAG, "WIFI STA CONNECTED");
+            if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 0 : 1);
+            p.status.wifi_connected = true;
+            global_state.wifi_connected = true;
+            break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
             if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 1 : 0);
             p.status.wifi_connected = false;
@@ -108,8 +115,9 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_DISCONNECTED");
 			ESP_LOGI(TAG, "reason: %d\n",event->event_info.disconnected.reason);
 
-            if (mode == 1) { 
-                ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_FLASH));
+            if (mode == 1) {
+                ESP_LOGI(TAG, "setting wifi_storage to RAM");
+                ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
                 bool ssid1 = true; //strcmp((char*)wifi_config.sta.ssid, (char*)params["ssid1"].as<char*>()) == 0;
                 if (ssid1) {
                     p.failed_1++;
@@ -123,6 +131,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
                             return ap_mode(p);
                         }
                     } else {
+                        ESP_LOGI(TAG, "resetting wifi configuration");
                         strcpy((char*)p.wifi_config.sta.ssid, (char*)params["ssid"].as<char*>());
                         strcpy((char*)p.wifi_config.sta.password, (char*)params["pass"].as<char*>());
                         esp_wifi_set_config(ESP_IF_WIFI_STA, &p.wifi_config);
@@ -141,6 +150,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
                     }
                 }
             }
+            ESP_LOGI(TAG, "reconnecting ...");
             ESP_ERROR_CHECK(esp_wifi_connect());
             break;
         default:
