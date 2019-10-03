@@ -1,5 +1,6 @@
 import { settings } from './settings';
 import { get } from './helpers';
+import { devices } from '../devices';
 
 export const getTasks = () => {
     return settings.get('plugins').filter(p => p).map((p, i) => ({ value: p.id, name: p.name }));
@@ -17,6 +18,15 @@ export const getTaskConfigs = (path) => {
         return Object.keys(task.params).filter(val => !val.private).map((val, i) => ({ value: val, name: val }));
     };
 }
+
+export const getTaskConfigObj = (selectedTask, selectedConfig) => {
+    const task = settings.get('plugins').find(p => p.id === selectedTask);
+    if (!task || !task.state || !task.state.values) return { type: 'string' };
+    const device = devices.find(d => d.value === task.type);
+    if (!device) return { type: 'string' }
+    return device.fields.params.configs[selectedConfig];
+}
+
 export const getTaskValues = (path) => {
     return (config) => {
         const selectedTask = get(config,path);

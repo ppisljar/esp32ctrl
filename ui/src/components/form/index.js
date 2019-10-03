@@ -154,7 +154,9 @@ export class Form extends Component {
 
         return (
             <div className={classes}>
-                {configArray.map((conf, i) => {
+                {configArray.map((conf_, i) => {
+                    const conf = typeof conf_ === "function" ? conf_() : conf_;
+
                     const varId = configArray.length > 1 ? `${id}.${i}` : id;
                     const varName = conf.var ? conf.var : varId;
                     const val = varName.startsWith('ROOT') ? settings.get(varName.replace('ROOT.', '')) : get(values, varName, null);

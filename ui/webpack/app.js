@@ -11150,7 +11150,8 @@ class Form extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
     const classes = `field is-grouped is-horizontal ${configArray.length === 3 ? 'group-3' : ''}`;
     return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
       className: classes
-    }, configArray.map((conf, i) => {
+    }, configArray.map((conf_, i) => {
+      const conf = typeof conf_ === "function" ? conf_() : conf_;
       const varId = configArray.length > 1 ? `${id}.${i}` : id;
       const varName = conf.var ? conf.var : varId;
       const val = varName.startsWith('ROOT') ? _lib_settings__WEBPACK_IMPORTED_MODULE_2__["settings"].get(varName.replace('ROOT.', '')) : Object(_lib_helpers__WEBPACK_IMPORTED_MODULE_1__["get"])(values, varName, null);
@@ -13965,7 +13966,7 @@ settings.editor = new Settings();
 /*!**************************!*\
   !*** ./src/lib/utils.js ***!
   \**************************/
-/*! exports provided: getTasks, getDeviceById, getTaskConfigs, getTaskValues, getTaskValueType, stringToAsciiByteArray */
+/*! exports provided: getTasks, getDeviceById, getTaskConfigs, getTaskConfigObj, getTaskValues, getTaskValueType, stringToAsciiByteArray */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -13973,11 +13974,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTasks", function() { return getTasks; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getDeviceById", function() { return getDeviceById; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTaskConfigs", function() { return getTaskConfigs; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTaskConfigObj", function() { return getTaskConfigObj; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTaskValues", function() { return getTaskValues; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "getTaskValueType", function() { return getTaskValueType; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "stringToAsciiByteArray", function() { return stringToAsciiByteArray; });
 /* harmony import */ var _settings__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./settings */ "./src/lib/settings.js");
 /* harmony import */ var _helpers__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./helpers */ "./src/lib/helpers.js");
+/* harmony import */ var _devices__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../devices */ "./src/devices/index.js");
+
 
 
 const getTasks = () => {
@@ -13999,6 +14003,17 @@ const getTaskConfigs = path => {
       name: val
     }));
   };
+};
+const getTaskConfigObj = (selectedTask, selectedConfig) => {
+  const task = _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].get('plugins').find(p => p.id === selectedTask);
+  if (!task || !task.state || !task.state.values) return {
+    type: 'string'
+  };
+  const device = _devices__WEBPACK_IMPORTED_MODULE_2__["devices"].find(d => d.value === task.type);
+  if (!device) return {
+    type: 'string'
+  };
+  return device.fields.params.configs[selectedConfig];
 };
 const getTaskValues = path => {
   return config => {
@@ -17038,7 +17053,7 @@ class Controlbox extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
       return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
         style: this.props.style
       }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])(_components_form__WEBPACK_IMPORTED_MODULE_1__["Form"], {
-        config: widget.getEditorConfig(),
+        config: widget.getEditorConfig(props.item.params),
         selected: props.item
       }));
     }
@@ -17370,6 +17385,115 @@ const mqttNode = {
   }
 };
 const component = Object(_helper__WEBPACK_IMPORTED_MODULE_1__["generateWidgetComponent"])(mqttNode);
+
+
+/***/ }),
+
+/***/ "./src/pages/floweditor/nodes/actions/set_config.js":
+/*!**********************************************************!*\
+  !*** ./src/pages/floweditor/nodes/actions/set_config.js ***!
+  \**********************************************************/
+/*! exports provided: setConfigNode */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "setConfigNode", function() { return setConfigNode; });
+/* harmony import */ var preact__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! preact */ "./node_modules/preact/dist/preact.mjs");
+/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../helper */ "./src/pages/floweditor/nodes/helper.js");
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../../lib/utils */ "./src/lib/utils.js");
+/* harmony import */ var _lib_settings__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../../lib/settings */ "./src/lib/settings.js");
+
+
+
+
+
+const compareValue = type => {
+  const checkValue = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_2__["getTaskValueType"])('params.device', 'params.value', type);
+  return config => {
+    if (config.params.val_type != 255) return false;
+    return checkValue(config);
+  };
+};
+
+const setConfigNode = {
+  group: 'ACTION',
+  name: 'setconfig',
+  title: 'SET CONFIG',
+  inputs: 1,
+  outputs: 1,
+  getEditorConfig: params => {
+    const cfg = {
+      groups: {
+        params: {
+          name: 'Set Config',
+          configs: {
+            device: {
+              name: 'Check Device',
+              type: 'select',
+              options: _lib_utils__WEBPACK_IMPORTED_MODULE_2__["getTasks"]
+            },
+            value: {
+              name: 'Check Value',
+              type: 'select',
+              options: Object(_lib_utils__WEBPACK_IMPORTED_MODULE_2__["getTaskConfigs"])('params.device')
+            },
+            val_type: {
+              name: 'Value',
+              type: 'select',
+              options: [{
+                name: 'state',
+                value: 0
+              }, {
+                name: 'custom',
+                value: 255
+              }],
+              var: 'params.val_type'
+            },
+            val: () => {
+              const valueObj = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_2__["getTaskConfigObj"])(params.device, params.value);
+              return { ...valueObj,
+                var: 'params.val'
+              };
+            }
+          }
+        }
+      }
+    };
+    return cfg;
+  },
+  getComponent: () => {
+    return component;
+  },
+  getDefault: () => ({
+    device: 0,
+    value: 0,
+    val_type: 255
+  }),
+  getText: item => {
+    const {
+      device,
+      value,
+      val
+    } = item.params;
+    if (device === undefined || value === undefined) return 'click to configure';
+    const d = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_2__["getDeviceById"])(device);
+    const deviceName = d ? d.name : '';
+    return `set ${deviceName}#${value} = ${val}`;
+  },
+  toDsl: item => {
+    const {
+      device,
+      value,
+      val,
+      val_type
+    } = item.params;
+    const v = val_type === 0 ? 255 : val; // F0 DEVICE_ID VAR_ID LENGTH VALUE (length = 1 & value = 255: copy state)
+
+    return [`\xF0${String.fromCharCode(device)}${String.fromCharCode(value)}\x01${String.fromCharCode(v)}`];
+  }
+};
+const component = Object(_helper__WEBPACK_IMPORTED_MODULE_1__["generateWidgetComponent"])(setConfigNode);
 
 
 /***/ }),
@@ -17951,6 +18075,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _logic_math__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./logic/math */ "./src/pages/floweditor/nodes/logic/math.js");
 /* harmony import */ var _device__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./device */ "./src/pages/floweditor/nodes/device.js");
 /* harmony import */ var _logic_logging__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./logic/logging */ "./src/pages/floweditor/nodes/logic/logging.js");
+/* harmony import */ var _actions_set_config__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./actions/set_config */ "./src/pages/floweditor/nodes/actions/set_config.js");
 
 
 
@@ -17972,7 +18097,8 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const getNodes = () => [...Object(_device__WEBPACK_IMPORTED_MODULE_19__["getDeviceNodes"])(), _triggers_timer__WEBPACK_IMPORTED_MODULE_2__["timerNode"], _triggers_hw_timer__WEBPACK_IMPORTED_MODULE_6__["hwtimerNode"], _triggers_hw_interrupt__WEBPACK_IMPORTED_MODULE_7__["hwinterruptNode"], _triggers_touch__WEBPACK_IMPORTED_MODULE_8__["touchNode"], _triggers_bluetooth__WEBPACK_IMPORTED_MODULE_9__["bluetoothNode"], _triggers_alexa__WEBPACK_IMPORTED_MODULE_10__["alexaNode"], _triggers_event__WEBPACK_IMPORTED_MODULE_3__["eventNode"], _triggers_clock__WEBPACK_IMPORTED_MODULE_4__["clockNode"], _triggers_boot__WEBPACK_IMPORTED_MODULE_5__["bootNode"], _logic_if_else__WEBPACK_IMPORTED_MODULE_1__["ifElseNode"], _logic_delay__WEBPACK_IMPORTED_MODULE_11__["delayNode"], _logic_math__WEBPACK_IMPORTED_MODULE_18__["mathNode"], _logic_logging__WEBPACK_IMPORTED_MODULE_20__["loggingNode"], _actions_get_state__WEBPACK_IMPORTED_MODULE_16__["getStateNode"], _actions_set_state__WEBPACK_IMPORTED_MODULE_0__["setStateNode"], _actions_fire_event__WEBPACK_IMPORTED_MODULE_14__["fireeventNode"], _actions_set_timer__WEBPACK_IMPORTED_MODULE_15__["settimerNode"], _actions_set_hw_timer__WEBPACK_IMPORTED_MODULE_17__["setHwTimerNode"], _actions_mqtt__WEBPACK_IMPORTED_MODULE_12__["mqttNode"], _actions_http__WEBPACK_IMPORTED_MODULE_13__["httpNode"]];
+
+const getNodes = () => [...Object(_device__WEBPACK_IMPORTED_MODULE_19__["getDeviceNodes"])(), _triggers_timer__WEBPACK_IMPORTED_MODULE_2__["timerNode"], _triggers_hw_timer__WEBPACK_IMPORTED_MODULE_6__["hwtimerNode"], _triggers_hw_interrupt__WEBPACK_IMPORTED_MODULE_7__["hwinterruptNode"], _triggers_touch__WEBPACK_IMPORTED_MODULE_8__["touchNode"], _triggers_bluetooth__WEBPACK_IMPORTED_MODULE_9__["bluetoothNode"], _triggers_alexa__WEBPACK_IMPORTED_MODULE_10__["alexaNode"], _triggers_event__WEBPACK_IMPORTED_MODULE_3__["eventNode"], _triggers_clock__WEBPACK_IMPORTED_MODULE_4__["clockNode"], _triggers_boot__WEBPACK_IMPORTED_MODULE_5__["bootNode"], _logic_if_else__WEBPACK_IMPORTED_MODULE_1__["ifElseNode"], _logic_delay__WEBPACK_IMPORTED_MODULE_11__["delayNode"], _logic_math__WEBPACK_IMPORTED_MODULE_18__["mathNode"], _logic_logging__WEBPACK_IMPORTED_MODULE_20__["loggingNode"], _actions_get_state__WEBPACK_IMPORTED_MODULE_16__["getStateNode"], _actions_set_state__WEBPACK_IMPORTED_MODULE_0__["setStateNode"], _actions_set_config__WEBPACK_IMPORTED_MODULE_21__["setConfigNode"], _actions_fire_event__WEBPACK_IMPORTED_MODULE_14__["fireeventNode"], _actions_set_timer__WEBPACK_IMPORTED_MODULE_15__["settimerNode"], _actions_set_hw_timer__WEBPACK_IMPORTED_MODULE_17__["setHwTimerNode"], _actions_mqtt__WEBPACK_IMPORTED_MODULE_12__["mqttNode"], _actions_http__WEBPACK_IMPORTED_MODULE_13__["httpNode"]];
 
 /***/ }),
 
@@ -19382,7 +19508,7 @@ class FSPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 /*!****************************!*\
   !*** ./src/pages/index.js ***!
   \****************************/
-/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, ProfilesPage, ProfilesEditPage, UpdatePage */
+/*! exports provided: ControllersPage, DashboardPage, DevicesPage, ConfigPage, ConfigAdvancedPage, types, ConfigBluetoothPage, pins, ConfigHardwarePage, ConfigPluginsPage, ConfigLCDPage, ConfigLCDScreenPage, ConfigLCDWidgetPage, RebootPage, LoadPage, UpdatePage, RulesPage, ToolsPage, FSPage, FactoryResetPage, DiscoverPage, ControllerAlexaPage, ControllerAlertsPage, AlertsPage, AlertsEditPage, DevicesEditPage, DiffPage, RulesEditorPage, SetupPage, SysVarsPage, ProfilesPage, ProfilesEditPage */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
@@ -20529,11 +20655,19 @@ const baseFields = {
   }
 };
 
+const compareValue = (device, type) => {
+  const checkValue = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getTaskValueType"])(`${device}.device`, `${device}.value_id`, type);
+  return config => {
+    return checkValue(config);
+  };
+};
+
 const getFormConfig = (config, form) => {
   const steps = {};
   config.steps.forEach((step, i) => {
     const configs = {};
     step.configs.forEach((cfg, j) => {
+      const valueObj = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getTaskConfigObj"])(cfg.device, cfg.value_id);
       configs[`${j}_prop`] = [{
         name: 'Device',
         type: 'select',
@@ -20545,12 +20679,77 @@ const getFormConfig = (config, form) => {
         type: 'select',
         value: cfg.value_id,
         options: Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getTaskConfigs"])(`steps[${i}].configs[${j}].device`),
-        var: `steps[${i}].configs[${j}].value_id`
+        var: `steps[${i}].configs[${j}].value_id`,
+        onChange: () => {
+          form.forceUpdate();
+        }
+      }, { ...valueObj,
+        var: `steps[${i}].configs[${j}].value`
       }, {
         type: 'button',
         value: 'remove',
         click: () => {
           step.configs.splice(i, 1);
+          form.forceUpdate();
+        }
+      }];
+    });
+    const states = {};
+    step.states.forEach((cfg, j) => {
+      const isBit = compareValue(`steps[${i}].states[${j}]`, 4);
+      const isByte = compareValue(`steps[${i}].states[${j}]`, 0);
+      const isInt16 = compareValue(`steps[${i}].states[${j}]`, 1);
+      const isInt32 = compareValue(`steps[${i}].states[${j}]`, 2);
+      const isString = compareValue(`steps[${i}].states[${j}]`, 3);
+      states[`${j}_state`] = [{
+        name: 'Device',
+        type: 'select',
+        value: cfg.device,
+        options: _lib_utils__WEBPACK_IMPORTED_MODULE_3__["getTasks"],
+        var: `steps[${i}].states[${j}].device`
+      }, {
+        name: 'Config',
+        type: 'select',
+        value: cfg.value_id,
+        options: Object(_lib_utils__WEBPACK_IMPORTED_MODULE_3__["getTaskValues"])(`steps[${i}].states[${j}].device`),
+        var: `steps[${i}].states[${j}].value_id`
+      }, {
+        name: 'Value',
+        if: isString,
+        type: 'string',
+        var: 'params.val'
+      }, {
+        name: 'Value',
+        if: isBit,
+        type: 'select',
+        options: [0, 1],
+        var: `steps[${i}].states[${j}].value`
+      }, {
+        name: 'Value',
+        if: isByte,
+        type: 'number',
+        min: 0,
+        max: 255,
+        var: `steps[${i}].states[${j}].value`
+      }, {
+        name: 'Value',
+        if: isInt16,
+        type: 'number',
+        min: 0,
+        max: 65535,
+        var: `steps[${i}].states[${j}].value`
+      }, {
+        name: 'Value',
+        if: isInt32,
+        type: 'number',
+        min: 0,
+        max: 4294967295,
+        var: `steps[${i}].states[${j}].value`
+      }, {
+        type: 'button',
+        value: 'remove',
+        click: () => {
+          step.states.splice(i, 1);
           form.forceUpdate();
         }
       }];
@@ -20572,11 +20771,20 @@ const getFormConfig = (config, form) => {
           }
         }],
         ...configs,
-        add: {
+        ...states,
+        addConfig: {
           type: 'button',
           value: 'add config',
           click: () => {
             step.configs.push({});
+            form.forceUpdate();
+          }
+        },
+        addState: {
+          type: 'button',
+          value: 'add state',
+          click: () => {
+            step.states.push({});
             form.forceUpdate();
           }
         }
@@ -20609,7 +20817,8 @@ class ProfilesEditPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] 
 
     this.addStep = () => {
       this.config.steps.push({
-        configs: []
+        configs: [],
+        states: []
       });
       this.forceUpdate();
     };

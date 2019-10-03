@@ -9,7 +9,7 @@ export class Controlbox extends Component {
             const EditorComponent = widget.getEditorComponent();
             return (<div style={this.props.style}><EditorComponent item={props.item} /></div>);
         } else if (widget && widget.getEditorConfig) {
-            return (<div style={this.props.style}><Form config={widget.getEditorConfig()} selected={props.item} /></div>);
+            return (<div style={this.props.style}><Form config={widget.getEditorConfig(props.item.params)} selected={props.item} /></div>);
         }
         return (null);
     }

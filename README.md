@@ -21,4 +21,5 @@ folder strucure:
 
 
 TODO:
-- isAuthenticated crashes if config.json is too big ???? (seems like out of memory but also happens with wroover)
+- set config ? how do we show the UI ?
+- set state : read only states ?
