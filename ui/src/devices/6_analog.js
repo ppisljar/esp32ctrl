@@ -5,6 +5,7 @@ export const analog = {
         'params.interval': 60,
         'state.values[0].name': 'Analog',
         'state.values[0].type': '2',
+        'state.values[0].readonly': '1',
     }),
     params: {
         name: 'Settings',

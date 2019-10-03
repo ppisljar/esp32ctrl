@@ -26,8 +26,10 @@ class Mlx90614 extends Device {
 
             'state.values[0].name': 'Temperature',
             'state.values[0].type': '0',
+            'state.values[0].readonly': '1',
             'state.values[1].name': 'TempAmbient',
             'state.values[1].type': '0',
+            'state.values[1].readonly': '1',
             // 'state.values[2].name': 'TempTherm',
             // 'state.values[2].type': '0',
         }

@@ -12,8 +12,10 @@ export const dht = {
         'params.type': 0,
         'state.values[0].name': 'Temperature',
         'state.values[0].type': '2',
+        'state.values[0].readonly': '1',
         'state.values[1].name': 'Humidity',
         'state.values[1].type': '2',
+        'state.values[1].readonly': '1',
     }),
     params: {
         name: 'Configuration',

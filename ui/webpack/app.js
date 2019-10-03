@@ -12113,7 +12113,8 @@ class DigitalInput extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
         'params.invert': false,
         interval: 60,
         'state.values[0].name': 'Switch',
-        'state.values[0].type': '0'
+        'state.values[0].type': '0',
+        'state.values[0].readonly': '1'
       };
     });
 
@@ -12279,7 +12280,8 @@ class Max31855 extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
         'params.data': 255,
         interval: 60,
         'state.values[0].name': 'Temperature',
-        'state.values[0].type': '2' // 'state.values[1].name': 'TempRJ',
+        'state.values[0].type': '2',
+        'state.values[0].readonly': '1' // 'state.values[1].name': 'TempRJ',
         // 'state.values[1].type': '0',
         // 'state.values[2].name': 'TempTherm',
         // 'state.values[2].type': '0',
@@ -12346,8 +12348,10 @@ class Mlx90614 extends _defs__WEBPACK_IMPORTED_MODULE_0__["Device"] {
         interval: 60,
         'state.values[0].name': 'Temperature',
         'state.values[0].type': '0',
+        'state.values[0].readonly': '1',
         'state.values[1].name': 'TempAmbient',
-        'state.values[1].type': '0' // 'state.values[2].name': 'TempTherm',
+        'state.values[1].type': '0',
+        'state.values[1].readonly': '1' // 'state.values[2].name': 'TempTherm',
         // 'state.values[2].type': '0',
 
       };
@@ -12469,8 +12473,10 @@ const dht = {
     'params.type': 0,
     'state.values[0].name': 'Temperature',
     'state.values[0].type': '2',
+    'state.values[0].readonly': '1',
     'state.values[1].name': 'Humidity',
-    'state.values[1].type': '2'
+    'state.values[1].type': '2',
+    'state.values[1].readonly': '1'
   }),
   params: {
     name: 'Configuration',
@@ -12643,7 +12649,8 @@ const analog = {
     'params.gpio': 255,
     'params.interval': 60,
     'state.values[0].name': 'Analog',
-    'state.values[0].type': '2'
+    'state.values[0].type': '2',
+    'state.values[0].readonly': '1'
   }),
   params: {
     name: 'Settings',
@@ -14020,7 +14027,7 @@ const getTaskValues = path => {
     const selectedTask = Object(_helpers__WEBPACK_IMPORTED_MODULE_1__["get"])(config, path);
     const task = _settings__WEBPACK_IMPORTED_MODULE_0__["settings"].get('plugins').find(p => p.id === selectedTask);
     if (!task || !task.state || !task.state.values) return [];
-    return task.state.values.filter(val => val).map((val, i) => ({
+    return task.state.values.filter(val => val && !val.readonly).map((val, i) => ({
       value: i,
       name: val.name
     }));

@@ -21,5 +21,5 @@ folder strucure:
 
 
 TODO:
-- set config ? how do we show the UI ?
+- set config -> server side
 - set state : read only states ?

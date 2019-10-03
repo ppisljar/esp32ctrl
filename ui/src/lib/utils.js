@@ -32,7 +32,7 @@ export const getTaskValues = (path) => {
         const selectedTask = get(config,path);
         const task = settings.get('plugins').find(p => p.id === selectedTask);
         if (!task || !task.state || !task.state.values) return [];
-        return task.state.values.filter(val => val).map((val, i) => ({ value: i, name: val.name }));
+        return task.state.values.filter(val => val && !val.readonly).map((val, i) => ({ value: i, name: val.name }));
     };
 };
 
