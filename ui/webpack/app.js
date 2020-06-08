@@ -12441,6 +12441,55 @@ const PIDLevelControl = {
 
 /***/ }),
 
+/***/ "./src/devices/23_motor_driver.js":
+/*!****************************************!*\
+  !*** ./src/devices/23_motor_driver.js ***!
+  \****************************************/
+/*! exports provided: MotorDriver */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "MotorDriver", function() { return MotorDriver; });
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../lib/utils */ "./src/lib/utils.js");
+
+const MotorDriver = {
+  defaults: () => ({
+    'state.values[0].name': 'Output A',
+    'state.values[0].type': '1',
+    'state.values[1].name': 'Output B',
+    'state.values[1].type': '1'
+  }),
+  params: {
+    name: 'Configuration',
+    configs: {
+      gpio_a1: {
+        name: 'GPIO A1',
+        type: 'gpio',
+        pins: () => window.io_pins.getPins('digital_out')
+      },
+      gpio_a2: {
+        name: 'GPIO A2',
+        type: 'gpio',
+        pins: () => window.io_pins.getPins('digital_out')
+      },
+      gpio_b1: {
+        name: 'GPIO B1',
+        type: 'gpio',
+        pins: () => window.io_pins.getPins('digital_out')
+      },
+      gpio_b2: {
+        name: 'GPIO B2',
+        type: 'gpio',
+        pins: () => window.io_pins.getPins('digital_out')
+      }
+    }
+  },
+  vals: 2
+};
+
+/***/ }),
+
 /***/ "./src/devices/2_dht.js":
 /*!******************************!*\
   !*** ./src/devices/2_dht.js ***!
@@ -13009,6 +13058,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _20_max31855__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./20_max31855 */ "./src/devices/20_max31855.js");
 /* harmony import */ var _21_mlx90614__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./21_mlx90614 */ "./src/devices/21_mlx90614.js");
 /* harmony import */ var _22_pid_regulator__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./22_pid_regulator */ "./src/devices/22_pid_regulator.js");
+/* harmony import */ var _23_motor_driver__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./23_motor_driver */ "./src/devices/23_motor_driver.js");
+
 
 
 
@@ -13159,6 +13210,10 @@ const devices = [{
   name: 'Generic - PID Regulator',
   value: 22,
   fields: _22_pid_regulator__WEBPACK_IMPORTED_MODULE_20__["PIDLevelControl"]
+}, {
+  name: 'Generic - Motor Driver',
+  value: 23,
+  fields: _23_motor_driver__WEBPACK_IMPORTED_MODULE_21__["MotorDriver"]
 }].sort((a, b) => a.name.localeCompare(b.name));
 
 /***/ }),
@@ -13212,7 +13267,7 @@ const prepareRules = async () => {
     'init': 0
   };
   const events = renderedNodes.filter(node => node.name === 'event').map((event, i) => ({
-    value: i,
+    value: i + 1,
     name: event.params.event
   }));
   events.forEach(event => {
@@ -13715,6 +13770,7 @@ class IO_PINS {
           var: `ROOT.hardware.gpio.${pin.value}`
         };
         pin.capabilities.push('digital_out');
+        pin.capabilities.push('analog_out');
       } else {
         pin.capabilities.push('analog_in');
       }

@@ -22,4 +22,20 @@ folder strucure:
 
 TODO:
 - set config -> server side
-- set state : read only states ?
+-- rule engine
+-- devices need to know how to set config
+-- store/don't store config
+
+- profiles:
+-- change profile function
+--- goes over all configs/states and sets them
+--- goToStep function (in rule engine)
+--- timed profiles
+----- startProfile, setStep, stopProfile
+
+- SD card test
+
+- logging test (logging of state/configs)
+-- start log/ stop log (for rule engine)
+
+- ui charts (on dashboard)

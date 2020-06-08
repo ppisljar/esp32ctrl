@@ -38,6 +38,7 @@ bool DummyPlugin::init(JsonObject &params) {
     return true;
 }
 
+// gets a pointer to json object to which it will write the state (All of it)
 bool DummyPlugin::getState(JsonObject &params) {
     for (int n = 0; n < values_len; n++) {
         if (values[n] == nullptr || values[n]->name == nullptr) continue;

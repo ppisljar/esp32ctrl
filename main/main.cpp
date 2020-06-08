@@ -165,6 +165,10 @@ Plugin* Mlx90614Plugin_myProtoype = Plugin::addPrototype(21, new Mlx90614Plugin)
 #include "plugins/p022_pid_regulator.h"
 Plugin* PIDRegulatorPlugin_myProtoype = Plugin::addPrototype(22, new PIDRegulatorPlugin);
 #endif
+#ifdef CONFIG_ENABLE_P023
+#include "plugins/p023_motor_driver.h"
+Plugin* MotorDriverPlugin_myProtoype = Plugin::addPrototype(23, new MotorDriverPlugin);
+#endif
 
 uint8_t ledPin;
 bool ledInverted;

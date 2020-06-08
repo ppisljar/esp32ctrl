@@ -35,6 +35,7 @@ class IO_PINS {
                 pin.configs.pull_up = { name: `Pin ${pin.value} pull up`, type: 'checkbox' };
                 pin.configs.boot_state = { name: `Pin ${pin.value} boot state`, type: 'select', options: pinState, var: `ROOT.hardware.gpio.${pin.value}` };
                 pin.capabilities.push('digital_out');
+                pin.capabilities.push('analog_out');
             } else {
                 pin.capabilities.push('analog_in');
             }

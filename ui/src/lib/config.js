@@ -34,7 +34,7 @@ const prepareRules = async () => {
     const eventMap = {
         'init': 0,
     };
-    const events = renderedNodes.filter(node => node.name === 'event').map((event, i) => ({ value: i, name: event.params.event }));
+    const events = renderedNodes.filter(node => node.name === 'event').map((event, i) => ({ value: i + 1, name: event.params.event }));
     events.forEach(event => {
         eventMap[event.name] = event.value;
     });

@@ -130,6 +130,10 @@ menu "MyESP32 CTRL"
             bool "ANALOG"
             default y
 
+        config ENABLE_P023
+            bool "MOTOR DRIVER"
+            default y
+
     endmenu
 
     menu "WiFi Config"
