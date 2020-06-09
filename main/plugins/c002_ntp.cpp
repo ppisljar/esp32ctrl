@@ -43,6 +43,14 @@ bool NTPPlugin::init(JsonObject &params) {
     time(&now);
     localtime_r(&now, &timeinfo);
 
+    // we need to wait for wifi (or make ip readable directly from wifi)
+    int retry = 0; int retry_count = 5;
+    while(wifi_plugin->status.local_ip == 0) {
+        ESP_LOGI(C002_TAG, "Waiting for wifi ... (%d/%d)", retry++, retry_count);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
+    // TODO: if wifi is not available on boot, or we can't reach ntp server on boot we should try to recover at a later time
+
     if (always || timeinfo.tm_year < (2016 - 1900)) {
         ESP_LOGI(C002_TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
         getTime(host);

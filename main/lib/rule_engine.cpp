@@ -160,8 +160,8 @@ int parse_rules(byte *rules, long len) {
                     ESP_LOGI(TAG_RE, "found touch %d on address: %p", rules[i + 5], (void*)(rules + i + 6));
                     rule_engine_touch_triggers[rules[i + 5]] = rules + i + 6;
                     break;
-                case TRIG_CRON:
-                    ESP_LOGI(TAG_RE, "found cron %s on address: %p", rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
+                case TRIG_CRON: // CRON string, callback
+                    ESP_LOGI(TAG_RE, "found cron %s [%d] on address: %p ", rules + i + 5, strlen((char*)rules + i + 5),(void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
                     cron_plugin->addCron(rules + i + 5, (void*)(rules + i + 6 + strlen((char*)rules + i + 5)));
                     break;   
                 case TRIG_BLUETOOTH:

@@ -8,6 +8,9 @@
 #include "esp_log.h"
 #include "lwip/err.h"
 #include "lwip/apps/sntp.h"
+#include "c003_wifi.h"
+
+extern WiFiPlugin *wifi_plugin;
 
 class NTPPlugin: public Plugin {
     private:
