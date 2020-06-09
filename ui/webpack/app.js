@@ -16123,6 +16123,45 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
       })))));
     };
 
+    this.renderMotorDriver = (device, deviceState) => {
+      const motor1State = deviceState[device.state.values[0].name];
+      const motor2State = deviceState[device.state.values[1].name];
+
+      const buttonClick = async e => {
+        const text = e.target.textContent;
+        const state = text === 'STOP' ? 0 : text === 'BACK' ? 2 : 1;
+        await fetch(`/plugin/${device.id}/state/0/${state}`);
+      };
+
+      return Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        className: "media device"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "media-left"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("p", {
+        class: "image is-64x64"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("span", {
+        class: device.icon
+      }))), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "media-content"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "info"
+      }, device.name)), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("div", {
+        class: "media-right"
+      }, Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("button", {
+        class: "button",
+        onClick: buttonClick,
+        disabled: motor1State === 1
+      }, "FORWARD"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("button", {
+        className: "button",
+        onClick: buttonClick,
+        disabled: motor1State === 2
+      }, "BACK"), Object(preact__WEBPACK_IMPORTED_MODULE_0__["h"])("button", {
+        className: "button",
+        onClick: buttonClick,
+        disabled: motor1State === 0
+      }, "STOP")));
+    };
+
     this.renderDevice = (device, deviceState) => {
       switch (device.type) {
         case 1:
@@ -16145,6 +16184,9 @@ class DashboardPage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
 
         case 19:
           return this.renderPWM(device, deviceState);
+
+        case 23:
+          return this.renderMotorDriver(device, deviceState);
 
         default:
           return null;
@@ -21644,8 +21686,9 @@ class UpdatePage extends preact__WEBPACK_IMPORTED_MODULE_0__["Component"] {
               progress: perc
             });
           }
-        }).then(() => {
-          window.location.href = '#config/reboot';
+        }).then(async () => {
+          await sleep(5000);
+          window.location.href = '/';
         });
       });
     };

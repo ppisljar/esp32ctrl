@@ -223,8 +223,7 @@ extern "C" void app_main()
     pins.analog_read = new ESP_analog_read();
     io.addDigitalPins(40, &pins);
 
-    /* Start the web server */
-    ESP_ERROR_CHECK(start_file_server("/spiffs"));
+
 
     // load configuration
     g_cfg = new Config();
@@ -238,6 +237,9 @@ extern "C" void app_main()
     JsonObject &wifi_config = cfgObject["wifi"];
     wifi_plugin = new WiFiPlugin();
     wifi_plugin->init(wifi_config);
+
+    /* Start the web server */
+    ESP_ERROR_CHECK(start_file_server("/spiffs"));
 
     if (cfgObject["hardware"]["spi"]["enabled"]) {
         JsonObject &spi_config = cfgObject["hardware"]["spi"];

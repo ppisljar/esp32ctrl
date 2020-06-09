@@ -107,6 +107,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 0 : 1);
             p.status.wifi_connected = true;
             global_state.wifi_connected = true;
+            p.failed_1 = 0;
             break;
         case SYSTEM_EVENT_STA_DISCONNECTED:
             if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 1 : 0);
@@ -117,16 +118,22 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 
             if (mode == 1) {
                 ESP_LOGI(TAG, "setting wifi_storage to RAM");
+                ESP_ERROR_CHECK(esp_wifi_disconnect());
+                ESP_ERROR_CHECK(esp_wifi_stop());
                 ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+                ESP_ERROR_CHECK(esp_wifi_clear_fast_connect());
+                ESP_ERROR_CHECK(esp_wifi_start());
                 bool ssid1 = true; //strcmp((char*)wifi_config.sta.ssid, (char*)params["ssid1"].as<char*>()) == 0;
                 if (ssid1) {
                     p.failed_1++;
                     if (p.failed_1 > 2) {
                         if (p.secondarySSID) {
+                            ESP_LOGI(TAG, "switching to secondary ssid");
                             strcpy((char*)p.wifi_config.sta.ssid,  (char*)params["ssid2"].as<char*>());
                             strcpy((char*)p.wifi_config.sta.password, (char*)params["pass2"].as<char*>());
                             esp_wifi_set_config(ESP_IF_WIFI_STA, &p.wifi_config);
                         } else {
+                            ESP_LOGI(TAG, "switching to ap mode");
                             params["mode"] = 0;
                             return ap_mode(p);
                         }
@@ -167,7 +174,10 @@ bool WiFiPlugin::init(JsonObject &params) {
     char *ssid = (char*)params["ssid"].as<char*>();
     char *pass = (char*)params["pass"].as<char*>();
 
-    if (ssid == nullptr || pass == nullptr) mode = 0;
+    if (ssid == nullptr || pass == nullptr) {
+        ESP_LOGI(TAG, "starting wifi in AP mode");
+        mode = 0;
+    }
     else ESP_LOGI(TAG, "starting wifi in STA mode with %s:%s", ssid, pass);
 
     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, this));

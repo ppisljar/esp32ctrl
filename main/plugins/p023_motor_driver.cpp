@@ -12,7 +12,7 @@ PLUGIN_CONFIG(MotorDriverPlugin, gpio_a1, gpio_a2, gpio_b1, gpio_b2)
 
 bool MotorDriverPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
-    state_cfg = &((JsonArray &)params["state"]);
+    state_cfg = &((JsonArray &)params["state"]["values"]);
 
     output_a = 0;
     output_b = 0;
@@ -42,8 +42,11 @@ bool MotorDriverPlugin::init(JsonObject &params) {
 
 bool MotorDriverPlugin::getState(JsonObject &params) {
     char *stateName1 = (char*)(*state_cfg)[0]["name"].as<char*>();
+    ESP_LOGI(TAG, "writting state out  to %d", output_a);
+    ESP_LOGI(TAG, "%s", stateName1);
     params[stateName1] = output_a;
-    char *stateName2 = (char*)(*state_cfg)[0]["name"].as<char*>();
+    char *stateName2 = (char*)(*state_cfg)[1]["name"].as<char*>();
+    ESP_LOGI(TAG, "writting state out [%s] to %d", stateName2, output_b);
     params[stateName2] = output_b;
     return true;
 }
@@ -51,7 +54,7 @@ bool MotorDriverPlugin::getState(JsonObject &params) {
 bool MotorDriverPlugin::setState(JsonObject &params) {
     char *stateName1 = (char*)(*state_cfg)[0]["name"].as<char*>();
     output_a = params[stateName1];
-    char *stateName2 = (char*)(*state_cfg)[0]["name"].as<char*>();
+    char *stateName2 = (char*)(*state_cfg)[1]["name"].as<char*>();
     output_b = params[stateName2];
     return true;
 }

@@ -139,6 +139,37 @@ export class DashboardPage extends Component {
             </div>);
         };
 
+        this.renderMotorDriver = (device, deviceState) => {
+            const motor1State = deviceState[device.state.values[0].name];
+            const motor2State = deviceState[device.state.values[1].name];
+
+
+            const buttonClick = async (e) => {
+                const text = e.target.textContent;
+                const state = text === 'STOP' ? 0 : text === 'BACK' ? 2 : 1;
+                await fetch(`/plugin/${device.id}/state/0/${state}`);
+            }
+            return (
+                <div className='media device'>
+                    <div class="media-left">
+                        <p class="image is-64x64">
+                            <span class={device.icon} />
+                        </p>
+                    </div>
+                    <div class="media-content">
+                        <div class='info'>
+                            {device.name}
+                        </div>
+                    </div>
+                    <div class="media-right">
+                        <button class="button" onClick={buttonClick} disabled={motor1State===1}>FORWARD</button>
+                        <button className="button" onClick={buttonClick} disabled={motor1State===2}>BACK</button>
+                        <button className="button" onClick={buttonClick} disabled={motor1State===0}>STOP</button>
+                    </div>
+                </div>
+            );
+        };
+
         this.renderDevice = (device, deviceState) => {
             switch (device.type) {
                 case 1: return this.renderSwitch(device, deviceState);
@@ -147,6 +178,7 @@ export class DashboardPage extends Component {
                 case 5: return this.renderRegulator(device, deviceState);
                 case 15: return this.renderDimmer(device, deviceState);
                 case 19: return this.renderPWM(device, deviceState);
+                case 23: return this.renderMotorDriver(device, deviceState);
                 
                 default:
                     return (null);

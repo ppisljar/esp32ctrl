@@ -38,8 +38,9 @@ export class UpdatePage extends Component {
                         const perc = 100 * e.loaded / e.total;
                         this.setState({ progress: perc });
                     }
-                }).then(() => {
-                    window.location.href = '#config/reboot';
+                }).then( async () => {
+                    await sleep(5000);
+                    window.location.href = '/';
                 });
             });
         }
