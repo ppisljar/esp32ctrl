@@ -997,6 +997,12 @@ static esp_err_t system_handler(httpd_req_t *req)
     ret = esp_spiffs_info(NULL, &total, &used);
     sys["fs_total"] = total;
     sys["fs_used"] = used;
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    esp_app_desc_t running_app_info;
+    if (esp_ota_get_partition_description(running, &running_app_info) == ESP_OK) {
+        sys["version"] = running_app_info.version;
+    }
+
     
     len = sys.printTo(buf, 512);
     httpd_resp_send_chunk(req, buf, len);

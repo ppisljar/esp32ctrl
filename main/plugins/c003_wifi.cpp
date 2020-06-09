@@ -76,22 +76,27 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             //dnsServer.stop();
             break;
         }
-        // case SYSTEM_EVENT_AP_START:
-        //     ESP_LOGI(TAG, "SoftAP started");
-        //     break;
-        // case SYSTEM_EVENT_AP_STOP:
-        //     ESP_LOGI(TAG, "SoftAP stopped");
-        //     break;
-        // case SYSTEM_EVENT_AP_STACONNECTED:
-        //     ESP_LOGI(TAG, "Station:"MACSTR" join, AID=%d",
-        //              MAC2STR(event->event_info.sta_connected.mac),
-        //              event->event_info.sta_connected.aid);
-        //     break;
-        // case SYSTEM_EVENT_AP_STADISCONNECTED:
-        //     ESP_LOGI(TAG, "Station:"MACSTR"leave, AID=%d",
-        //              MAC2STR(event->event_info.sta_disconnected.mac),
-        //              event->event_info.sta_disconnected.aid);
-        //     break;
+        case SYSTEM_EVENT_STA_STOP: {
+            ESP_LOGI(TAG, "SYSTEM_EVENT_STA_STOP");
+            break;
+        }
+         case SYSTEM_EVENT_AP_START:
+            xTaskCreatePinnedToCore(p.task, TAG, 4096, &p, 5, NULL, 1);
+             ESP_LOGI(TAG, "SoftAP started");
+             break;
+         case SYSTEM_EVENT_AP_STOP:
+             ESP_LOGI(TAG, "SoftAP stopped");
+             break;
+         case SYSTEM_EVENT_AP_STACONNECTED:
+             ESP_LOGI(TAG, "Station:"MACSTR" join, AID=%d",
+                      MAC2STR(event->event_info.sta_connected.mac),
+                      event->event_info.sta_connected.aid);
+             break;
+         case SYSTEM_EVENT_AP_STADISCONNECTED:
+             ESP_LOGI(TAG, "Station:"MACSTR"leave, AID=%d",
+                      MAC2STR(event->event_info.sta_disconnected.mac),
+                      event->event_info.sta_disconnected.aid);
+             break;
         case SYSTEM_EVENT_STA_GOT_IP:
             if (ledPin < 32) io.digitalWrite(ledPin, ledInverted ? 0 : 1);
             p.status.wifi_connected = true;
@@ -114,7 +119,13 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             p.status.wifi_connected = false;
             global_state.wifi_connected = false;
             ESP_LOGI(TAG, "SYSTEM_EVENT_STA_DISCONNECTED");
-			ESP_LOGI(TAG, "reason: %d\n",event->event_info.disconnected.reason);
+			switch (event->event_info.disconnected.reason) {
+			    case 4:
+                    ESP_LOGI(TAG, "reason: ASSOC_EXIPIRE\n");
+			        break;
+                default:
+                    ESP_LOGI(TAG, "reason: %d\n",event->event_info.disconnected.reason);
+			}
 
             if (mode == 1) {
                 ESP_LOGI(TAG, "setting wifi_storage to RAM");
@@ -133,6 +144,10 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
                             strcpy((char*)p.wifi_config.sta.password, (char*)params["pass2"].as<char*>());
                             esp_wifi_set_config(ESP_IF_WIFI_STA, &p.wifi_config);
                         } else {
+                            // allow to disable switching to AP mode ?
+                            // or allow getting back from AP mode to normal mode when wifi is available agian
+                            p.failed_1 = 0;
+
                             ESP_LOGI(TAG, "switching to ap mode");
                             params["mode"] = 0;
                             return ap_mode(p);
@@ -165,6 +180,25 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
             break;
     }
     return ESP_OK;
+}
+
+void WiFiPlugin::task(void * pvParameters)
+{
+    WiFiPlugin* s = (WiFiPlugin*)pvParameters;
+    JsonObject &params = *(s->cfg);
+
+    uint32_t delay = 60 * 60 * 1000 / portTICK_PERIOD_MS;
+    vTaskDelay(delay);
+
+    ESP_ERROR_CHECK(esp_wifi_stop());
+    strcpy((char*)s->wifi_config.sta.ssid,  (char*)params["ssid2"].as<char*>());
+    strcpy((char*)s->wifi_config.sta.password, (char*)params["pass2"].as<char*>());
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &s->wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
+
+    vTaskDelete(nullptr);
+
 }
 
 bool WiFiPlugin::init(JsonObject &params) {

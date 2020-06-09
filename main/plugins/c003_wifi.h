@@ -42,6 +42,8 @@ class WiFiPlugin: public Plugin {
         uint8_t failed_2 = 0;
         
         DEFINE_PLUGIN(WiFiPlugin);
+
+        static void task(void *pvParameters);
 };
 
 #endif
