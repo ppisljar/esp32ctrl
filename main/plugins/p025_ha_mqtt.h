@@ -1,5 +1,5 @@
-#ifndef ESP_PLUGIN_011_H
-#define ESP_PLUGIN_011_H
+#ifndef ESP_PLUGIN_025_H
+#define ESP_PLUGIN_025_H
 
 
 #include "plugin_defs.h"
@@ -15,7 +15,7 @@ struct subscribe_info {
     int8_t value_id_group = -1;
 };
 
-class MQTTPlugin: public Plugin {
+class HAMQTTPlugin: public Plugin {
     private:
         int value = 0;
         Type value_t = Type::integer;
@@ -28,7 +28,7 @@ class MQTTPlugin: public Plugin {
         std::map<char*,std::function<void(char*,char*)>> registeredTopics;
         struct subscribe_info info = {};
 
-        DEFINE_PPLUGIN(MQTTPlugin, 11);
+        DEFINE_PPLUGIN(HAMQTTPlugin, 25);
 
         void publish(char *topic, char* data);
         void subscribe(char *topic, std::function<void(char*,char*)> handler);

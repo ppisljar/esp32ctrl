@@ -14,7 +14,7 @@ class LoggingNotify : public Controller_Notify_Handler {
         LoggingNotify(LoggingPlugin* parent) {     
                 p = parent;
         };
-        uint8_t operator()(Plugin *x, uint8_t var_id, void *val, uint8_t val_type) {
+        uint8_t operator()(Plugin *x, uint8_t var_id, void *val, uint8_t val_type, bool shouldNotify) {
             if (!p->started) {
                 return 0;
             }
@@ -36,6 +36,10 @@ class LoggingNotify : public Controller_Notify_Handler {
             
             fflush(p->f);
 
+            return 0;
+        }
+
+        uint8_t operator()(Plugin *x, uint8_t var_id) {
             return 0;
         }
 };

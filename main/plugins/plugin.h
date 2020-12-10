@@ -61,7 +61,9 @@ void convert(T ptr, Type to, void* val, Type from) {
 }
 
 #define SET_STATE(plugin, var, var_index, shouldNotify, value, value_type) plugin->var = value; \
-    if (shouldNotify) notify(plugin, var_index, &plugin->var, value_type)            
+    notify(plugin, var_index, &plugin->var, value_type, shouldNotify)
+
+#define REGISTER_STATE(plugin, var, var_index) registerState(plugin, var, var_index)
 
 #define NOTIFY_CONTROLLER(shouldNotify, plugin, var, var_index, value_type) if (shouldNotify) notify(plugin, var_index, &plugin->var, value_type)
 
@@ -139,7 +141,7 @@ bool TYPE::getConfig(JsonObject &params) { \
 #define PLUGIN___STATS_GETVARPTR(VARIABLE, I) if (n == I) { if (t != nullptr) *t = VARIABLE ## _t; return &VARIABLE; }
 #define PLUGIN___STATS_SETVARPTR(VARIABLE, I) if (n == I) { \
   convert(&VARIABLE, VARIABLE ## _t, val, t); \
-  if (shouldNotify) notify(this, I, &VARIABLE, VARIABLE ## _t); \
+  notify(this, I, &VARIABLE, VARIABLE ## _t, shouldNotify); \
 }
 #define PLUGIN_STATS(TYPE, ...) \
 bool TYPE::getState(JsonObject &params) { \

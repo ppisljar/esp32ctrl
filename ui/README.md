@@ -61,7 +61,7 @@ export const inputSwitch = {                // definition of our form
 
 lets look into above in more detail.
 
-Each form can define multiple groups of ouptions. Each group has a name and a list of options. First option from above looks like this:
+Each form can define multiple groups of options. Each group has a name and a list of options. First option from above looks like this:
 ```
 pullup: { name: 'Internal PullUp', type: 'checkbox', var: 'pin1pullup' },
 ^       ^

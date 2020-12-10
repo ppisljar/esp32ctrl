@@ -42,11 +42,8 @@ bool MotorDriverPlugin::init(JsonObject &params) {
 
 bool MotorDriverPlugin::getState(JsonObject &params) {
     char *stateName1 = (char*)(*state_cfg)[0]["name"].as<char*>();
-    ESP_LOGI(TAG, "writting state out  to %d", output_a);
-    ESP_LOGI(TAG, "%s", stateName1);
     params[stateName1] = output_a;
     char *stateName2 = (char*)(*state_cfg)[1]["name"].as<char*>();
-    ESP_LOGI(TAG, "writting state out [%s] to %d", stateName2, output_b);
     params[stateName2] = output_b;
     return true;
 }
@@ -72,7 +69,7 @@ void MotorDriverPlugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNot
     // output: 0 = stop, 1 = forwad, 2 = back
     if (n == 0 && output_a != value) {
         SET_STATE(this, output_a, 0, shouldNotify, value, 1);
-        ESP_LOGI(TAG, "updating state %d (%p) [%d] to %d", n, &output_a, output_a, value);
+        ESP_LOGD(TAG, "updating state %d (%p) [%d] to %d", n, &output_a, output_a, value);
         if (gpio_a1 != 255 && gpio_a2 != 255) {
             ESP_LOGI(TAG, "writting digital out [%d] to %d", gpio_a1, output_a == 1 ? 1 : 0);
             ESP_LOGI(TAG, "writting digital out [%d] to %d", gpio_a2, output_a == 2 ? 1 : 0);
@@ -81,7 +78,7 @@ void MotorDriverPlugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNot
         }
     } else if (n == 1 && output_b != value) {
         SET_STATE(this, output_b, 1, shouldNotify, value, 1);
-        ESP_LOGI(TAG, "updating state %d (%p) [%d] to %d", n, &output_b, output_b, value);
+        ESP_LOGD(TAG, "updating state %d (%p) [%d] to %d", n, &output_b, output_b, value);
         if (gpio_b1 != 255 && gpio_b2 != 255) {
             ESP_LOGI(TAG, "writting digital out [%d] to %d", gpio_b1, output_b == 1 ? 1 : 0);
             ESP_LOGI(TAG, "writting digital out [%d] to %d", gpio_b2, output_b == 2 ? 1 : 0);

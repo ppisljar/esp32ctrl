@@ -8,6 +8,13 @@ bool SwitchPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]["values"]);
 
+    // this allows ys to tell controllers about this state.
+    // for example we will send event to MQTT to let homeassistant know about our device (auto discover)
+    // we need this "switch" for home assistant registration (HA device type)
+    // feels this shouldn't be part of our plugin, or we should have a map somewhere
+    // would be good to check what requirements other systems have, we might need completely custom registration info
+//    REGISTER_STATE(this, state, 0);
+
     state = 0;
     gpio = (*cfg)["gpio"] | 255;
     invert = ((*cfg)["invert"] | 0) > 0;
@@ -37,11 +44,9 @@ void* SwitchPlugin::getStateVarPtr(int n, Type *t) {
     if (n > 0) return nullptr;
     if (t != nullptr) *t = Type::byte;
     return &state; 
-} 
+}
 
 void SwitchPlugin::setStateVarPtr_(int n, void *val, Type t, bool shouldNotify) {
-
-    
     uint8_t value;
     convert(&value, Type::byte, val, t);
 

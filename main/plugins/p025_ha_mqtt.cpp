@@ -1,10 +1,10 @@
-#include "p011_mqtt.h"
+#include "p025_ha_mqtt.h"
 #include "../lib/config.h"
-static const char *TAG = "MQTTPlugin";
+static const char *TAG = "HAMQTTPlugin";
 extern Config* g_cfg;
 
-PLUGIN_CONFIG(MQTTPlugin, interval, uri, client_id, user, pass, lwt_topic, lwt_msg)
-PLUGIN_STATS(MQTTPlugin, value, value)
+PLUGIN_CONFIG(HAMQTTPlugin, interval, uri, client_id, user, pass, lwt_topic, lwt_msg)
+PLUGIN_STATS(HAMQTTPlugin, value, value)
 
 // parses topic and ges out the atual subscribe topic (with wildcards)
 static void parseSubscribeTopicStr(const char *topic_in, struct subscribe_info *info) {
@@ -67,7 +67,7 @@ static void parseSubscribeTopicStr(const char *topic_in, struct subscribe_info *
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
     esp_mqtt_client_handle_t client = event->client;
-    MQTTPlugin *p = (MQTTPlugin*)event->user_context;
+    HAMQTTPlugin *p = (HAMQTTPlugin*)event->user_context;
     int msg_id;
     // your_context_t *context = event->context;
     switch (event->event_id) {
@@ -128,9 +128,9 @@ class MQTT_Notify : public Controller_Notify_Handler {
     private:
         char topic[64];
         char data[64];
-        MQTTPlugin* p;
+        HAMQTTPlugin* p;
     public:
-        MQTT_Notify(MQTTPlugin* parent) {     
+        MQTT_Notify(HAMQTTPlugin* parent) {     
                 p = parent;
         };
         uint8_t operator()(Plugin *x, uint8_t var_id) {
@@ -176,7 +176,7 @@ class MQTT_Notify : public Controller_Notify_Handler {
         }
 };
 
-bool MQTTPlugin::init(JsonObject &params) {
+bool HAMQTTPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]);
     
@@ -204,19 +204,19 @@ bool MQTTPlugin::init(JsonObject &params) {
 
     // register rule engine custom command (mqtt publish)
     // 0x55 TOPIC_LEN TOPIC DATA_LEN DATA
-    register_command(55, [this](uint8_t* start) {
-        uint8_t topic_len = start[1];
-        uint8_t* topic = start+2;
-        uint8_t data_len = start[topic_len + 2];
-        uint8_t* data = topic + topic_len + 1;
-        publish((char*)topic, (char*)data);
-        return topic_len + data_len + 2;
-    });
+//    register_command(55, [this](uint8_t* start) {
+//        uint8_t topic_len = start[1];
+//        uint8_t* topic = start+2;
+//        uint8_t data_len = start[topic_len + 2];
+//        uint8_t* data = topic + topic_len + 1;
+//        publish((char*)topic, (char*)data);
+//        return topic_len + data_len + 2;
+//    });
 
     return true;
 }
 
-void MQTTPlugin::handler(char* topic, int topic_len, char* msg, int msg_len) {
+void HAMQTTPlugin::handler(char* topic, int topic_len, char* msg, int msg_len) {
     ESP_LOGI(TAG, "%.*s %.*s", topic_len, topic, msg_len, msg);
     const char *device_field = (*cfg)["subscribe_data_device_id"];
     const char *var_field = (*cfg)["subscribe_data_value_id"];
@@ -299,17 +299,17 @@ void MQTTPlugin::handler(char* topic, int topic_len, char* msg, int msg_len) {
 
 }
 
-void MQTTPlugin::publish(char *topic, char* data) {
+void HAMQTTPlugin::publish(char *topic, char* data) {
     esp_mqtt_client_publish(client, topic, data, 0, 0, 0);
 }
 
-void MQTTPlugin::subscribe(char *topic, std::function<void(char*,char*)> handler) {
+void HAMQTTPlugin::subscribe(char *topic, std::function<void(char*,char*)> handler) {
     ESP_LOGI(TAG, "regstering topic %s with handler", topic);
     registeredTopics[topic] = handler;
     int msg_id = esp_mqtt_client_subscribe(client, topic, 0);
     ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 }
 
-MQTTPlugin::~MQTTPlugin() {
+HAMQTTPlugin::~HAMQTTPlugin() {
     
 }

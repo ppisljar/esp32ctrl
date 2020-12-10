@@ -5,6 +5,10 @@ ESP32 iot controller
 ## install
 
 - you will need ESP-IDF installed
+ 
+   Toolchain version: esp32-2019r1
+   Compiler version: 8.2.0
+
 - you will need nodejs and yarn installed
 - `git clone https://github.com/ppisljar/esp32ctrl.git --recursive init`
 - run `cd ui; yarn install; yarn build; cd ..` to build web ui
@@ -25,6 +29,8 @@ TODO:
 -- rule engine
 -- devices need to know how to set config
 -- store/don't store config
+
+- boot event (that every plugin can register): things that need to happen when all the plugins have registered.
 
 - profiles:
 -- change profile function

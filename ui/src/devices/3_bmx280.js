@@ -8,10 +8,13 @@ export const bmx280 = {
     defaults: () => ({
         'state.values[0].name': 'Temperature',
         'state.values[0].type': '2',
+        'state.values[0].meta_type': 'sensor',
         'state.values[1].name': 'Humidity',
         'state.values[1].type': '2',
+        'state.values[1].meta_type': 'sensor',
         'state.values[2].name': 'Pressure',
         'state.values[2].type': '2',
+        'state.values[2].meta_type': 'sensor',
     }),
     sensor: {
         name: 'Sensor',

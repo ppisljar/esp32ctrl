@@ -14,7 +14,8 @@ class HTTP_Notify : public Controller_Notify_Handler {
         HTTP_Notify(HTTPCtrlPlugin* parent) {     
                 p = parent;
         };
-        uint8_t operator()(Plugin *x, uint8_t var_id, void *val1, uint8_t val_type) {
+        uint8_t operator()(Plugin *x, uint8_t var_id, void *val1, uint8_t val_type, bool shouldNotify) {
+            if (!shouldNotify) return 0;
             uint8_t val = *(uint8_t*)val1;
             ESP_LOGI(TAG, "sending http notification %p %d %d", p, var_id, val);
             JsonObject &cfg = *(p->cfg);
@@ -30,6 +31,23 @@ class HTTP_Notify : public Controller_Notify_Handler {
 
             p->request(uri_str.c_str(), (esp_http_client_method_t)method, data_str.c_str());
             
+            return 0;
+        }
+        uint8_t operator()(Plugin *x, uint8_t var_id) {
+            ESP_LOGI(TAG, "sending http registration %p %d", p, var_id);
+            JsonObject &cfg = *(p->cfg);
+            const char *uri_format = cfg["uri"];
+            const char *data_format = cfg["data"];
+            uint8_t method = cfg["method"] | 0;
+            std::string uri_str(uri_format);
+            std::string data_str(data_format);
+            // // we need to have parse function which will parse the topic/data format and do string replacement for vars
+            parseStrForVar(uri_str, x, var_id, 0);
+            parseStrForVar(data_str, x, var_id, 0);
+            ESP_LOGI(TAG, "%s\n%s", uri_str.c_str(), data_str.c_str());
+
+            p->request(uri_str.c_str(), (esp_http_client_method_t)method, data_str.c_str());
+
             return 0;
         }
 };

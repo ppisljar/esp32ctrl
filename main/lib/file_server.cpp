@@ -1054,8 +1054,8 @@ static esp_err_t reset_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
-int8_t level;
-int8_t lastLevel;
+static int8_t level;
+static int8_t lastLevel;
 static void json_init() {
   level = 0;
   lastLevel = -1;
@@ -1130,6 +1130,7 @@ static esp_err_t cmd_handler(httpd_req_t *req)
     int len = req->content_len;
     httpd_req_recv(req, buf, MIN(len, 255));
 
+    ESP_LOGI(TAG, "executing rule");
     run_rule((unsigned char*)buf, nullptr, 0, len);
 
     json_init();

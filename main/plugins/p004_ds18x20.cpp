@@ -23,7 +23,7 @@ void DS18x20Plugin::task(void * pvParameters)
         if (gpio != 255) {
             if (ds18x20_measure_and_read_multi((gpio_num_t)gpio, s->addrs, s->sensor_count, s->temperature) == ESP_OK) {
                 ESP_LOGI(P004_TAG, "Sensors read %f", s->temperature[0]);
-                notify(s, 0, s->temperature, 1);
+                notify(s, 0, s->temperature, 1, true);
             } else
                 ESP_LOGI(P004_TAG, "Could not read data from sensor");
         }

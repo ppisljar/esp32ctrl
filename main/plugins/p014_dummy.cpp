@@ -42,7 +42,7 @@ bool DummyPlugin::init(JsonObject &params) {
 bool DummyPlugin::getState(JsonObject &params) {
     for (int n = 0; n < values_len; n++) {
         if (values[n] == nullptr || values[n]->name == nullptr) continue;
-        ESP_LOGI(TAG, "getting state %d with name %s and value %d", n, values[n]->name, *values[n]->value);
+        ESP_LOGD(TAG, "getting state %d with name %s and value %d", n, values[n]->name, *values[n]->value);
         params[values[n]->name] = *(uint8_t*)(values[n]->value);
     }
     return true;
@@ -65,7 +65,7 @@ void* DummyPlugin::getStateVarPtr(int n, Type *t) {
 void DummyPlugin::setStateVarPtr_(int n, void* val, Type t, bool shouldNotify) {
     if (n < values_len && values[n] != nullptr && values[n]->name != nullptr) {
         convert(values[n]->value, (Type)values[n]->type, val, t);
-        if (shouldNotify) notify(this, n, values[n]->value, values[n]->type); 
+        notify(this, n, values[n]->value, values[n]->type, shouldNotify);
     }
 }
 

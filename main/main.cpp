@@ -63,11 +63,11 @@ LoggingPlugin *logging_plugin;
 CronPlugin *cron_plugin;
 //#endif
 
-#ifdef CONFIG_ENABLE_C009
-#include "bluetooth.h"
+#if defined(CONFIG_ENABLE_C009) && defined(CONFIG_BT_ENABLED)
+//#include "bluetooth.h"
 #include "plugins/c009_bluetooth.h"
 BlueToothPlugin *bluetooth_plugin;
-BlueTooth* bluetooth;
+// BlueTooth* bluetooth;
 #endif
 
 #ifdef CONFIG_LVGL_GUI_ENABLE
@@ -169,6 +169,10 @@ Plugin* PIDRegulatorPlugin_myProtoype = Plugin::addPrototype(22, new PIDRegulato
 #include "plugins/p023_motor_driver.h"
 Plugin* MotorDriverPlugin_myProtoype = Plugin::addPrototype(23, new MotorDriverPlugin);
 #endif
+#ifdef CONFIG_ENABLE_P025
+#include "plugins/p025_ha_mqtt.h"
+Plugin* HAMQTTPlugin_myProtoype = Plugin::addPrototype(25, new HAMQTTPlugin);
+#endif
 
 uint8_t ledPin;
 bool ledInverted;
@@ -184,16 +188,20 @@ void init_plugins() {
     JsonArray &plugins = cfgObject["plugins"];
     for (auto plugin : plugins){
         if (!plugin["enabled"]) continue;
-        uint8_t pid = plugin["id"];
-        ESP_LOGI(TAG, "initializing plugin '%s' type: %i id:%i", plugin["name"].as<char*>(), (int)plugin["type"], pid);
-        if (!Plugin::hasType((int)plugin["type"])) {
-            ESP_LOGI(TAG, "invalid plugin type, skipping ...");
-            continue;
+        try {
+            uint8_t pid = plugin["id"];
+            ESP_LOGI(TAG, "initializing plugin '%s' type: %i id:%i", plugin["name"].as<char*>(), (int)plugin["type"], pid);
+            if (!Plugin::hasType((int)plugin["type"])) {
+                ESP_LOGI(TAG, "invalid plugin type, skipping ...");
+                continue;
+            }
+            active_plugins[pid] = Plugin::getPluginInstance((int)plugin["type"]);
+            active_plugins[pid]->name = plugin["name"].as<char*>();
+            active_plugins[pid]->id = pid;
+            active_plugins[pid]->init(plugin);
+        } catch (...) {
+           ESP_LOGW(TAG, "error loading plugin");
         }
-        active_plugins[pid] = Plugin::getPluginInstance((int)plugin["type"]);
-        active_plugins[pid]->name = plugin["name"].as<char*>();
-        active_plugins[pid]->id = pid;
-        active_plugins[pid]->init(plugin);
     }
 }
 
@@ -259,10 +267,9 @@ extern "C" void app_main()
     #ifdef CONFIG_ENABLE_C009
     JsonObject &bluetooth_config = cfgObject["bluetooth"];
     if (bluetooth_config["enabled"]) {
-        if (bluetooth_config["server"]["enabled"]) {
-            bluetooth_plugin = new BlueToothPlugin();
-            bluetooth_plugin->init(bluetooth_config);
-        }
+        bluetooth_plugin = new BlueToothPlugin();
+        bluetooth_plugin->init(bluetooth_config);
+
         // bluetooth = new BlueTooth();
         // bluetooth->init();
         // bluetooth->getDevices(btfunc, 0);
@@ -333,7 +340,11 @@ extern "C" void app_main()
         //     esp_restart();
         // }
         ESP_LOGD(TAG, "executing rule engine");
-        run_rules();
+        try {
+            run_rules();
+        } catch(...) {
+            ESP_LOGW(TAG, "error running rules");
+        }
         vTaskDelay( 1000 / portTICK_PERIOD_MS);
     }
 }

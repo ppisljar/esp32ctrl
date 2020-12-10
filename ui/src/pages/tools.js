@@ -25,6 +25,18 @@ const CMD = {
   ENDON   : 0xff,
 }
 
+function dhm(ms){
+    let days = Math.floor(ms / (24*60*60*1000));
+    let daysms=ms % (24*60*60*1000);
+    let hours = Math.floor((daysms)/(60*60*1000));
+    let hoursms=ms % (60*60*1000);
+    let minutes = Math.floor((hoursms)/(60*1000));
+    let minutesms=ms % (60*1000);
+    let sec = Math.floor((minutesms)/(1000));
+    return days+":"+hours+":"+minutes+":"+sec;
+}
+
+
 export class ToolsPage extends Component {
     constructor(props) {
         super(props);
@@ -143,7 +155,7 @@ export class ToolsPage extends Component {
             this.setState({ level: e.currentTarget.value });
         }
         const setLogFilter = e => {
-            this.setState({ log_filter: /e.currentTarget.value/ });
+            this.setState({ log_filter: new RegExp(e.currentTarget.value) });
         }
         
 
@@ -173,7 +185,7 @@ export class ToolsPage extends Component {
 
                     <button type="button" onClick={setLoggingLevel}>SET</button>   
 
-                    FILTER (regex): 
+                    FILTER (regex):
                     <input type='text' value={this.state.log_filter.toString()} onChange={setLogFilter}></input>
                 </div>
                 <div style="width: 100%; height: 200px; overflow-y: scroll; border: 1px solid gray; margin-bottom: 10px;">
@@ -181,7 +193,9 @@ export class ToolsPage extends Component {
                         if (this.state.log_filter && !this.state.log_filter.test(log)) return false;
                         return true;
                     }).map(log => {
-                        const decorated = ansi.ansi_to_html(log);
+                        const decorated = ansi.ansi_to_html(log).replace(/.*? \((.*?)\).*/,  function(match, $1, offset, str) {
+                            return str.replace($1, dhm(parseInt($1)));
+                        });
                         return (<div dangerouslySetInnerHTML={{__html: decorated}}></div>);
                     })}
                 </div>

@@ -8,11 +8,13 @@ class Plugin;
 class Controller_Notify_Handler {
   public:
     Controller_Notify_Handler() {};
-    virtual uint8_t operator()(Plugin *p, uint8_t var_id, void *val, uint8_t val_type) = 0;
+    virtual uint8_t operator()(Plugin *p, uint8_t var_id, void *val, uint8_t val_type, bool shouldNotify) = 0;
+    virtual uint8_t operator()(Plugin *p, uint8_t var_id) = 0;
 };
 
 
-void notify(Plugin *p, uint8_t var_id, void *val, uint8_t val_type);
+void notify(Plugin *p, uint8_t var_id, void *val, uint8_t val_type, bool shouldNotify);
+void registerState(Plugin *p, uint8_t var_id, void *val);
 void update(uint8_t device_id, uint8_t var_id, void *val, uint8_t val_type);
 
 int8_t findVarIdByName(Plugin *p, char *var_name);

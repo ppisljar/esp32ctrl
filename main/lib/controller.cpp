@@ -12,9 +12,15 @@ void registerController(Controller_Notify_Handler* handler) {
     handlers[last_id++] = handler;
 }
 
-void notify(Plugin *p, uint8_t var_id, void *val, uint8_t val_type) {
+void registerState(Plugin *p, uint8_t var_id, void *val) {
     for (uint8_t i = 0; i < last_id; i++) {
-        (*handlers[i])(p, var_id, val, val_type);
+        (*handlers[i])(p, var_id);
+    }
+}
+
+void notify(Plugin *p, uint8_t var_id, void *val, uint8_t val_type, bool shouldNotify) {
+    for (uint8_t i = 0; i < last_id; i++) {
+        (*handlers[i])(p, var_id, val, val_type, shouldNotify);
     }
 }
 

@@ -9,8 +9,10 @@
 #include "lwip/err.h"
 #include "lwip/apps/sntp.h"
 #include "c003_wifi.h"
+#include "c004_timers.h"
 
 extern WiFiPlugin *wifi_plugin;
+extern esp_err_t soft_timer(std::function<void()> fn, int32_t delay, bool repeat);
 
 class NTPPlugin: public Plugin {
     private:
@@ -18,6 +20,7 @@ class NTPPlugin: public Plugin {
         time_t current_time;
         Type current_time_t = Type::integer;
     public:
+        bool hasTime = false;
         DEFINE_PLUGIN(NTPPlugin);
         void getTime(const char *);
 };

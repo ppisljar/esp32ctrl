@@ -161,7 +161,7 @@ void DimmerPlugin::setStateVarPtr_(int n, void* val, Type t, bool shouldNotify) 
     if (n > 8) return;
     convert(&state[n], Type::byte, val, t);
     dimmer_pins[n]->delay = 4 * state[n];
-    if (shouldNotify) notify(this, n, &state[n], Type::byte); 
+    notify(this, n, &state[n], Type::byte, shouldNotify);
 }
 
 

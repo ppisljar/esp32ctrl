@@ -28,6 +28,7 @@ class InputSwitch extends Device {
 
             'state.values[0].name': 'Switch',
             'state.values[0].type': '0',
+            'state.values[0].meta_type': 'switch',
 
         }
     }

@@ -45,7 +45,7 @@ static void user_event_handler(void* handler_args, esp_event_base_t base, int32_
     uint8_t *data =  (uint8_t*)event_data;
     uint16_t event_id = *((uint16_t*)data);
     uint8_t data_len = data[2];
-    ESP_LOGD(TAG_RE, "user event triggered: %p : %d with %d bytes of data", data, event_id, data_len);
+    ESP_LOGI(TAG_RE, "user event triggered: %p : %d with %d bytes of data", data, event_id, data_len);
     if (event_id < 1024) {
         auto event = event_list[event_id];
         if (event != nullptr) {
@@ -55,7 +55,7 @@ static void user_event_handler(void* handler_args, esp_event_base_t base, int32_
             ESP_LOGW(TAG_RE, "invalid event");
         }
     } else {
-        ESP_LOGD(TAG_RE, "sytem event");
+        ESP_LOGI(TAG_RE, "sytem event");
         if (system_events[event_id] != nullptr) {
             run_rule(system_events[event_id], data + 3, data_len, 255);
         }
@@ -518,6 +518,7 @@ void run_rules() {
                 //ESP_LOGI(TAG_RE, "oldid: %d, old: %p, old[0]: %d", oldId, old, old[0]);
                 match = compare(&cmd, var, old);
                 if (match) {
+                    ESP_LOGI(TAG_RE, "variable triggered %d:%d", cmd[1],cmd[2]);
                     start_val = var;
                     start_val_len = 1;
                     cmd--;
@@ -527,14 +528,14 @@ void run_rules() {
                 ESP_LOGD(TAG_RE, "checking timer %d time: %d", cmd[1], timers[cmd[1]]);
                 match = IS_TIMER_TRIGGERED(cmd[1]);
                 if (match) {
-                    ESP_LOGD(TAG_RE, "timer %d triggered, clearing", cmd[1]);
+                    ESP_LOGI(TAG_RE, "timer %d triggered", cmd[1]);
                     CLEAR_TIMER(cmd[1]);
                 }
                 cmd += 2;
                 break;
         }
         if (match) {
-            ESP_LOGI(TAG_RE, "match! executing rule [%x %x %x %x]", cmd[0], cmd[1], cmd[2], cmd[3]);
+            ESP_LOGD(TAG_RE, "rule match! executing rule [%x %x %x %x]", cmd[0], cmd[1], cmd[2], cmd[3]);
             // for each command
             cmd += run_rule(cmd, start_val, (Type)start_val_len);
         }

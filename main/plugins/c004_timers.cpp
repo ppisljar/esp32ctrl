@@ -129,6 +129,7 @@ static void timer_example_evt_task(void *arg)
             if (evt.type == 0) start = rule_engine_hwtimers[evt.id];
             if (evt.type == 1) start = rule_engine_hwinterrupts[evt.id];
             if (start != nullptr) {
+                ESP_LOGI(TAG, "running timers rule");
                 run_rule(start, nullptr, 0, 255);
             }
         }
@@ -260,7 +261,7 @@ struct s_timer {
     bool repeat;
 };
 
-#define MAX_SOFT_TIMERS 5
+#define MAX_SOFT_TIMERS 10
 struct s_timer* soft_timers[MAX_SOFT_TIMERS] = {};
 
 static void soft_timer_callback(void* arg)
@@ -282,7 +283,7 @@ esp_err_t soft_timer(std::function<void()> fn, int32_t delay, bool repeat = fals
             soft_timers[i]->args.callback = &soft_timer_callback;
             soft_timers[i]->args.arg = (void*) i;
             soft_timers[i]->args.name = "soft-timer";
-ESP_LOGI(TAG, "setting function");
+            ESP_LOGI(TAG, "setting function");
             soft_timers[i]->fn = &fn;
 
             ESP_ERROR_CHECK(esp_timer_create(&soft_timers[i]->args, &soft_timers[i]->handle));

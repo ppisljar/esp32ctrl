@@ -6,6 +6,7 @@ export const analog = {
         'state.values[0].name': 'Analog',
         'state.values[0].type': '2',
         'state.values[0].readonly': '1',
+        'state.values[0].meta_type': 'sensor',
     }),
     params: {
         name: 'Settings',

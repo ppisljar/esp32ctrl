@@ -5,6 +5,9 @@
 #include "freertos/FreeRTOS.h"
 #include "driver/timer.h"
 #include "ccronexpr.h"
+#include "c002_ntp.h"
+
+extern NTPPlugin *ntp_plugin;
 
 class CronPlugin: public Plugin {
     

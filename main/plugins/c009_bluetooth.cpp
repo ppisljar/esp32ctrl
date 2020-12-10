@@ -1,25 +1,22 @@
-#ifdef CONFIG_ENABLE_C009
+
 #include "c009_bluetooth.h"
+
+//#ifdef CONFIG_BT_ENABLED
+
 #include "../lib/rule_engine.h"
 #include "../lib/config.h"
 
-#include "esp_bt.h"
-
-#include "esp_gap_ble_api.h"
-#include "esp_gatts_api.h"
-#include "esp_bt_defs.h"
-#include "esp_bt_main.h"
-#include "esp_gatt_common_api.h"
 
 static const char *TAG = "BlueToothPlugin";
 
 extern Plugin* active_plugins[50];
 extern Config* g_cfg;
 
-PLUGIN_CONFIG(BlueToothPlugin, t1_enabled, t2_enabled, t3_enabled, t4_enabled)
+PLUGIN_CONFIG(BlueToothPlugin, bleEnabled, beaconEnabled)
 PLUGIN_STATS(BlueToothPlugin, state, state)
 
 #define GATTS_TAG "GATTS_DEMO"
+#define GATTC_TAG "GATTC_DEMO"
 
 ///Declare the static function
 static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param);
@@ -80,6 +77,17 @@ static esp_ble_adv_data_t adv_data = {
     .p_service_uuid = adv_service_uuid128,
     .flag = (ESP_BLE_ADV_FLAG_GEN_DISC | ESP_BLE_ADV_FLAG_BREDR_NOT_SPT),
 };
+
+
+static esp_ble_scan_params_t ble_scan_params = {
+    .scan_type              = BLE_SCAN_TYPE_ACTIVE,
+    .own_addr_type          = BLE_ADDR_TYPE_PUBLIC,
+    .scan_filter_policy     = BLE_SCAN_FILTER_ALLOW_ALL,
+    .scan_interval          = 0x50,
+    .scan_window            = 0x30,
+    .scan_duplicate         = BLE_SCAN_DUPLICATE_DISABLE
+};
+
 // scan response data
 static esp_ble_adv_data_t scan_rsp_data = {
     .set_scan_rsp = true,
@@ -103,7 +111,7 @@ static esp_ble_adv_params_t adv_params = {};
 
 #define PROFILE_NUM 1
 #define PROFILE_A_APP_ID 0
-#define PROFILE_B_APP_ID 1
+#define PROFILE_B_APP_ID 0
 
 struct gatts_char {
     uint16_t char_handle;
@@ -130,9 +138,21 @@ struct gatts_profile_inst {
     struct gatts_service *services;
 };
 
+struct gattc_profile_inst {
+    esp_gattc_cb_t gattc_cb;
+    uint16_t gattc_if;
+    uint16_t app_id;
+    uint16_t conn_id;
+    uint16_t service_start_handle;
+    uint16_t service_end_handle;
+    uint16_t char_handle;
+    esp_bd_addr_t remote_bda;
+};
+
 
 /* One gatt-based profile one app_id and one gatts_if, this array will store the gatts_if returned by ESP_GATTS_REG_EVT */
 static struct gatts_profile_inst gl_profile_tab[PROFILE_NUM] = {};
+static struct gattc_profile_inst client_profile_tab[1] = {};
 
 typedef struct {
     uint8_t                 *prepare_buf;
@@ -145,9 +165,95 @@ static prepare_type_env_t b_prepare_write_env;
 void example_write_event_env(esp_gatt_if_t gatts_if, prepare_type_env_t *prepare_write_env, esp_ble_gatts_cb_param_t *param);
 void example_exec_write_event_env(prepare_type_env_t *prepare_write_env, esp_ble_gatts_cb_param_t *param);
 
+typedef struct {
+    uint8_t bda[6];
+    char name[50];
+    int16_t rssi;
+} scan_result_t;
+
+static scan_result_t scan_results[10];
+
+scan_result_t* find_scan_result(esp_bd_addr_t bda) {
+    for (int i = 0; i < 10; i++) {
+        if (memcmp(scan_results[i].bda, bda, 6) == 0) {
+            return &scan_results[i];
+        }
+        if (scan_results[i].bda[0] == 0 && scan_results[i].bda[1] == 0 && scan_results[i].bda[2] == 0 &&
+            scan_results[i].bda[3] == 0 && scan_results[i].bda[4] == 0 && scan_results[i].bda[5] == 0) {
+            memcpy(scan_results[i].bda, bda, 6);
+            scan_results[i].rssi = -1000;
+            return &scan_results[i];
+        }
+    }
+
+    return nullptr;
+}
+
+void clear_scan_results() {
+    for (int i = 0; i < 10; i++) {
+        for (int j = 0; j < 6; j++) scan_results[i].bda[j] = 0;
+        scan_results[i].name[0] = 0;
+        scan_results[i].rssi = 0;
+    }
+}
+
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
+    uint8_t *adv_name = NULL;
+    uint8_t adv_name_len = 0;
     switch (event) {
+    case ESP_GAP_BLE_SCAN_PARAM_SET_COMPLETE_EVT: {
+         //the unit of the duration is second
+         uint32_t duration = 15;
+         esp_ble_gap_start_scanning(duration);
+         clear_scan_results();
+         break;
+     }
+     case ESP_GAP_BLE_SCAN_START_COMPLETE_EVT:
+         //scan start complete event to indicate scan start successfully or failed
+         if (param->scan_start_cmpl.status != ESP_BT_STATUS_SUCCESS) {
+             ESP_LOGE(GATTC_TAG, "scan start failed, error status = %x", param->scan_start_cmpl.status);
+             break;
+         }
+         ESP_LOGI(GATTC_TAG, "scan start success");
+
+         break;
+     case ESP_GAP_BLE_SCAN_RESULT_EVT: {
+        ESP_LOGI(GATTC_TAG, "scan result event");
+         esp_ble_gap_cb_param_t *scan_result = (esp_ble_gap_cb_param_t *)param;
+         switch (scan_result->scan_rst.search_evt) {
+         case ESP_GAP_SEARCH_INQ_RES_EVT: {
+             //esp_log_buffer_hex(GATTC_TAG, scan_result->scan_rst.bda, 6);
+             ESP_LOGI(GATTC_TAG, "found device at %02x:%02x:%02x:%02x:%02x:%02x: type: %d, rssi: %d, nr: %d",
+                scan_result->scan_rst.bda[0], scan_result->scan_rst.bda[1], scan_result->scan_rst.bda[2],
+                scan_result->scan_rst.bda[3], scan_result->scan_rst.bda[4], scan_result->scan_rst.bda[5],
+                scan_result->scan_rst.dev_type, scan_result->scan_rst.rssi, scan_result->scan_rst.num_resps);
+
+
+             scan_result_t* result = find_scan_result(scan_result->scan_rst.bda);
+             if (result->rssi < scan_result->scan_rst.rssi) {
+                result->rssi = scan_result->scan_rst.rssi;
+             }
+
+             ESP_LOGI(GATTC_TAG, "searched Adv Data Len %d, Scan Response Len %d", scan_result->scan_rst.adv_data_len, scan_result->scan_rst.scan_rsp_len);
+             adv_name = esp_ble_resolve_adv_data(scan_result->scan_rst.ble_adv, ESP_BLE_AD_TYPE_NAME_CMPL, &adv_name_len);
+             ESP_LOGI(GATTC_TAG, "searched Device Name Len %d", adv_name_len);
+             esp_log_buffer_char(GATTC_TAG, adv_name, adv_name_len);
+
+             memcpy(result->name, adv_name, adv_name_len);
+
+             ESP_LOGI(GATTC_TAG, "\n");
+             break;
+         } case ESP_GAP_SEARCH_INQ_CMPL_EVT:
+             ESP_LOGI(GATTC_TAG, "scan complete");
+             break;
+         default:
+             break;
+         }
+         break;
+     }
+
+
 // #ifdef CONFIG_SET_RAW_ADV_DATA
     case ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT:
         adv_config_done &= (~adv_config_flag);
@@ -181,12 +287,20 @@ static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param
             ESP_LOGE(GATTS_TAG, "Advertising start failed\n");
         }
         break;
+    case ESP_GAP_BLE_SCAN_STOP_COMPLETE_EVT:
+        if (param->scan_stop_cmpl.status != ESP_BT_STATUS_SUCCESS){
+            ESP_LOGE(GATTC_TAG, "scan stop failed, error status = %x", param->scan_stop_cmpl.status);
+            break;
+        }
+        ESP_LOGI(GATTC_TAG, "stop scan successfully");
+        break;
     case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT:
         if (param->adv_stop_cmpl.status != ESP_BT_STATUS_SUCCESS) {
             ESP_LOGE(GATTS_TAG, "Advertising stop failed\n");
-        } else {
-            ESP_LOGI(GATTS_TAG, "Stop adv successfully\n");
+            break;
         }
+        ESP_LOGI(GATTS_TAG, "Stop adv successfully\n");
+
         break;
     case ESP_GAP_BLE_UPDATE_CONN_PARAMS_EVT:
          ESP_LOGI(GATTS_TAG, "update connection params status = %d, min_int = %d, max_int = %d,conn_int = %d,latency = %d, timeout = %d",
@@ -271,6 +385,7 @@ void example_write_event_env(esp_gatt_if_t gatts_if, prepare_type_env_t *prepare
             memcpy(gl_profile_tab[PROFILE_A_APP_ID].services[service_id].chars[char_id].value.attr_value, param->write.value, param->write.len);
             esp_ble_gatts_send_response(gatts_if, param->write.conn_id, param->write.trans_id, status, NULL);
             if (rule_engine_bluetooth_triggers[char_id] != nullptr) {
+                ESP_LOGI(TAG, "running rule");
                 run_rule(rule_engine_bluetooth_triggers[char_id], gl_profile_tab[PROFILE_A_APP_ID].services[service_id].chars[char_id].value.attr_value, param->write.len, 255);
             }
             
@@ -290,6 +405,46 @@ void example_exec_write_event_env(prepare_type_env_t *prepare_write_env, esp_ble
         prepare_write_env->prepare_buf = NULL;
     }
     prepare_write_env->prepare_len = 0;
+}
+
+#define MIN(x, y) ((x > y) ? y : x);
+#define MAX(x, y) ((x > y) ? x : y);
+
+bool bluetoothConnectionReady = false;
+bool bluetoothDataReady = false;
+uint8_t* bluetoothData;
+uint8_t bluetoothDataLength;
+
+static void gatts_profile_b_event_handler(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param) {
+    switch (event) {
+    case ESP_GATTC_CONNECT_EVT: {
+       ESP_LOGI(GATTC_TAG, "ESP_GATTC_CONNECT_EVT conn_id %d, if %d", param->connect.conn_id, gattc_if);
+       client_profile_tab[PROFILE_B_APP_ID].conn_id = param->connect.conn_id;
+       memcpy(client_profile_tab[PROFILE_B_APP_ID].remote_bda, param->connect.remote_bda, sizeof(esp_bd_addr_t));
+       ESP_LOGI(GATTC_TAG, "REMOTE BDA:");
+       esp_log_buffer_hex(GATTC_TAG, client_profile_tab[PROFILE_B_APP_ID].remote_bda, sizeof(esp_bd_addr_t));
+       esp_err_t mtu_ret = esp_ble_gattc_send_mtu_req (gattc_if, param->connect.conn_id);
+        break;
+    }
+    case ESP_GATTC_DIS_SRVC_CMPL_EVT:
+        if (param->dis_srvc_cmpl.status != ESP_GATT_OK){
+            ESP_LOGE(GATTC_TAG, "discover service failed, status %d", param->dis_srvc_cmpl.status);
+            break;
+        }
+        ESP_LOGI(GATTC_TAG, "discover service complete conn_id %d", param->dis_srvc_cmpl.conn_id);
+        bluetoothConnectionReady = true;
+        //esp_ble_gattc_search_service(gattc_if, param->cfg_mtu.conn_id, &remote_filter_service_uuid);
+        break;
+    case ESP_GATTC_CFG_MTU_EVT:
+        ESP_LOGI(GATTS_TAG, "ESP_GATTS_MTU_EVT, MTU %d", param->cfg_mtu.mtu);
+        break;
+
+
+    default:
+        ESP_LOGI(GATTC_TAG, "event: %d ", event);
+        break;
+    }
+
 }
 
 static void gatts_profile_a_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_if, esp_ble_gatts_cb_param_t *param) {
@@ -555,6 +710,189 @@ static void gatts_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_t gatts_
     } while (0);
 }
 
+static void esp_gattc_cb(esp_gattc_cb_event_t event, esp_gatt_if_t gattc_if, esp_ble_gattc_cb_param_t *param)
+{
+    /* If event is register event, store the gattc_if for each profile */
+    if (event == ESP_GATTC_REG_EVT) {
+        if (param->reg.status == ESP_GATT_OK) {
+            client_profile_tab[param->reg.app_id].gattc_if = gattc_if;
+        } else {
+            ESP_LOGI(GATTC_TAG, "reg app failed, app_id %04x, status %d",
+                    param->reg.app_id,
+                    param->reg.status);
+            return;
+        }
+    }
+
+    /* If the gattc_if equal to profile A, call profile A cb handler,
+     * so here call each profile's callback */
+    do {
+        int idx;
+        for (idx = 0; idx < PROFILE_NUM; idx++) {
+            if (gattc_if == ESP_GATT_IF_NONE || /* ESP_GATT_IF_NONE, not specify a certain gatt_if, need to call every profile cb function */
+                    gattc_if == client_profile_tab[idx].gattc_if) {
+                if (client_profile_tab[idx].gattc_cb) {
+                    client_profile_tab[idx].gattc_cb(event, gattc_if, param);
+                }
+            }
+        }
+    } while (0);
+}
+
+static int8_t level;
+static int8_t lastLevel;
+static void json_init() {
+  level = 0;
+  lastLevel = -1;
+}
+
+static void json_quote_name(httpd_req_t *req, const char* val) {
+  if (lastLevel == level) httpd_resp_sendstr_chunk(req, ",");
+  if (strlen(val) > 0) {
+    httpd_resp_sendstr_chunk(req, "\"");
+    httpd_resp_sendstr_chunk(req, val);
+    httpd_resp_sendstr_chunk(req, "\"");
+    httpd_resp_sendstr_chunk(req, ":");
+  }
+}
+
+static void json_quote_val_prop(httpd_req_t *req, const char* val) {
+  if (lastLevel == level) httpd_resp_sendstr_chunk(req, ",");
+  httpd_resp_sendstr_chunk(req, "\"");
+  httpd_resp_sendstr_chunk(req, val);
+  httpd_resp_sendstr_chunk(req, "\"");
+  lastLevel = level;
+}
+
+static void json_val_prop(httpd_req_t *req, const char* val) {
+  if (lastLevel == level) httpd_resp_sendstr_chunk(req, ",");
+  httpd_resp_sendstr_chunk(req, val);
+  lastLevel = level;
+}
+
+static void json_quote_val(httpd_req_t *req, const char* val) {
+  httpd_resp_sendstr_chunk(req, "\"");
+  httpd_resp_sendstr_chunk(req, val);
+  httpd_resp_sendstr_chunk(req, "\"");
+}
+
+static void json_val(httpd_req_t *req, const char* val) {
+  httpd_resp_sendstr_chunk(req, val);
+}
+
+static void json_open(httpd_req_t *req, bool arr = false, const char* name = "") {
+  json_quote_name(req, name);
+  httpd_resp_sendstr_chunk(req, arr ? "[" : "{");
+  lastLevel = level;
+  level++;
+}
+
+static void json_close(httpd_req_t *req, bool arr = false) {
+  httpd_resp_sendstr_chunk(req, arr ? "]" : "}");
+  level--;
+  lastLevel = level;
+}
+
+static void json_number(httpd_req_t *req, const char* name, const char* value) {
+  json_quote_name(req, name);
+  httpd_resp_sendstr_chunk(req, value);
+  lastLevel = level;
+}
+
+static void json_prop(httpd_req_t *req, const char* name, const char* value) {
+  json_quote_name(req, name);
+  json_quote_val(req, value);
+  lastLevel = level;
+}
+
+static esp_err_t blescan_webhandler(httpd_req_t *req) {
+    esp_err_t scan_ret = esp_ble_gap_set_scan_params(&ble_scan_params);
+    if (scan_ret){
+        ESP_LOGE(GATTC_TAG, "set scan params error, error code = %x", scan_ret);
+    }
+
+    // wait for scan to complete
+    vTaskDelay(15000 / portTICK_PERIOD_MS);
+
+    // return the results
+    json_init();
+    json_open(req, true);
+
+    char name[5];
+    for (uint8_t i = 0; i < 10; i++) {
+        if (memcmp(scan_results[i].bda, "\0\0\0\0\0\0", 6) == 0) break;
+        json_open(req);
+        json_open(req, true, "bda");
+        for(int j = 0; j < 6; j++) {
+            sprintf(name, "%02x", scan_results[i].bda[j]);
+            json_val_prop(req, name);
+        }
+        json_close(req, true);
+        json_prop(req, "name",  scan_results[i].name[0] == 0 ? "-" : scan_results[i].name);
+        sprintf(name, "%02x", scan_results[i].rssi);
+        json_number(req, "rssi", name);
+        json_close(req);
+    }
+
+    json_close(req, true);
+
+    httpd_resp_sendstr_chunk(req, NULL);
+
+    return ESP_OK;
+}
+
+// performs a scan for bluetooth LE devices
+void BlueToothPlugin::scanDevices() {
+
+}
+
+// reads a device/service/char
+bool semaphore = false;
+void BlueToothPlugin::readDevice(esp_bd_addr_t addr, esp_bt_uuid_t service, esp_bt_uuid_t charr, char* result, uint8_t length) {
+    if (semaphore) {
+        ESP_LOGE(TAG, "already running!!");
+        return;
+    }
+    semaphore = true;
+    bluetoothConnectionReady = false;
+    bluetoothDataReady = false;
+    bluetoothData = (uint8_t*)result;
+    bluetoothDataLength = length;
+
+    esp_ble_gattc_open(client_profile_tab[PROFILE_B_APP_ID].gattc_if, addr, (esp_ble_addr_type_t)2, true);
+
+    // semaphore connection open and discovery complete
+    while (!bluetoothConnectionReady) {
+        vTaskDelay( 100 / portTICK_PERIOD_MS);
+    }
+
+    esp_gattc_char_elem_t* char_elem_result = (esp_gattc_char_elem_t *)malloc(sizeof(esp_gattc_char_elem_t));
+    uint16_t l = 1;
+    esp_ble_gattc_get_char_by_uuid(client_profile_tab[PROFILE_B_APP_ID].gattc_if, client_profile_tab[PROFILE_B_APP_ID].conn_id, 0, 0xffff, charr, char_elem_result, &l);
+    esp_ble_gattc_read_char(client_profile_tab[PROFILE_B_APP_ID].gattc_if, client_profile_tab[PROFILE_B_APP_ID].conn_id, char_elem_result[0].char_handle, ESP_GATT_AUTH_REQ_NONE);
+
+    while(!bluetoothDataReady) {
+        vTaskDelay( 100 / portTICK_PERIOD_MS);
+    }
+
+    semaphore = false;
+}
+
+// writes to device/service/char
+void BlueToothPlugin::writeDevice() {
+
+}
+
+// adds a device/service/char to read periodically
+void BlueToothPlugin::registerDevice() {
+
+}
+
+// bluetooth plugin
+// enables bluetooth (config/bluetooth/enabled)
+// enables bluetooth beacon, which can emit any device value (or TODO: name)
+// enables bluetooth LE device with a list of services (values) that can be controlled
+// exposes API for other plugins to connect to other bluetooth LE devices and capture beacons
 bool BlueToothPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params);
     state_cfg = &((JsonArray &)params["state"]);
@@ -566,28 +904,33 @@ bool BlueToothPlugin::init(JsonObject &params) {
     adv_params.channel_map = ADV_CHNL_ALL;
     adv_params.adv_filter_policy = ADV_FILTER_ALLOW_SCAN_ANY_CON_ANY;
 
-    if ((*cfg)["beacon"]["type"] == "custom") {
-        JsonArray &vals = params["server"]["values"];// service["chars"];
-        if (vals.size() == 0) {
-            ESP_LOGW(GATTS_TAG, "no beacon info defined");
-            return false;
-        }
+    if ((*cfg)["beacon"]["enabled"] == true) {
+        if ((*cfg)["beacon"]["type"] == "custom") {
+            JsonArray &vals = params["server"]["values"];// service["chars"];
+            if (vals.size() == 0) {
+                ESP_LOGW(GATTS_TAG, "no beacon info defined");
+                return false;
+            }
 
-        strncpy((char*)raw_adv_data, g_cfg->getUnitName(), 12);
-        raw_adv_data[11] = 0;
-        uint8_t b = 12;
-        for (auto v : vals) {
-            uint8_t device = v["device"];
-            uint8_t value = v["value"];
-            Type t;
-            void* ptr = active_plugins[device]->getStateVarPtr(value, &t);
-            convert((char*)raw_adv_data + b, (Type)(t < 4 ? 4: t), ptr, t);
-            b += t < 4 ? (t == 0 ? 1 : 4)  : t;
-            //raw_adv_data[b++] = *ptr;
+            strncpy((char*)raw_adv_data, g_cfg->getUnitName(), 12);
+            raw_adv_data[11] = 0;
+            uint8_t b = 12;
+            for (auto v : vals) {
+                uint8_t device = v["device"];
+                uint8_t value = v["value"];
+                Type t;
+                void* ptr = active_plugins[device]->getStateVarPtr(value, &t);
+                convert((char*)raw_adv_data + b, (Type)(t < 4 ? 4: t), ptr, t);
+                b += t < 4 ? (t == 0 ? 1 : 4)  : t;
+                //raw_adv_data[b++] = *ptr;
+            }
+        } else {
+            // todo: name beacon
+
         }
     }
-
-    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT));
+    
+    ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_CLASSIC_BT)); // we are not using classic bt yet, so release the memory
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     esp_err_t ret = esp_bt_controller_init(&bt_cfg);
@@ -612,74 +955,93 @@ bool BlueToothPlugin::init(JsonObject &params) {
         return ESP_FAIL;
     }
 
-    gl_profile_tab[0].gatts_cb = gatts_profile_a_event_handler;
-    gl_profile_tab[0].gatts_if = ESP_GATT_IF_NONE;
-
-    JsonArray &services = params["services"];
-    gl_profile_tab[0].services = new gatts_service[1];//new gatts_service[services.size()];
-
-    uint i = 0;
-    //for (auto service : services) {
-        gl_profile_tab[PROFILE_A_APP_ID].services[i].service_id.is_primary = true;
-        gl_profile_tab[PROFILE_A_APP_ID].services[i].service_id.id.inst_id = 0x00;
-        gl_profile_tab[PROFILE_A_APP_ID].services[i].service_id.id.uuid.len = ESP_UUID_LEN_16;
-        gl_profile_tab[PROFILE_A_APP_ID].services[i].service_id.id.uuid.uuid.uuid16 = i;
-
-        JsonArray &chars = params["server"]["values"];// service["chars"];
-        if (chars.size() == 0) {
-            ESP_LOGW(GATTS_TAG, "no characteristics defined on a service");
-            return false;
-        }
-        
-        gl_profile_tab[0].services[i].chars = new gatts_char[chars.size()];
-        gl_profile_tab[0].services[i].chars_len = chars.size();
-
-        uint j = 0;
-        for (auto c : chars) {
-            gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j] = {};
-            gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].char_uuid.len = ESP_UUID_LEN_16;
-            gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].char_uuid.uuid.uuid16 = j;
-
-            uint8_t c_size = c["size"] | 1;
-
-            ESP_LOGI(GATTS_TAG, "adding characteristic %d:%d with size %d", i, j, c_size);
-            gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].value = {};
-            gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].value.attr_max_len = c_size;
-            gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].value.attr_len = c_size;
-            uint8_t *val_buf = (uint8_t*)malloc(c_size);
-            memset(val_buf, 0, c_size);
-            gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].value.attr_value = val_buf;
-            j++;
-        }
-    //     i++;
-    // }
-
-    ret = esp_ble_gatts_register_callback(gatts_event_handler);
+    ret = esp_ble_gattc_register_callback(esp_gattc_cb);
     if (ret){
-        ESP_LOGE(GATTS_TAG, "gatts register error, error code = %x", ret);
+        ESP_LOGE(GATTS_TAG, "gattc register error, error code = %x", ret);
         return ESP_FAIL;
     }
+
     ret = esp_ble_gap_register_callback(gap_event_handler);
     if (ret){
         ESP_LOGE(GATTS_TAG, "gap register error, error code = %x", ret);
         return ESP_FAIL;
     }
-    ret = esp_ble_gatts_app_register(PROFILE_A_APP_ID);
+
+    // profile B app is used to handling plugin API
+    client_profile_tab[0].gattc_cb = gatts_profile_b_event_handler;
+    client_profile_tab[0].gattc_if = ESP_GATT_IF_NONE;
+    ret = esp_ble_gattc_app_register(0);
     if (ret){
         ESP_LOGE(GATTS_TAG, "gatts app register error, error code = %x", ret);
         return ESP_FAIL;
     }
-    // ret = esp_ble_gatts_app_register(PROFILE_B_APP_ID);
-    // if (ret){
-    //     ESP_LOGE(GATTS_TAG, "gatts app register error, error code = %x", ret);
-    //     return;
-    // }
+
+    // enable BLE device
+    if ((*cfg)["server"]["enabled"] == true) {
+        ret = esp_ble_gatts_register_callback(gatts_event_handler);
+        if (ret){
+            ESP_LOGE(GATTS_TAG, "gatts register error, error code = %x", ret);
+            return ESP_FAIL;
+        }
+        
+        gl_profile_tab[PROFILE_A_APP_ID].gatts_cb = gatts_profile_a_event_handler;
+        gl_profile_tab[PROFILE_A_APP_ID].gatts_if = ESP_GATT_IF_NONE;
+
+        JsonArray &services = params["services"];
+        gl_profile_tab[PROFILE_A_APP_ID].services = new gatts_service[1];//new gatts_service[services.size()];
+
+        uint i = 0;
+        //for (auto service : services) {
+            gl_profile_tab[PROFILE_A_APP_ID].services[i].service_id.is_primary = true;
+            gl_profile_tab[PROFILE_A_APP_ID].services[i].service_id.id.inst_id = 0x00;
+            gl_profile_tab[PROFILE_A_APP_ID].services[i].service_id.id.uuid.len = ESP_UUID_LEN_16;
+            gl_profile_tab[PROFILE_A_APP_ID].services[i].service_id.id.uuid.uuid.uuid16 = i;
+
+            JsonArray &chars = params["server"]["values"];// service["chars"];
+            if (chars.size() == 0) {
+                ESP_LOGW(GATTS_TAG, "no characteristics defined on a service");
+                return false;
+            }
+            
+            gl_profile_tab[PROFILE_A_APP_ID].services[i].chars = new gatts_char[chars.size()];
+            gl_profile_tab[PROFILE_A_APP_ID].services[i].chars_len = chars.size();
+
+            uint j = 0;
+            for (auto c : chars) {
+                gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j] = {};
+                gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].char_uuid.len = ESP_UUID_LEN_16;
+                gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].char_uuid.uuid.uuid16 = j;
+
+                uint8_t c_size = c["size"] | 1;
+
+                ESP_LOGI(GATTS_TAG, "adding characteristic %d:%d with size %d", i, j, c_size);
+                gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].value = {};
+                gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].value.attr_max_len = c_size;
+                gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].value.attr_len = c_size;
+                uint8_t *val_buf = (uint8_t*)malloc(c_size);
+                memset(val_buf, 0, c_size);
+                gl_profile_tab[PROFILE_A_APP_ID].services[i].chars[j].value.attr_value = val_buf;
+                j++;
+            }
+            i++;
+        // }
+
+        
+        ret = esp_ble_gatts_app_register(PROFILE_A_APP_ID);
+        if (ret){
+            ESP_LOGE(GATTS_TAG, "gatts app register error, error code = %x", ret);
+            return ESP_FAIL;
+        }
+    }
+
     esp_err_t local_mtu_ret = esp_ble_gatt_set_local_mtu(500);
     if (local_mtu_ret){
         ESP_LOGE(GATTS_TAG, "set local  MTU failed, error code = %x", local_mtu_ret);
     }
 
+    http_quick_register("/ble_scan", HTTP_GET, blescan_webhandler, this);
+
     return true;
 }
 
-#endif
+//#endif

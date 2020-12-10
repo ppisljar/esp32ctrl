@@ -19,7 +19,17 @@ void NTPPlugin::getTime(const char* host) {
         ESP_LOGI(C002_TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
         time(&now);
+
         localtime_r(&now, &timeinfo);
+    }
+
+    // TODO: if it fails try again later
+
+    if (timeinfo.tm_year > (2016 - 1900)) {
+        char strftime_buf[64];
+        strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
+        ESP_LOGI(C002_TAG, "Time is set, current date/time is: %s", strftime_buf);
+        hasTime = true;
     }
 }
 
@@ -41,6 +51,8 @@ bool NTPPlugin::init(JsonObject &params) {
     time_t now;
     struct tm timeinfo;
     time(&now);
+    setenv("TZ", params["timezone"].as<char*>(), 1);
+    tzset();
     localtime_r(&now, &timeinfo);
 
     // we need to wait for wifi (or make ip readable directly from wifi)
@@ -49,22 +61,16 @@ bool NTPPlugin::init(JsonObject &params) {
         ESP_LOGI(C002_TAG, "Waiting for wifi ... (%d/%d)", retry++, retry_count);
         vTaskDelay(2000 / portTICK_PERIOD_MS);
     }
+
     // TODO: if wifi is not available on boot, or we can't reach ntp server on boot we should try to recover at a later time
-
-    if (always || timeinfo.tm_year < (2016 - 1900)) {
-        ESP_LOGI(C002_TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
+    if (wifi_plugin->status.local_ip == 0) {
+        ESP_LOGI(C002_TAG, "setting soft timer to retry after 1 hour");
+        soft_timer([=](){
+            getTime(host);
+        }, 60 * 60 * 1000, false);
+    } else {
         getTime(host);
-        time(&now);
     }
-
-    char strftime_buf[64];
-
-    // Set timezone to Eastern Standard Time and print local time
-    setenv("TZ", params["timezone"].as<char*>(), 1);
-    tzset();
-    localtime_r(&now, &timeinfo);
-    strftime(strftime_buf, sizeof(strftime_buf), "%c", &timeinfo);
-    ESP_LOGI(C002_TAG, "The current date/time is: %s", strftime_buf);
 
     return true;
 }
