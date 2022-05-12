@@ -24,6 +24,10 @@ folder strucure:
 
 
 
+troubleshooting:
+-- manually uploading update file:
+curl --data-binary "@/path/to/esp32ctrl/build/file_server.bin" http://host/update
+
 TODO:
 - set config -> server side
 -- rule engine

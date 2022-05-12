@@ -13863,6 +13863,38 @@ const MotorDriver = {
 
 /***/ }),
 
+/***/ "./src/devices/25_analog_output.js":
+/*!*****************************************!*\
+  !*** ./src/devices/25_analog_output.js ***!
+  \*****************************************/
+/*! exports provided: AnalogOutput */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AnalogOutput", function() { return AnalogOutput; });
+/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../lib/utils */ "./src/lib/utils.js");
+
+const AnalogOutput = {
+  defaults: () => ({
+    'state.values[0].name': 'Output',
+    'state.values[0].type': '1'
+  }),
+  params: {
+    name: 'Configuration',
+    configs: {
+      gpio: {
+        name: 'GPIO',
+        type: 'gpio',
+        pins: () => window.io_pins.getPins('digital_out').filter(pin => pin.value == 25 || pin.value == 26)
+      }
+    }
+  },
+  vals: 1
+};
+
+/***/ }),
+
 /***/ "./src/devices/2_dht.js":
 /*!******************************!*\
   !*** ./src/devices/2_dht.js ***!
@@ -14076,10 +14108,12 @@ const analog = {
   defaults: () => ({
     'params.gpio': 255,
     'params.interval': 60,
+    'params.samples': 1,
     'state.values[0].name': 'Analog',
     'state.values[0].type': '2',
     'state.values[0].readonly': '1',
-    'state.values[0].meta_type': 'sensor'
+    'state.values[0].device_class': 'current',
+    'state.values[0].unit': 'A'
   }),
   params: {
     name: 'Settings',
@@ -14094,6 +14128,22 @@ const analog = {
         type: 'number',
         min: 0,
         max: 3600 * 24
+      },
+      notify_interval: {
+        name: 'Notify interval',
+        type: 'number',
+        min: 0,
+        max: 3600 * 24
+      },
+      ac: {
+        name: 'Average AC',
+        type: 'checkbox'
+      },
+      samples: {
+        name: 'Samples',
+        type: 'number',
+        min: 1,
+        max: 1000
       }
     }
   },
@@ -14439,6 +14489,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _21_mlx90614__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./21_mlx90614 */ "./src/devices/21_mlx90614.js");
 /* harmony import */ var _22_pid_regulator__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./22_pid_regulator */ "./src/devices/22_pid_regulator.js");
 /* harmony import */ var _23_motor_driver__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./23_motor_driver */ "./src/devices/23_motor_driver.js");
+/* harmony import */ var _25_analog_output__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./25_analog_output */ "./src/devices/25_analog_output.js");
+
 
 
 
@@ -14594,6 +14646,10 @@ const devices = [{
   name: 'Generic - Motor Driver',
   value: 23,
   fields: _23_motor_driver__WEBPACK_IMPORTED_MODULE_21__["MotorDriver"]
+}, {
+  name: 'Generic - Analog Output',
+  value: 25,
+  fields: _25_analog_output__WEBPACK_IMPORTED_MODULE_22__["AnalogOutput"]
 }].sort((a, b) => a.name.localeCompare(b.name));
 
 /***/ }),
@@ -19365,6 +19421,25 @@ const compareValue = type => {
   };
 };
 
+function doubleToByteArray(number) {
+  var buffer = new ArrayBuffer(8); // JS numbers are 8 bytes long, or 64 bits
+
+  var longNum = new Float64Array(buffer); // so equivalent to Float64
+
+  longNum[0] = number;
+  return Array.from(new Uint8Array(buffer)).reverse(); // reverse to get little endian
+}
+
+function bin2String(array) {
+  var result = "";
+
+  for (var i = 0; i < array.length; i++) {
+    result += String.fromCharCode(parseInt(array[i], 2));
+  }
+
+  return result;
+}
+
 const getDeviceNode = device => {
   const deviceNode = {
     group: 'TRIGGERS',
@@ -19460,8 +19535,16 @@ const getDeviceNode = device => {
         eq,
         val
       } = item.params;
+      const d = Object(_lib_utils__WEBPACK_IMPORTED_MODULE_2__["getDeviceById"])(device.id);
+      const valueType = d ? d.state.values[value].type : '';
+      const isBit = valueType == 0;
+      const isInt16 = valueType == 1;
+      const isInt32 = valueType == 2;
+      const isString = valueType == 3;
+      const len = isBit ? 1 : isInt16 ? 254 : isInt32 ? 255 : String.length(val);
+      const convertedVal = isBit ? String.fromCharCode(val) : isInt16 ? 1 : isInt32 ? Object(_helper__WEBPACK_IMPORTED_MODULE_1__["getString"])(doubleToByteArray(val)) : val;
       const comp = eqOptions.findIndex(o => o == eq);
-      const comparison = eq === 'changed' ? `\x00\x01` : `${String.fromCharCode(comp)}\x01${String.fromCharCode(val)}`;
+      const comparison = eq === 'changed' ? `\x00\x01` : `${String.fromCharCode(comp)}${String.fromCharCode(len)}${convertedVal}`;
       return [`\xFF\xFE\x00\xFF\x00${String.fromCharCode(device.id)}${String.fromCharCode(value)}${comparison}%%output%%\xFF`];
     }
   };

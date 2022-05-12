@@ -207,8 +207,6 @@ bool authenticate(httpd_req_t *req){
   return false;
 }
 
-
-
 void requestAuthentication(httpd_req_t *req) {
     ESP_LOGD(TAG, "requesting authentication");
     strcpy(_snonce, "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");

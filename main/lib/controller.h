@@ -9,7 +9,6 @@ class Controller_Notify_Handler {
   public:
     Controller_Notify_Handler() {};
     virtual uint8_t operator()(Plugin *p, uint8_t var_id, void *val, uint8_t val_type, bool shouldNotify) = 0;
-    virtual uint8_t operator()(Plugin *p, uint8_t var_id) = 0;
 };
 
 

@@ -10,7 +10,7 @@
 
 bool string_to_lower(std::string& subject);
 bool replace_string_in_place(std::string& subject, const std::string& search, const std::string& replace);
-void parseStrForVar(std::string& str, Plugin *p, uint8_t var_id, uint8_t val);
+void parseStrForVar(std::string& str, Plugin *p, uint8_t var_id, const char* val);
 void makeHttpRequest(char *url, esp_http_client_method_t method = HTTP_METHOD_GET);
 
 #endif

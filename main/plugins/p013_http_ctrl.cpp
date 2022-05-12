@@ -16,8 +16,15 @@ class HTTP_Notify : public Controller_Notify_Handler {
         };
         uint8_t operator()(Plugin *x, uint8_t var_id, void *val1, uint8_t val_type, bool shouldNotify) {
             if (!shouldNotify) return 0;
-            uint8_t val = *(uint8_t*)val1;
-            ESP_LOGI(TAG, "sending http notification %p %d %d", p, var_id, val);
+
+            std::string val;
+
+            if (val_type == Type::byte) val = std::to_string(*(uint8_t*)val1);
+            if (val_type == Type::integer) val = std::to_string(*(uint16_t*)val1);
+            if (val_type == Type::decimal) val = std::to_string(*(double*)val1);
+
+            ESP_LOGI(TAG, "sending mqtt notification %p %d %s", p, var_id, val.c_str());
+
             JsonObject &cfg = *(p->cfg);
             const char *uri_format = cfg["uri"];
             const char *data_format = cfg["data"];
@@ -25,8 +32,8 @@ class HTTP_Notify : public Controller_Notify_Handler {
             std::string uri_str(uri_format);
             std::string data_str(data_format);
             // // we need to have parse function which will parse the topic/data format and do string replacement for vars
-            parseStrForVar(uri_str, x, var_id, val);
-            parseStrForVar(data_str, x, var_id, val);
+            parseStrForVar(uri_str, x, var_id, val.c_str());
+            parseStrForVar(data_str, x, var_id, val.c_str());
             ESP_LOGI(TAG, "%s\n%s", uri_str.c_str(), data_str.c_str());
 
             p->request(uri_str.c_str(), (esp_http_client_method_t)method, data_str.c_str());
@@ -42,8 +49,8 @@ class HTTP_Notify : public Controller_Notify_Handler {
             std::string uri_str(uri_format);
             std::string data_str(data_format);
             // // we need to have parse function which will parse the topic/data format and do string replacement for vars
-            parseStrForVar(uri_str, x, var_id, 0);
-            parseStrForVar(data_str, x, var_id, 0);
+            parseStrForVar(uri_str, x, var_id, nullptr);
+            parseStrForVar(data_str, x, var_id, nullptr);
             ESP_LOGI(TAG, "%s\n%s", uri_str.c_str(), data_str.c_str());
 
             p->request(uri_str.c_str(), (esp_http_client_method_t)method, data_str.c_str());

@@ -31,6 +31,13 @@ esp_err_t IO::digitalWrite(uint8_t pin, bool value) {
     else return (*(dpin->digital_write))(pin, value);
 }
 
+esp_err_t IO::setDirection(uint8_t pin, uint8_t direction) {
+    auto dpin = getDigitalPin(pin);
+    if (dpin == NULL || dpin->set_direction == NULL) return ESP_FAIL;
+    else return (*(dpin->set_direction))(pin, direction);
+}
+
+
 uint16_t IO::analogRead(uint8_t pin) {
     auto dpin = getDigitalPin(pin);
     if (dpin == NULL || dpin->analog_read == NULL) return 0;
@@ -43,8 +50,8 @@ esp_err_t IO::analogWrite(uint8_t pin, uint16_t value) {
     else return (*(dpin->analog_write))(pin, value);
 }
 
-esp_err_t IO::setDirection(uint8_t pin, uint8_t direction) {
-    auto dpin = getDigitalPin(pin);
-    if (dpin == NULL || dpin->set_direction == NULL) return ESP_FAIL;
-    else return (*(dpin->set_direction))(pin, direction);
+esp_err_t IO::analogInit(uint8_t pin, uint8_t atten) {
+    auto apin = getDigitalPin(pin);
+    if (apin == NULL || apin->analog_init == NULL) return ESP_FAIL;
+    else return (*(apin->analog_init))(pin, atten);
 }

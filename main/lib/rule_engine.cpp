@@ -208,6 +208,48 @@ bool compare(byte** ptr, byte *val, byte *old) {
     byte *cmd = *ptr;
     
     bool match = true;
+
+    if (cmd[1] == 254) {
+        *ptr+= 2 + 2;
+        return false;
+    } // int16
+    if (cmd[1] == 255) { // double
+        switch (cmd[0]) {
+            case 0: // every change
+                ESP_LOGD(TAG_RE, "decimal compare val(%p):%f old(%p):%f", val, *(double*)val, old, *(double*)old);
+                if (*(double*)val == *(double*)old) match = false;
+                break;
+            case 1: // equals
+                ESP_LOGD(TAG_RE, "decimal compare val(%p):%f == :%f", val, *(double*)val, *(double*)(cmd+2));
+                if (*((double*)(cmd+2)) != *(double*)val) match = false;
+                break;
+            case 2: // <
+                ESP_LOGD(TAG_RE, "decimal compare val(%p):%lf < :%lf", val, *(double*)val, *(double*)(cmd+2));
+                if (*(double*)val >= *((double*)(cmd+2))) match = false;
+                break;
+            case 3: // >
+                ESP_LOGD(TAG_RE, "decimal compare val(%p):%lf > :%lf", val, *(double*)val, *(double*)(cmd+2));
+                if (*(double*)val <= *((double*)(cmd+2))) match = false;
+                break;
+            case 4: // <=
+                ESP_LOGD(TAG_RE, "decimal compare val(%p):%f <= :%f", val, *(double*)val, *(double*)(cmd+2));
+                if (*(double*)val > *((double*)(cmd+2))) match = false;
+                break;
+            case 5: // >=
+                ESP_LOGD(TAG_RE, "decimal compare val(%p):%f >= :%f", val, *(double*)val, *(double*)(cmd+2));
+                if (*(double*)val < *((double*)(cmd+2))) match = false;
+                break;
+            case 6: // <>
+                ESP_LOGD(TAG_RE, "decimal compare val(%p):%f <> :%f", val, *(double*)val, *(double*)(cmd+2));
+                if (*((double*)(cmd+2)) == *(double*)val) match = false;
+                break;
+        }
+        
+        *ptr+= 8 + 2;
+        return match;
+    }
+
+    
     for (byte i = 0; i < cmd[1]; i++) {
         switch (cmd[0]) {
             case 0: // every change
@@ -335,7 +377,11 @@ uint8_t run_rule(byte* start, void* start_val, uint8_t start_val_length, uint8_t
                 // CMD_TIMER TIMER_ID TIME TIME
                 int16_t timetowait = (cmd[3] << 8) + cmd[2];
                 ESP_LOGI(TAG_RE, "cmd triggering timer %d time: %ds", cmd[1], timetowait);
-                TRIGGER_TIMER(cmd[1], timetowait*100);
+                if (timetowait == 0) {
+                    CLEAR_TIMER(cmd[1]);
+                } else {
+                    TRIGGER_TIMER(cmd[1], timetowait*100);
+                }
                 cmd += 4;
                 break;
             } case CMD_GET:
@@ -493,26 +539,33 @@ void run_rules() {
         uint16_t oldId;
         Plugin *p;
         byte *var;
+        uint16_t var_16t;
         bool match = false;
         unsigned char *start_val = nullptr;
         uint8_t start_val_len = 0;
 
         switch (cmd[0]) { // trigger type (0: var, 1: event, 2: timer, 3: system
             // device variable
-            case 0:
-                //ESP_LOGI(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
+            case 0: {
+                ESP_LOGD(TAG_RE, "checking variable %d:%d", cmd[1],cmd[2]);
                 p = active_plugins[cmd[1]];
                 if (p == nullptr) continue;
                 var = (uint8_t*)p->getStateVarPtr((int)cmd[2], nullptr);
+
+                // spremenljiv je tip ki ga vrne plugin
+                // pa tud kar vpisem v UI .... byte?, int, double, string, bytes?
+                // v uiju vem tip spremelnjivke in lahko omejim input box + prov nastavim type/length
+                // se prav da bi lahko reseval samo z pravim castanjem pointerjev ?
+
 
                 oldId = cmd[1] * 10 + cmd[2]; // id is id * 10 + varid
                 //ESP_LOGI(TAG_RE, "checking for old id %i", oldId);
                 if (!rule_data_ptrs[oldId]) {
                     //ESP_LOGI(TAG_RE, "old id not found, creating");
                     rule_data_ptrs[oldId] = old_values + old_values_free_ptr;
-                    old_values_free_ptr += cmd[4];
+                    old_values_free_ptr += cmd[4] == 255 ? 8 : cmd[4] == 254 ? 2 : cmd[4];
                 }
-                
+
                 old = (byte*)rule_data_ptrs[oldId];
                 cmd += 3;
                 //ESP_LOGI(TAG_RE, "oldid: %d, old: %p, old[0]: %d", oldId, old, old[0]);
@@ -524,7 +577,7 @@ void run_rules() {
                     cmd--;
                 }
                 break;
-            case 2:
+            } case 2:
                 ESP_LOGD(TAG_RE, "checking timer %d time: %d", cmd[1], timers[cmd[1]]);
                 match = IS_TIMER_TRIGGERED(cmd[1]);
                 if (match) {

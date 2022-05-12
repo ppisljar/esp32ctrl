@@ -1,5 +1,5 @@
 import { settings } from "../../../lib/settings";
-import { generateWidgetComponent } from "./helper";
+import { generateWidgetComponent, getString } from "./helper";
 import { getTaskValues, getTaskValueType, getDeviceById } from "../../../lib/utils";
 
 const eqOptions = ['changed', '=', '<', '>', '<=', '>=', '!='];
@@ -10,6 +10,23 @@ const compareValue = (type) => {
         if (config.params.eq == '') return false;
         return checkValue(config);
     }
+}
+
+function doubleToByteArray(number) {
+    var buffer = new ArrayBuffer(8);         // JS numbers are 8 bytes long, or 64 bits
+    var longNum = new Float64Array(buffer);  // so equivalent to Float64
+
+    longNum[0] = number;
+
+    return Array.from(new Uint8Array(buffer)).reverse();  // reverse to get little endian
+}
+
+function bin2String(array) {
+    var result = "";
+    for (var i = 0; i < array.length; i++) {
+        result += String.fromCharCode(parseInt(array[i], 2));
+    }
+    return result;
 }
 
 const getDeviceNode = (device) => {
@@ -67,8 +84,17 @@ const getDeviceNode = (device) => {
     
         toDsl: (item) => {
             const { value, eq, val } = item.params;
+            const d = getDeviceById(device.id);
+            const valueType = d ? d.state.values[value].type : '';
+            const isBit = valueType == 0;
+            const isInt16 = valueType == 1;
+            const isInt32 = valueType == 2;
+            const isString = valueType == 3;
+
+            const len = isBit ? 1 : isInt16 ? 254 : isInt32 ? 255 : String.length(val);
+            const convertedVal = isBit ? String.fromCharCode(val) : isInt16 ? 1 : isInt32 ? getString(doubleToByteArray(val)) : val;
             const comp = eqOptions.findIndex(o => o == eq);
-            const comparison = eq === 'changed' ? `\x00\x01` : `${String.fromCharCode(comp)}\x01${String.fromCharCode(val)}`;
+            const comparison = eq === 'changed' ? `\x00\x01` : `${String.fromCharCode(comp)}${String.fromCharCode(len)}${convertedVal}`;
             return [`\xFF\xFE\x00\xFF\x00${String.fromCharCode(device.id)}${String.fromCharCode(value)}${comparison}%%output%%\xFF`]; 
         } ,     
     }

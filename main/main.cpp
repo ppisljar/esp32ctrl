@@ -22,7 +22,7 @@ static const char *TAG = "MAIN";
 
 // global config object
 Config *g_cfg;
-Plugin *active_plugins[50];
+Plugin *active_plugins[MAX_PLUGINS];
 WiFiPlugin *wifi_plugin;
 
 
@@ -169,10 +169,10 @@ Plugin* PIDRegulatorPlugin_myProtoype = Plugin::addPrototype(22, new PIDRegulato
 #include "plugins/p023_motor_driver.h"
 Plugin* MotorDriverPlugin_myProtoype = Plugin::addPrototype(23, new MotorDriverPlugin);
 #endif
-#ifdef CONFIG_ENABLE_P025
-#include "plugins/p025_ha_mqtt.h"
-Plugin* HAMQTTPlugin_myProtoype = Plugin::addPrototype(25, new HAMQTTPlugin);
-#endif
+//#ifdef CONFIG_ENABLE_P025
+#include "plugins/p025_analog_output.h"
+Plugin* AnalogOutputPlugin_myProtoype = Plugin::addPrototype(25, new AnalogOutputPlugin);
+//#endif
 
 uint8_t ledPin;
 bool ledInverted;
@@ -229,9 +229,8 @@ extern "C" void app_main()
     pins.digital_read = new ESP_digital_read();
     pins.digital_write = new ESP_digital_write();
     pins.analog_read = new ESP_analog_read();
+    pins.analog_init = new ESP_analog_init();
     io.addDigitalPins(40, &pins);
-
-
 
     // load configuration
     g_cfg = new Config();

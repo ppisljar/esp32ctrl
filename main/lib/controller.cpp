@@ -3,7 +3,7 @@
 #include "../plugins/plugin.h"
 
 extern Config *g_cfg;
-extern Plugin *active_plugins[50];
+extern Plugin *active_plugins[MAX_PLUGINS];
 
 Controller_Notify_Handler *handlers[50];
 uint last_id = 0;
@@ -12,13 +12,10 @@ void registerController(Controller_Notify_Handler* handler) {
     handlers[last_id++] = handler;
 }
 
-void registerState(Plugin *p, uint8_t var_id, void *val) {
-    for (uint8_t i = 0; i < last_id; i++) {
-        (*handlers[i])(p, var_id);
-    }
-}
-
 void notify(Plugin *p, uint8_t var_id, void *val, uint8_t val_type, bool shouldNotify) {
+    // disabling the notify ....
+    // actually this should be 1. done per controller 2. all of the state_cfg should be parsed at init so its faster to access (we need a fixed struct)
+    // if (p->state_cfg[var_id]['notify'] != nullptr && strcmp(p->state_cfg[var_id]['notify'], "false") == 0) return;
     for (uint8_t i = 0; i < last_id; i++) {
         (*handlers[i])(p, var_id, val, val_type, shouldNotify);
     }
@@ -33,12 +30,12 @@ int8_t findDeviceIdByName(char *device_name) {
     if (device_name == nullptr) {
         return -1;
     }
-    for (uint8_t i = 0; i < 10; i++) {
+    for (uint8_t i = 0; i < MAX_PLUGINS; i++) {
         if (active_plugins[i] == nullptr) break;
         char *name = (char*)active_plugins[i]->name;
-        ESP_LOGI("CTRL", "comparing '%s' to '%s'", device_name, name);
+        ESP_LOGD("CTRL", "comparing '%s' to '%s'", device_name, name);
         if (strcmp(name, device_name) == 0) {
-            ESP_LOGI("CTRL", "found device with name %s : %i [id: %i]", device_name, i, active_plugins[i]->id);
+            ESP_LOGD("CTRL", "found device with name %s : %i [id: %i]", device_name, i, active_plugins[i]->id);
             return i;
         }
     }
@@ -50,9 +47,9 @@ int8_t findVarIdByName(Plugin *p, char *var_name) {
     int8_t i = 0;
     if (var_name == nullptr) return -1;
     for (auto state_cfg : (*(p->state_cfg))) {
-        ESP_LOGI("CTRL", "comparing '%s' to '%s'", state_cfg["name"].as<char*>(), var_name);
+        ESP_LOGD("CTRL", "comparing '%s' to '%s'", state_cfg["name"].as<char*>(), var_name);
         if (strcmp(state_cfg["name"], var_name) == 0) {
-            ESP_LOGI("CTRL", "found variable with name %s : %i", var_name, i);
+            ESP_LOGD("CTRL", "found variable with name %s : %i", var_name, i);
             return i;
         }
         i++;

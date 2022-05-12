@@ -37,6 +37,12 @@ class IO_analog_write {
     virtual uint8_t operator()(uint8_t pin, uint16_t value) = 0;
 };
 
+class IO_analog_init {
+  public:
+    IO_analog_init() {};
+    virtual uint8_t operator()(uint8_t pin, uint8_t atten) = 0;
+};
+
 
 struct IO_DIGITAL_PINS {
   uint8_t start;
@@ -46,6 +52,7 @@ struct IO_DIGITAL_PINS {
   IO_set_direction* set_direction = 0;
   IO_analog_write* analog_write = 0;
   IO_analog_read* analog_read = 0;
+  IO_analog_init* analog_init = 0;
 };
 
 class IO
@@ -62,6 +69,7 @@ class IO
         esp_err_t digitalWrite(uint8_t pin, bool value);
         uint16_t analogRead(uint8_t pin);
         esp_err_t analogWrite(uint8_t pin, uint16_t value);
+        esp_err_t analogInit(uint8_t pin, uint8_t atten);
         esp_err_t setDirection(uint8_t pin, uint8_t direction);
 };
 
@@ -94,24 +102,34 @@ class ESP_digital_write : public IO_digital_write {
         }
 };
 
+
+class ESP_analog_init : public IO_analog_init {
+    private:
+        uint8_t esp_adc_ch[8] = { 4, 5, 6, 7, 0, 1, 2, 3 };
+    public:
+        ESP_analog_init() { };
+        uint8_t operator()(uint8_t pin, uint8_t atten) {
+            if (pin < 32) return 0;
+            adc1_channel_t channel = (adc1_channel_t)esp_adc_ch[pin-32];
+            esp_err_t err = adc1_config_channel_atten(channel, (adc_atten_t)atten);
+            if (err != ESP_OK) {
+                ESP_ERROR_CHECK(err);
+                return 0;
+            }
+            return err;
+        }
+};
+
+
 class ESP_analog_read : public IO_analog_read {
     private:
-        uint8_t ch[8] = { 4, 5, 6, 7, 0, 1, 2, 3 };
-        bool ch_enabled[8] = {};
+        uint8_t esp_adc_ch[8] = { 4, 5, 6, 7, 0, 1, 2, 3 };
     public:
         ESP_analog_read() { };
         uint16_t operator()(uint8_t pin) {
             if (pin < 32) return 0;
             else {
-                adc1_channel_t channel = (adc1_channel_t)ch[pin-32];
-                if (!ch_enabled[channel]) {
-                    esp_err_t err = adc1_config_channel_atten(channel, ADC_ATTEN_0db /*(adc_atten_t)atten*/);
-                    if (err != ESP_OK) {
-                        ESP_ERROR_CHECK(err);
-                        return 0;
-                    }
-                    ch_enabled[channel] = true;
-                }
+                adc1_channel_t channel = (adc1_channel_t)esp_adc_ch[pin-32];
                 return adc1_get_raw(channel);
             }
         }

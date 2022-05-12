@@ -25,8 +25,8 @@ void DHTPlugin::task(void * pvParameters)
 		    errorHandler(ret);
             s->temp[0] = getTemperature();
             s->temp[1] = getHumidity();
-            SET_STATE(s, temperature, 0, true, s->temp[0], 5);
-            SET_STATE(s, humidity, 1, true, s->temp[1], 5);
+            SET_STATE(s, temperature, 0, true, s->temp[0], s->temperature_t);
+            SET_STATE(s, humidity, 1, true, s->temp[1], s->humidity_t);
             //SET_STATE(s, temperature, 0, true, te_eval(s->temp_expr), 5);
             //SET_STATE(s, humidity, 1, true, te_eval(s->humi_expr), 5);
             ESP_LOGD(P002_TAG, "Humidity: %f%% Temp: %fC (%f%% %fC)", s->humidity, s->temperature, s->temp[0], s->temp[1]);
@@ -38,6 +38,13 @@ void DHTPlugin::task(void * pvParameters)
 bool DHTPlugin::init(JsonObject &params) {
     cfg = &((JsonObject &)params["params"]);
     state_cfg = &((JsonArray &)params["state"]["values"]);
+
+    (*state_cfg)[0]["readonly"] = "true";
+    (*state_cfg)[0]["device_class"] = "temperature";
+    (*state_cfg)[0]["unit"] = "°C";
+    (*state_cfg)[1]["readonly"] = "true";
+    (*state_cfg)[1]["device_class"] = "humidity";
+    (*state_cfg)[1]["unit"] = "%";
     
     int gpio = (*cfg)["gpio"] | 255;
 

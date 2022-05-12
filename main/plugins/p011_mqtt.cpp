@@ -2,6 +2,7 @@
 #include "../lib/config.h"
 static const char *TAG = "MQTTPlugin";
 extern Config* g_cfg;
+extern Plugin *active_plugins[MAX_PLUGINS];
 
 PLUGIN_CONFIG(MQTTPlugin, interval, uri, client_id, user, pass, lwt_topic, lwt_msg)
 PLUGIN_STATS(MQTTPlugin, value, value)
@@ -12,6 +13,7 @@ static void parseSubscribeTopicStr(const char *topic_in, struct subscribe_info *
 
     JsonObject& c = g_cfg->getConfig();
 
+    // we need to do different parsing here as we want to replace a bunch of things with +
     replace_string_in_place(str_topic, "%unit_id%", c["unit"]["name"]);
     replace_string_in_place(str_topic, "%unit_name%", c["unit"]["name"]);
     replace_string_in_place(str_topic, "%timestamp%", "test");
@@ -29,6 +31,7 @@ static void parseSubscribeTopicStr(const char *topic_in, struct subscribe_info *
     strcpy(info->topic, topic.c_str());  
     ESP_LOGI(TAG, "parsed topic: %s", info->topic);
 
+    // what exactly does this below do ?
     uint8_t a = 0; uint8_t b = 0; char* len = 0; uint8_t i = 0;
     auto str_char = str_topic.c_str();
     char temp[24];
@@ -63,27 +66,62 @@ static void parseSubscribeTopicStr(const char *topic_in, struct subscribe_info *
 
 }
 
+// MQTT event loop
 // TODO: we need a way to register to additional topics (from rules) and have separate handler for those (update should be called only for default topic)
 static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
 {
     esp_mqtt_client_handle_t client = event->client;
     MQTTPlugin *p = (MQTTPlugin*)event->user_context;
-    int msg_id;
-    // your_context_t *context = event->context;
+    JsonObject &cfg = *(p->cfg);
+
     switch (event->event_id) {
         case MQTT_EVENT_CONNECTED: {
             p->connected = true;
 
+            // subscribe to topic set in configuration
             parseSubscribeTopicStr((*(p->cfg))["subscribe_topic"].as<char*>(), &p->info);
             int msg_id = esp_mqtt_client_subscribe(p->client, p->info.topic, 0);
             ESP_LOGI(TAG, "sent subscribe to '%s' successful, msg_id=%d", p->info.topic, msg_id);
-            //subscribe(info.topic, [this]);
 
-            // char* atopic = (*(p->cfg))["ad_topic"];
-            // if (atopic != nullptr) { // pubish on connect
-                
-            //     esp_mqtt_client_publish(p->client, atopic, (*(p->cfg))["ad_msg"], 0, 0, 0);  // len, qos, retain
-            // }
+            // send autodiscover information
+            const char *topic_format = cfg["ad_topic"];
+            const char *data_format = cfg["ad_data"];
+            for (auto plugin : active_plugins) {
+                if (plugin == nullptr) continue;
+                JsonArray* state_cfg = plugin->state_cfg;
+                if (state_cfg == nullptr) continue;
+                int8_t var_id = -1;
+                for (JsonVariant var_cfg : *state_cfg) {
+                    var_id++;
+                    // bool sendAutodiscover = var_cfg["autodiscover"];
+                    // if (!sendAutodiscover) continue;
+
+                    uint8_t type = var_cfg["type"];
+                    const char* readonly_s = var_cfg["readonly"];
+                    const char* unit_s = var_cfg["unit"];
+                    const char* device_class_s = var_cfg["device_class"];
+                    bool readOnly = readonly_s != nullptr && strcmp(readonly_s, "true") == 0;
+                    //const char* nofity_s = var_cfg["notify"];
+                    //bool disableNotify = nofity_s != nullptr && strcmp(nofity_s, "false") == 0;
+                    //if (disableNotify) continue;
+
+                    std::string topic_str(topic_format);
+                    std::string data_str(!readOnly ? data_format : "{\"~\": \"homeassistant/%unit_id%\", \"device_class\": \"%device_class%\", \"name\": \"%unit_id% %device_name% %value_name%\", \"state_topic\": \"~/%device_name%/%value_name%/status\", \"unit_of_measurement\": \"%unit%\" }");
+                    // additional device_type variable which will be either switch or sensor .... HA specific
+                    if (device_class_s != nullptr) replace_string_in_place(data_str, "%device_class%", device_class_s);
+                    replace_string_in_place(data_str, "%unit%", unit_s == nullptr ? "" : unit_s);
+
+                    replace_string_in_place(topic_str, "%device_type%", (!readOnly) ? "switch" : "sensor");
+                    replace_string_in_place(data_str, "%device_type%", (!readOnly) ? "switch" : "sensor");
+                    parseStrForVar(topic_str, plugin, var_id, nullptr);
+                    parseStrForVar(data_str, plugin, var_id, nullptr);
+                    ESP_LOGI(TAG, "%s\n%s", topic_str.c_str(), data_str.c_str());
+
+                    esp_mqtt_client_publish(p->client, topic_str.c_str(), data_str.c_str(), 0, 0, 1);  // len, qos, retain
+
+                }
+
+            }
 
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             break;
@@ -123,7 +161,7 @@ static esp_err_t mqtt_event_handler(esp_mqtt_event_handle_t event)
     return ESP_OK;
 }
 
-
+// controller class, allows to notify on changes to other devices
 class MQTT_Notify : public Controller_Notify_Handler {
     private:
         char topic[64];
@@ -133,45 +171,38 @@ class MQTT_Notify : public Controller_Notify_Handler {
         MQTT_Notify(MQTTPlugin* parent) {     
                 p = parent;
         };
-        uint8_t operator()(Plugin *x, uint8_t var_id) {
-            ESP_LOGI(TAG, "sending mqtt registration %p %d", p, var_id);
-            if (!p->connected) {
-                ESP_LOGW(TAG, "mqtt not connected, skipping");
-                return 0;
-            }
-            JsonObject &cfg = *(p->cfg);
-            const char *topic_format = cfg["ad_topic"];
-            const char *data_format = cfg["ad_data"];
-            std::string topic_str(topic_format);
-            std::string data_str(data_format);
-            // // we need to have parse function which will parse the topic/data format and do string replacement for vars
-            parseStrForVar(topic_str, x, var_id, 0);
-            parseStrForVar(data_str, x, var_id, 0);
-            ESP_LOGI(TAG, "%s\n%s", topic_str.c_str(), data_str.c_str());
-            //ESP_LOGI(TAG, "%s\n%s", topic_format, data_format);
-
-            esp_mqtt_client_publish(p->client, topic_str.c_str(), data_str.c_str(), 0, 0, 1);  // len, qos, retain
-            return 0;
-        }
         uint8_t operator()(Plugin *x, uint8_t var_id, void *val1, uint8_t val_type, bool shouldNotify) {
-            uint8_t val = *(uint8_t*)val1;
-            ESP_LOGI(TAG, "sending mqtt notification %p %d %d", p, var_id, val);
+            std::string val;
+
+
             if (!p->connected) {
                 ESP_LOGW(TAG, "mqtt not connected, skipping");
                 return 0;
             }
-            JsonObject &cfg = *(p->cfg);
-            const char *topic_format = cfg["publish_topic"];
-            const char *data_format = cfg["publish_data"];
-            std::string topic_str(topic_format);
-            std::string data_str(data_format);
-            // // we need to have parse function which will parse the topic/data format and do string replacement for vars
-            parseStrForVar(topic_str, x, var_id, val);
-            parseStrForVar(data_str, x, var_id, val);
-            ESP_LOGI(TAG, "%s\n%s", topic_str.c_str(), data_str.c_str());
-            //ESP_LOGI(TAG, "%s\n%s", topic_format, data_format);
-            
-            esp_mqtt_client_publish(p->client, topic_str.c_str(), data_str.c_str(), 0, 0, 1);  // len, qos, retain
+
+            try {
+                if (val_type == Type::byte) val = std::to_string(*(uint8_t*)val1);
+                if (val_type == Type::integer) val = std::to_string(*(int*)val1);
+                if (val_type == Type::decimal) val = std::to_string(*(double*)val1);
+                else val = std::string("");
+
+                ESP_LOGI(TAG, "sending mqtt notification %p %d %s", p, var_id, val.c_str());
+
+                JsonObject &cfg = *(p->cfg);
+                const char *topic_format = cfg["publish_topic"];
+                const char *data_format = cfg["publish_data"];
+                std::string topic_str(topic_format);
+                std::string data_str(data_format);
+                // // we need to have parse function which will parse the topic/data format and do string replacement for vars
+                parseStrForVar(topic_str, x, var_id, val.c_str());
+                parseStrForVar(data_str, x, var_id, val.c_str());
+                ESP_LOGI(TAG, "%s\n%s", topic_str.c_str(), data_str.c_str());
+                //ESP_LOGI(TAG, "%s\n%s", topic_format, data_format);
+
+                esp_mqtt_client_publish(p->client, topic_str.c_str(), data_str.c_str(), 0, 0, 1);  // len, qos, retain
+            } catch (...) {
+                ESP_LOGW(TAG, "error notifying over MQTT");
+            }
             return 0;
         }
 };
@@ -216,11 +247,17 @@ bool MQTTPlugin::init(JsonObject &params) {
     return true;
 }
 
+// parse received MQTT message
 void MQTTPlugin::handler(char* topic, int topic_len, char* msg, int msg_len) {
     ESP_LOGI(TAG, "%.*s %.*s", topic_len, topic, msg_len, msg);
-    const char *device_field = (*cfg)["subscribe_data_device_id"];
-    const char *var_field = (*cfg)["subscribe_data_value_id"];
-    const char *value_field = (*cfg)["subscribe_data_value"];
+
+    // message can be either JSON object or raw data. If its JSON object the below settings configure how to parse it
+    const char *device_field = (*cfg)["subscribe_data_device_id"];  // property name for device id/name
+    const char *var_field = (*cfg)["subscribe_data_value_id"]; // property name for value id/name
+    const char *value_field = (*cfg)["subscribe_data_value"]; // value variable name
+    // if message is not JSON device ID and value ID need to be included in the topic and whole MSG is used as value (leave above settings empty)
+
+    // allows choosing between using name or id for device/value
     bool device_as_id = (*cfg)["device_as_id"];
     bool value_as_id = (*cfg)["value_as_id"];
 
@@ -299,10 +336,12 @@ void MQTTPlugin::handler(char* topic, int topic_len, char* msg, int msg_len) {
 
 }
 
+// published data to mqtt topic
 void MQTTPlugin::publish(char *topic, char* data) {
     esp_mqtt_client_publish(client, topic, data, 0, 0, 0);
 }
 
+// subscribes to mqtt topic with a callback
 void MQTTPlugin::subscribe(char *topic, std::function<void(char*,char*)> handler) {
     ESP_LOGI(TAG, "regstering topic %s with handler", topic);
     registeredTopics[topic] = handler;
